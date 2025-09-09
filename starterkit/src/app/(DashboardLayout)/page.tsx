@@ -43,10 +43,6 @@ export default function Dashboard() {
       case 'EmployeeDashboard':
         return <EmployeeDashboard />;
       default:
-        // Check user role to show appropriate dashboard
-        if (user?.role === 'employee') {
-          return <EmployeeDashboard />;
-        }
         return <AdminDashboard />;
     }
   };

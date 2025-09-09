@@ -1,6 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const Employee = require('../models/Employee');
+const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
@@ -13,22 +13,22 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     console.log('Employee login attempt for username:', username);
     
-    const employee = await Employee.findOne({ username });
-    console.log('Employee found:', employee ? 'Yes' : 'No');
+    const user = await User.findOne({ username, role: 'employee' });
+    console.log('Employee user found:', user ? 'Yes' : 'No');
     
-    if (employee) {
-      const passwordMatch = await employee.matchPassword(password);
+    if (user) {
+      const passwordMatch = await user.matchPassword(password);
       console.log('Password match:', passwordMatch);
       
       if (passwordMatch) {
-        const token = jwt.sign({ id: employee._id }, process.env.JWT_SECRET, {
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
           expiresIn: '30d',
         });
         console.log('Employee login successful for user:', username);
         res.json({
-          _id: employee._id,
-          username: employee.username,
-          role: employee.role,
+          _id: user._id,
+          username: user.username,
+          role: user.role,
           token,
         });
       } else {
@@ -50,13 +50,13 @@ router.post('/login', async (req, res) => {
 // @access  Private
 router.get('/profile', protect, async (req, res) => {
   try {
-    const employee = await Employee.findById(req.user._id);
-    if (employee) {
+    const user = await User.findById(req.user._id);
+    if (user && user.role === 'employee') {
       res.json({
-        _id: employee._id,
-        username: employee.username,
-        role: employee.role,
-        createdAt: employee.createdAt,
+        _id: user._id,
+        username: user.username,
+        role: user.role,
+        createdAt: user.createdAt,
       });
     } else {
       res.status(404).json({ message: 'Employee not found' });

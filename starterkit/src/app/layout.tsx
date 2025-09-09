@@ -11,6 +11,8 @@ import { Provider } from "react-redux";
 import NextTopLoader from 'nextjs-toploader';
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ContentProvider } from "@/contexts/ContentContext";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // import NextNProgress from "nextjs-progressbar";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -74,6 +76,18 @@ export default function RootLayout({
             </ContentProvider>
           </AuthProvider>
         </Provider>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </body>
     </html>
   );

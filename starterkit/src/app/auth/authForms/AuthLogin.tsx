@@ -45,12 +45,23 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
 
     setLoading(true);
     try {
-      await login(formData.username, formData.password);
-      toast.success("Login successful!");
-      router.push("/");
+      const result = await login(formData.username, formData.password);
+      if (result.success) {
+        toast.success("Login successful!");
+        // Redirect based on user role
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        if (userData.role === 'employee') {
+          router.push("/employee/dashboard");
+        } else {
+          router.push("/");
+        }
+      } else {
+        // Handle login failure
+        toast.error(result.message || "Invalid username or password");
+      }
     } catch (error: any) {
       console.error("Login error:", error);
-      toast.error(error.message || "Invalid username or password");
+      toast.error(error.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }

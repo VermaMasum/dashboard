@@ -8,9 +8,10 @@ const router = express.Router();
 // @route   GET /api/reports
 // @access  Private (admin and superAdmin)
 router.get("/", protect, async (req, res) => {
-  if (req.user.role === "admin" || req.user.role === "superAdmin") {
+  try {
     const { date, project } = req.query;
     let query = {};
+    
     if (date) {
       const startDate = new Date(date);
       const endDate = new Date(date);
@@ -20,12 +21,19 @@ router.get("/", protect, async (req, res) => {
     if (project) {
       query.project = project;
     }
+    
+    // If user is employee, only show their own reports
+    if (req.user.role === "employee") {
+      query.employee = req.user._id;
+    }
+    // If user is admin or superAdmin, show all reports
+    
     const reports = await Report.find(query)
       .populate("project", "name")
       .populate("employee", "username");
     res.json(reports);
-  } else {
-    res.status(401).json({ message: "Not authorized" });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -33,25 +41,26 @@ router.get("/", protect, async (req, res) => {
 // @route   POST /api/reports
 // @access  Private/Admin
 router.post("/", protect, async (req, res) => {
-  if (req.user.role === "admin" || req.user.role === "superAdmin") {
-    try {
-      const { date, project, employee, details, hoursWorked } = req.body;
-      const report = new Report({
-        date,
-        project,
-        employee,
-        details,
-        hoursWorked,
-      });
-      const createdReport = await report.save();
-      await createdReport.populate('project', 'name');
-      await createdReport.populate('employee', 'username');
-      res.status(201).json(createdReport);
-    } catch (error) {
-      res.status(500).json({ message: 'Server error' });
-    }
-  } else {
-    res.status(401).json({ message: "Not authorized" });
+  try {
+    const { date, project, employee, details, hoursWorked, title } = req.body;
+    
+    // For employees, use their own ID as the employee field
+    const employeeId = req.user.role === "employee" ? req.user._id : employee;
+    
+    const report = new Report({
+      date,
+      project,
+      employee: employeeId,
+      details,
+      hoursWorked,
+      title: title || 'Daily Report', // Add title field
+    });
+    const createdReport = await report.save();
+    await createdReport.populate('project', 'name');
+    await createdReport.populate('employee', 'username');
+    res.status(201).json(createdReport);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -59,28 +68,36 @@ router.post("/", protect, async (req, res) => {
 // @route   PUT /api/reports/:id
 // @access  Private/Admin
 router.put("/:id", protect, async (req, res) => {
-  if (req.user.role === "admin" || req.user.role === "superAdmin") {
-    try {
-      const { date, project, employee, details, hoursWorked } = req.body;
-      const report = await Report.findById(req.params.id);
-      if (report) {
-        report.date = date || report.date;
-        report.project = project || report.project;
-        report.employee = employee || report.employee;
-        report.details = details || report.details;
-        report.hoursWorked = hoursWorked || report.hoursWorked;
-        const updatedReport = await report.save();
-        await updatedReport.populate('project', 'name');
-        await updatedReport.populate('employee', 'username');
-        res.json(updatedReport);
-      } else {
-        res.status(404).json({ message: 'Report not found' });
-      }
-    } catch (error) {
-      res.status(500).json({ message: 'Server error' });
+  try {
+    const { date, project, employee, details, hoursWorked, title } = req.body;
+    const report = await Report.findById(req.params.id);
+    
+    if (!report) {
+      return res.status(404).json({ message: 'Report not found' });
     }
-  } else {
-    res.status(401).json({ message: "Not authorized" });
+    
+    // Check if employee is trying to edit their own report
+    if (req.user.role === "employee" && report.employee.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to edit this report' });
+    }
+    
+    report.date = date || report.date;
+    report.project = project || report.project;
+    report.title = title || report.title;
+    report.details = details || report.details;
+    report.hoursWorked = hoursWorked || report.hoursWorked;
+    
+    // Only admins can change the employee field
+    if (req.user.role === "admin" || req.user.role === "superAdmin") {
+      report.employee = employee || report.employee;
+    }
+    
+    const updatedReport = await report.save();
+    await updatedReport.populate('project', 'name');
+    await updatedReport.populate('employee', 'username');
+    res.json(updatedReport);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -88,20 +105,22 @@ router.put("/:id", protect, async (req, res) => {
 // @route   DELETE /api/reports/:id
 // @access  Private/Admin
 router.delete("/:id", protect, async (req, res) => {
-  if (req.user.role === "admin" || req.user.role === "superAdmin") {
-    try {
-      const report = await Report.findById(req.params.id);
-      if (report) {
-        await report.deleteOne();
-        res.json({ message: 'Report removed' });
-      } else {
-        res.status(404).json({ message: 'Report not found' });
-      }
-    } catch (error) {
-      res.status(500).json({ message: 'Server error' });
+  try {
+    const report = await Report.findById(req.params.id);
+    
+    if (!report) {
+      return res.status(404).json({ message: 'Report not found' });
     }
-  } else {
-    res.status(401).json({ message: "Not authorized" });
+    
+    // Check if employee is trying to delete their own report
+    if (req.user.role === "employee" && report.employee.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to delete this report' });
+    }
+    
+    await report.deleteOne();
+    res.json({ message: 'Report removed' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

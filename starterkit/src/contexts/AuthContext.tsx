@@ -49,8 +49,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       console.log('🔐 Attempting login for user:', username);
       clearAuth(); // Ensure auth data is cleared before attempt
-      const response = await axios.post('/auth/login', { username, password });
-      console.log('✅ Login successful for user:', username);
+      
+      let response;
+      try {
+        // Try regular auth first (for admin/superAdmin)
+        response = await axios.post('/auth/login', { username, password });
+        console.log('✅ Admin login successful for user:', username);
+      } catch (adminError: any) {
+        if (adminError.response?.status === 401) {
+          // If admin login fails, try employee auth
+          console.log('🔄 Trying employee auth for user:', username);
+          response = await axios.post('/employee-auth/login', { username, password });
+          console.log('✅ Employee login successful for user:', username);
+        } else {
+          throw adminError;
+        }
+      }
+      
       if (response.data && response.data.token) {
         const userData = {
           id: response.data._id,
