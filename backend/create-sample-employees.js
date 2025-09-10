@@ -89,7 +89,7 @@ const createSampleEmployees = async () => {
       // Create user login credentials
       const existingUser = await User.findOne({ username: empData.username });
       if (!existingUser) {
-        const user = new User({
+        const user = new User({F
           username: empData.username,
           password: empData.password,
           role: 'employee'
@@ -98,7 +98,7 @@ const createSampleEmployees = async () => {
         console.log(`✅ Employee login created: ${empData.username}/password123`);
       } else {
         console.log(`ℹ️ Employee login already exists: ${empData.username}`);
-      }
+      } 
     }
 
     console.log('🎉 Sample employees created successfully!');

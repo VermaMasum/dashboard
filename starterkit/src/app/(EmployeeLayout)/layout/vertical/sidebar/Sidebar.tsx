@@ -23,19 +23,9 @@ const Sidebar = () => {
         sx={{
           width: customizer.isCollapse ? 0 : 240,
           flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: 240,
-            boxSizing: "border-box",
-            top: "64px",
-            height: "calc(100vh - 64px)",
-            background: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-            borderRight: `1px solid ${theme.palette.divider}`,
-            borderRadius: "0 !important",
-            sx: {
-              height: "100%",
-            },
-          },
+          minHeight: "100vh",
+          background: theme.palette.background.paper,
+          borderRight: `1px solid ${theme.palette.divider}`,
         }}
       >
         <Drawer
@@ -50,48 +40,18 @@ const Sidebar = () => {
               border: "0 !important",
               boxShadow: "none !important",
               width: 240,
+              minHeight: "100vh",
               background: theme.palette.background.paper,
               color: theme.palette.text.primary,
               borderRadius: "0 !important",
-              border: "0 !important",
-              boxShadow: (theme) => theme.shadows[8],
             },
           }}
         >
           <Box
             sx={{
-              height: "100%",
+              minHeight: "100vh",
             }}
           >
-            {/* Welcome Section */}
-            <Box
-              sx={{
-                p: 3,
-                textAlign: 'center',
-                background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-                color: 'white',
-                borderRadius: '0 !important',
-              }}
-            >
-              <Typography
-                variant="h5"
-                sx={{
-                  fontWeight: 'bold',
-                  mb: 1,
-                  fontSize: customizer.isCollapse ? '1rem' : '1.25rem',
-                }}
-              >
-                Employee Portal
-              </Typography>
-              {user && !customizer.isCollapse && (
-                <Typography
-                  variant="body2"
-                  sx={{ opacity: 0.9, fontSize: '0.875rem' }}
-                >
-                  Welcome, {user.username}
-                </Typography>
-              )}
-            </Box>
             <SidebarItems />
           </Box>
         </Drawer>
@@ -117,37 +77,6 @@ const Sidebar = () => {
         },
       }}
     >
-      {/* Welcome Section for Mobile */}
-      <Box
-        sx={{
-          p: 3,
-          textAlign: 'center',
-          background: 'linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%)',
-          color: 'white',
-          borderRadius: '0 !important',
-        }}
-      >
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 'bold',
-            mb: 1,
-          }}
-        >
-          Employee Portal
-        </Typography>
-        {user && (
-          <Typography
-            variant="body2"
-            sx={{
-              opacity: 0.9,
-              fontSize: '0.875rem',
-            }}
-          >
-            Welcome, {user.username}
-          </Typography>
-        )}
-      </Box>
       <SidebarItems />
     </Drawer>
   );

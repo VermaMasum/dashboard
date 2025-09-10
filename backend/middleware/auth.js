@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Employee = require('../models/Employee');
 
 const protect = async (req, res, next) => {
   let token;
@@ -10,10 +11,19 @@ const protect = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.id).select('-password');
+      
+      // Find user in User model (all users including employees are now in User model)
+      let user = await User.findById(decoded.id).select('-password');
+      
       if (!user) {
         return res.status(401).json({ message: 'User not found' });
       }
+      console.log('🔍 Authenticated user:', {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        model: user.constructor.modelName
+      });
       req.user = user;
       next();
     } catch (error) {

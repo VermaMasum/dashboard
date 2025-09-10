@@ -59,6 +59,7 @@ const EmployeeManagement = () => {
   // Form state
   const [formData, setFormData] = useState({
     username: '',
+    password: '',
     role: 'employee',
     email: '',
     phone: '',
@@ -72,8 +73,8 @@ const EmployeeManagement = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log('👥 Fetching employees from /employees endpoint...');
-      const response = await axios.get('/employees');
+      console.log('👥 Fetching employees from /users endpoint with role=employee...');
+      const response = await axios.get('/users?role=employee');
       console.log('👥 Employees response:', response.data);
       setEmployees(response.data);
     } catch (err: any) {
@@ -99,6 +100,7 @@ const EmployeeManagement = () => {
       setEditingEmployee(null);
       setFormData({
         username: '',
+        password: '',
         role: 'employee',
         email: '',
         phone: '',
@@ -113,6 +115,7 @@ const EmployeeManagement = () => {
     setEditingEmployee(null);
     setFormData({
       username: '',
+      password: '',
       role: 'employee',
       email: '',
       phone: '',
@@ -123,10 +126,10 @@ const EmployeeManagement = () => {
   const handleSubmit = async () => {
     try {
       if (editingEmployee) {
-        await axios.put(`/employees/${editingEmployee._id}`, formData);
+        await axios.put(`/users/${editingEmployee._id}`, formData);
         setSuccess('Employee updated successfully');
       } else {
-        await axios.post('/employees', formData);
+        await axios.post('/users', { ...formData, role: 'employee' });
         setSuccess('Employee created successfully');
       }
       handleCloseDialog();
@@ -139,7 +142,7 @@ const EmployeeManagement = () => {
   const handleDelete = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        await axios.delete(`/employees/${id}`);
+        await axios.delete(`/users/${id}`);
         setSuccess('Employee deleted successfully');
         fetchData();
       } catch (err: any) {
@@ -260,6 +263,15 @@ const EmployeeManagement = () => {
             label="Username"
             value={formData.username}
             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            margin="normal"
+            required
+          />
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             margin="normal"
             required
           />

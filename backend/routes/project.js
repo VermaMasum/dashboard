@@ -6,21 +6,31 @@ const router = express.Router();
 
 // @desc    Get all projects
 // @route   GET /api/projects
-// @access  Private/Admin
+// @access  Private (admin, superAdmin, and employees)
 router.get('/', protect, async (req, res) => {
-  if (req.user.role !== 'admin' && req.user.role !== 'superAdmin') {
-    return res.status(401).json({ message: 'Not authorized' });
+  try {
+    const { date } = req.query;
+    let query = {};
+    if (date) {
+      const startDate = new Date(date);
+      const endDate = new Date(date);
+      endDate.setDate(endDate.getDate() + 1);
+      query.date = { $gte: startDate, $lt: endDate };
+    }
+    
+    // If user is employee, only show projects they are assigned to
+    if (req.user.role === "employee") {
+      query.employees = req.user._id;
+      console.log('🔍 Employee filtering projects for user ID:', req.user._id);
+    }
+    // If user is admin or superAdmin, show all projects
+    
+    const projects = await Project.find(query).populate('employees', 'username');
+    res.json(projects);
+  } catch (error) {
+    console.error('Error fetching projects:', error);
+    res.status(500).json({ message: 'Server error' });
   }
-  const { date } = req.query;
-  let query = {};
-  if (date) {
-    const startDate = new Date(date);
-    const endDate = new Date(date);
-    endDate.setDate(endDate.getDate() + 1);
-    query.date = { $gte: startDate, $lt: endDate };
-  }
-  const projects = await Project.find(query).populate('employees', 'username');
-  res.json(projects);
 });
 
 // @desc    Create a project
@@ -47,12 +57,12 @@ router.post('/', protect, async (req, res) => {
       }
     }
   }
-  const project = new Project({
-    name,
-    description,
-    date,
-    employees: employeeIds,
-  });
+    const project = new Project({
+      name,
+      description,
+      date,
+      employees: employeeIds,
+    });
   const createdProject = await project.save();
   await createdProject.populate('employees', 'username');
   res.status(201).json(createdProject);
@@ -118,7 +128,7 @@ router.post('/:id/assign', protect, async (req, res) => {
       project.employees.push(employeeId);
       await project.save();
     }
-    await project.populate('employees', 'username');
+    await project.populate('employees', 'username role');
     res.json(project);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -140,7 +150,7 @@ router.post('/:id/unassign', protect, async (req, res) => {
     }
     project.employees = project.employees.filter(id => id.toString() !== employeeId);
     await project.save();
-    await project.populate('employees', 'username');
+    await project.populate('employees', 'username role');
     res.json(project);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

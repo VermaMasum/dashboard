@@ -1,13 +1,16 @@
 "use client";
 import React from "react";
 import { List, ListItem, ListItemButton, ListItemIcon, ListItemText, Box, Typography } from "@mui/material";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDashboard } from "@/contexts/DashboardContext";
 import Menuitems from "./MenuItems";
 
 const SidebarItems = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuth();
+  const { setActiveTab } = useDashboard();
 
   return (
     <Box>
@@ -34,10 +37,24 @@ const SidebarItems = () => {
             return (
               <ListItem key={item.id} disablePadding sx={{ mb: 1 }}>
                 <ListItemButton
-                  selected={pathname === item.href}
+                  selected={pathname === item.href || (pathname === '/employee/dashboard' && item.href?.includes('tab='))}
                   onClick={() => {
-                    // Handle navigation - you can use Next.js router here
-                    window.location.href = item.href;
+                    // Handle navigation for dashboard tabs
+                    if (item.href?.includes('tab=')) {
+                      // Extract tab number and set it directly
+                      const tabMatch = item.href.match(/tab=(\d+)/);
+                      if (tabMatch) {
+                        const tabNumber = parseInt(tabMatch[1]);
+                        setActiveTab(tabNumber);
+                      }
+                      // Always navigate to dashboard for tab items
+                      if (pathname !== '/employee/dashboard') {
+                        router.push('/employee/dashboard');
+                      }
+                    } else {
+                      // For other pages, use normal navigation
+                      router.push(item.href || '/');
+                    }
                   }}
                   sx={{
                     borderRadius: 1,
@@ -49,6 +66,10 @@ const SidebarItems = () => {
                         backgroundColor: "primary.dark",
                       },
                     },
+                    "&:hover": {
+                      backgroundColor: "primary.light",
+                      color: "primary.main",
+                    },
                   }}
                 >
                   <ListItemIcon
@@ -57,7 +78,7 @@ const SidebarItems = () => {
                       color: pathname === item.href ? "white" : "text.secondary",
                     }}
                   >
-                    {item.icon}
+                    {item.icon && React.createElement(item.icon)}
                   </ListItemIcon>
                   <ListItemText
                     primary={item.title}

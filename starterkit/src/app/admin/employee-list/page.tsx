@@ -45,7 +45,7 @@ const EmployeeList = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/employees');
+      const response = await axios.get('/users?role=employee');
       setEmployees(response.data);
     } catch (err: any) {
       console.error('Error fetching employees:', err);

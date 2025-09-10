@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Grid, Box, Stack, Typography } from '@mui/material';
 import PageContainer from '@/app/(DashboardLayout)/components/container/PageContainer';
 import AuthLogo from '@/app/(DashboardLayout)/layout/shared/logo/AuthLogo';
-import AuthLogin from '../../authForms/AuthLogin';
+import AuthLogin from '../authForms/AuthLogin';
 import Image from 'next/image';
 
 export default function EmployeeLogin() {

@@ -5,6 +5,9 @@ const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['admin', 'superAdmin', 'employee'], required: true },
+  email: { type: String, default: '' },
+  phone: { type: String, default: '' },
+  department: { type: String, default: '' },
 });
 
 // Password hashing middleware

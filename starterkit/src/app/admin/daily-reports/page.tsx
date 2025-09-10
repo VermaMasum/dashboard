@@ -54,12 +54,26 @@ const DailyReports = () => {
     hoursWorked: 0,
     date: new Date().toISOString().split('T')[0]
   });
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
   const [selectedProject, setSelectedProject] = useState<string>('');
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Debug: Monitor projects state changes
+  useEffect(() => {
+    console.log('📊 Projects state updated:', projects);
+    console.log('📊 Projects count in state:', projects.length);
+  }, [projects]);
+
+  // Debug: Monitor filter changes
+  useEffect(() => {
+    console.log('📊 Filter state updated - selectedDate:', selectedDate, 'selectedProject:', selectedProject);
+  }, [selectedDate, selectedProject]);
 
   const fetchData = async () => {
     try {
@@ -69,18 +83,34 @@ const DailyReports = () => {
       const [reportsRes, projectsRes, employeesRes] = await Promise.all([
         axios.get('/reports'),
         axios.get('/projects'),
-        axios.get('/employees'),
+        axios.get('/users?role=employee'),
       ]);
 
       console.log('📊 Reports data:', reportsRes.data);
       console.log('📊 Projects data:', projectsRes.data);
       console.log('📊 Employees data:', employeesRes.data);
+      
+      // Debug: Check report dates
+      reportsRes.data.forEach((report, index) => {
+        console.log(`📊 Report ${index + 1}:`, {
+          id: report._id,
+          date: report.date,
+          dateType: typeof report.date,
+          dateString: new Date(report.date).toDateString(),
+          dateISO: new Date(report.date).toISOString()
+        });
+      });
 
       setReports(reportsRes.data);
       setProjects(projectsRes.data);
       setEmployees(employeesRes.data);
+      
+      // Debug: Check if projects are being set correctly
+      console.log('📊 Projects state will be set to:', projectsRes.data);
+      console.log('📊 Projects count:', projectsRes.data.length);
     } catch (err: any) {
       console.error('❌ Error fetching data:', err);
+      console.error('❌ Error response:', err.response);
       setError(err.response?.data?.message || 'Failed to fetch data');
     } finally {
       setLoading(false);
@@ -150,14 +180,55 @@ const DailyReports = () => {
     }
   };
 
-  const todayReports = reports.filter(r => new Date(r.date).toDateString() === new Date().toDateString());
+  const todayReports = reports.filter(r => {
+    const reportDate = new Date(r.date);
+    const today = new Date();
+    return reportDate.toDateString() === today.toDateString();
+  });
   const totalHoursToday = todayReports.reduce((sum, report) => sum + report.hoursWorked, 0);
 
   const filteredReports = reports.filter(report => {
-    const dateMatch = new Date(report.date).toDateString() === new Date(selectedDate).toDateString();
+    // Handle date filtering more robustly
+    let reportDate;
+    
+    // Handle different date formats
+    if (typeof report.date === 'string') {
+      reportDate = new Date(report.date);
+    } else if (report.date instanceof Date) {
+      reportDate = report.date;
+    } else {
+      reportDate = new Date(report.date);
+    }
+    
+    const filterDate = new Date(selectedDate);
+    
+    // Compare dates by setting time to start of day
+    const reportDateOnly = new Date(reportDate.getFullYear(), reportDate.getMonth(), reportDate.getDate());
+    const filterDateOnly = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
+    
+    const dateMatch = reportDateOnly.getTime() === filterDateOnly.getTime();
     const projectMatch = !selectedProject || report.project?._id === selectedProject;
+    
+    // Debug: Log filtering details
+    console.log('🔍 Filtering report:', {
+      reportId: report._id,
+      reportDate: report.date,
+      reportDateType: typeof report.date,
+      reportDateOnly: reportDateOnly.toDateString(),
+      filterDate: selectedDate,
+      filterDateOnly: filterDateOnly.toDateString(),
+      dateMatch,
+      projectMatch,
+      finalMatch: dateMatch && projectMatch
+    });
+    
     return dateMatch && projectMatch;
   });
+
+  // Debug: Monitor filtered reports
+  useEffect(() => {
+    console.log('📊 Filtered reports count:', filteredReports.length);
+  }, [filteredReports]);
 
   if (loading) {
     return (
@@ -267,29 +338,94 @@ const DailyReports = () => {
       </Grid>
 
       {/* Filters */}
-      <Box display="flex" gap={2} mb={3} alignItems="center">
+      <Box display="flex" gap={2} mb={3} alignItems="center" flexWrap="wrap">
         <TextField
           type="date"
           label="Filter by Date"
           value={selectedDate}
           onChange={(e) => setSelectedDate(e.target.value)}
           InputLabelProps={{ shrink: true }}
+          sx={{ minWidth: 200 }}
         />
+        <Button
+          variant="outlined"
+          onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+          size="small"
+        >
+          Today
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            setSelectedDate(yesterday.toISOString().split('T')[0]);
+          }}
+          size="small"
+        >
+          Yesterday
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            setSelectedDate(tomorrow.toISOString().split('T')[0]);
+          }}
+          size="small"
+        >
+          Tomorrow
+        </Button>
         <FormControl sx={{ minWidth: 200 }}>
           <InputLabel>Filter by Project</InputLabel>
           <Select
             value={selectedProject}
             onChange={(e) => setSelectedProject(e.target.value)}
             label="Filter by Project"
+            disabled={loading}
           >
             <MenuItem value="">All Projects</MenuItem>
-            {projects.map((project) => (
-              <MenuItem key={project._id} value={project._id}>
-                {project.name}
-              </MenuItem>
-            ))}
+            {loading ? (
+              <MenuItem disabled>Loading projects...</MenuItem>
+            ) : projects.length === 0 ? (
+              <MenuItem disabled>No projects available</MenuItem>
+            ) : (
+              projects.map((project) => (
+                <MenuItem key={project._id} value={project._id}>
+                  {project.name} ({project.employees?.length || 0} employees)
+                </MenuItem>
+              ))
+            )}
           </Select>
         </FormControl>
+        <Button
+          variant="outlined"
+          onClick={() => setSelectedProject('')}
+          size="small"
+          disabled={!selectedProject}
+        >
+          Clear Project Filter
+        </Button>
+      </Box>
+
+      {/* Filter Status */}
+      <Box mb={2}>
+        <Typography variant="body2" color="textSecondary">
+          Showing reports for: <strong>{new Date(selectedDate).toLocaleDateString()}</strong>
+          {selectedProject && (
+            <>
+              {' '}from project: <strong>{projects.find(p => p._id === selectedProject)?.name || 'Unknown'}</strong>
+            </>
+          )}
+          {' '}({filteredReports.length} reports found)
+        </Typography>
+        
+        {/* Debug: Show available dates */}
+        <Box mt={1}>
+          <Typography variant="caption" color="textSecondary">
+            Available dates in reports: {Array.from(new Set(reports.map(r => new Date(r.date).toDateString()))).sort().join(', ')}
+          </Typography>
+        </Box>
       </Box>
 
       {/* Reports Table */}
@@ -379,7 +515,7 @@ const DailyReports = () => {
               >
                 {projects.map((project) => (
                   <MenuItem key={project._id} value={project._id}>
-                    {project.name}
+                    {project.name} ({project.employees?.length || 0} employees)
                   </MenuItem>
                 ))}
               </Select>
@@ -391,11 +527,43 @@ const DailyReports = () => {
                 onChange={(e) => setFormData({ ...formData, employee: e.target.value })}
                 required
               >
-                {employees.map((employee) => (
-                  <MenuItem key={employee._id} value={employee._id}>
-                    {employee.username} ({employee.role})
-                  </MenuItem>
-                ))}
+                {(() => {
+                  // Only show employees who are assigned to the selected project
+                  const selectedProject = projects.find(p => p._id === formData.project);
+                  const assignedEmployees = selectedProject?.employees || [];
+                  
+                  console.log('🔍 Employee filtering debug:', {
+                    selectedProjectId: formData.project,
+                    selectedProject: selectedProject,
+                    assignedEmployees: assignedEmployees,
+                    allEmployees: employees.length
+                  });
+                  
+                  if (!formData.project) {
+                    return (
+                      <MenuItem disabled>
+                        Please select a project first
+                      </MenuItem>
+                    );
+                  }
+                  
+                  if (assignedEmployees.length === 0) {
+                    return (
+                      <MenuItem disabled>
+                        No employees assigned to this project
+                      </MenuItem>
+                    );
+                  }
+                  
+                  return assignedEmployees.map((employee) => {
+                    // employee is already populated with username and _id
+                    return (
+                      <MenuItem key={employee._id} value={employee._id}>
+                        {employee.username} ({employee.role || 'employee'})
+                      </MenuItem>
+                    );
+                  });
+                })()}
               </Select>
             </FormControl>
             <TextField

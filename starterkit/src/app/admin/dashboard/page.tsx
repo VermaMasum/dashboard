@@ -76,6 +76,8 @@ const AdminDashboard = () => {
         axios.get('/employees'),
       ]);
 
+      console.log('📊 Admin Dashboard - Reports data:', reportsRes.data);
+      console.log('📊 Admin Dashboard - Sample report:', reportsRes.data[0]);
       setReports(reportsRes.data);
       setProjects(projectsRes.data);
       setEmployees(employeesRes.data);

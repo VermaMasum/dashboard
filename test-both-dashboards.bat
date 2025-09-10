@@ -25,7 +25,6 @@ start "Frontend Server" cmd /k "npm run dev"
 
 echo.
 echo ========================================
-echo BOTH DASHBOARDS READY!
 echo.
 echo Backend: http://localhost:5000
 echo Frontend: http://localhost:3000
@@ -42,3 +41,5 @@ echo - Features: Submit Reports, View Past Reports, Stats
 echo.
 echo ========================================
 pause
+
+

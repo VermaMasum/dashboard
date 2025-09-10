@@ -14,7 +14,7 @@ router.post('/login', async (req, res) => {
     console.log('Employee login attempt for username:', username);
     
     const user = await User.findOne({ username, role: 'employee' });
-    console.log('Employee user found:', user ? 'Yes' : 'No');
+    console.log('Employee found:', user ? 'Yes' : 'No');
     
     if (user) {
       const passwordMatch = await user.matchPassword(password);
@@ -51,7 +51,7 @@ router.post('/login', async (req, res) => {
 router.get('/profile', protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    if (user && user.role === 'employee') {
+    if (user) {
       res.json({
         _id: user._id,
         username: user.username,
@@ -59,7 +59,7 @@ router.get('/profile', protect, async (req, res) => {
         createdAt: user.createdAt,
       });
     } else {
-      res.status(404).json({ message: 'Employee not found' });
+      res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
     console.error('Error fetching employee profile:', error);

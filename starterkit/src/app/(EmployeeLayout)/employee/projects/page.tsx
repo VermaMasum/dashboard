@@ -20,7 +20,7 @@ import {
   Schedule,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
+import axios from '@/utils/axios';
 
 interface Project {
   _id: string;
@@ -54,16 +54,31 @@ const EmployeeProjects = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      console.log('📊 Fetching employee projects data for:', user?.username);
       
-      // Fetch all projects
-      const projectsResponse = await axios.get('/projects');
-      setProjects(projectsResponse.data);
+      // Fetch all projects and reports
+      const [projectsResponse, reportsResponse] = await Promise.all([
+        axios.get('/projects'),
+        axios.get('/reports'),
+      ]);
 
-      // Fetch employee's reports to get project assignments
-      const reportsResponse = await axios.get('/reports');
-      const employeeReports = reportsResponse.data.filter((report: any) => 
-        report.employee && report.employee._id === user?.id
+      console.log('📊 All projects response:', projectsResponse.data);
+      console.log('📊 All reports response:', reportsResponse.data);
+
+      // Filter projects assigned to current employee
+      const assignedProjects = projectsResponse.data.filter((project: any) => 
+        project.employees && project.employees.includes(user?._id)
       );
+
+      // Filter employee's reports
+      const employeeReports = reportsResponse.data.filter((report: any) => 
+        report.employee && report.employee._id === user?._id
+      );
+
+      console.log('📊 Assigned projects:', assignedProjects);
+      console.log('📊 Employee reports:', employeeReports);
+
+      setProjects(assignedProjects);
       setProjectReports(employeeReports);
 
     } catch (error) {

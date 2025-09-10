@@ -84,7 +84,7 @@ const ProjectDetails = () => {
       console.log('📋 Fetching projects and employees...');
       const [projectsRes, employeesRes] = await Promise.all([
         axios.get('/projects'),
-        axios.get('/employees'),
+        axios.get('/users?role=employee'),
       ]);
 
       console.log('📋 Projects response:', projectsRes.data);

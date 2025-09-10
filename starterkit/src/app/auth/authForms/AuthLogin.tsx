@@ -47,12 +47,13 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
     try {
       const result = await login(formData.username, formData.password);
       if (result.success) {
-        toast.success("Login successful!");
         // Redirect based on user role
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
         if (userData.role === 'employee') {
+          toast.success(`Welcome ${userData.username}! Redirecting to Employee Dashboard...`);
           router.push("/employee/dashboard");
         } else {
+          toast.success(`Welcome ${userData.username}! Redirecting to Admin Dashboard...`);
           router.push("/");
         }
       } else {

@@ -1,5 +1,6 @@
 const express = require('express');
 const Employee = require('../models/Employee');
+const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 
 const router = express.Router();
@@ -50,6 +51,7 @@ router.post('/', protect, adminOrSuperAdmin, async (req, res) => {
     if (employeeExists) {
       return res.status(400).json({ message: 'Username already exists' });
     }
+    // Create employee in Employee collection
     const newEmployee = new Employee({
       username,
       password,
@@ -59,6 +61,15 @@ router.post('/', protect, adminOrSuperAdmin, async (req, res) => {
       department,
     });
     const createdEmployee = await newEmployee.save();
+
+    // Also create user login credentials in User collection
+    const newUser = new User({
+      username,
+      password,
+      role: 'employee'
+    });
+    await newUser.save();
+
     res.status(201).json({
       _id: createdEmployee._id,
       username: createdEmployee.username,

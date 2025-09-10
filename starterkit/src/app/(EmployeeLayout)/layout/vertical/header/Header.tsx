@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useState } from "react";
 import {
@@ -10,16 +11,16 @@ import {
   Typography,
   IconButton,
   Menu,
-  MenuItem,
   Avatar,
   Divider,
   Button,
 } from "@mui/material";
-import { IconPower, IconMail } from "@tabler/icons-react";
+import { IconMail } from "@tabler/icons-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const lgDown = useMediaQuery((theme: any) => theme.breakpoints.down("lg"));
+  const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
   const [anchorEl2, setAnchorEl2] = useState(null);
   const { user, logout } = useAuth();
 
@@ -37,6 +38,8 @@ const Header = () => {
     background: theme.palette.primary.main,
     justifyContent: "center",
     backdropFilter: "blur(4px)",
+    width: "100%",
+    position: "relative",
     [theme.breakpoints.up("lg")]: {
       minHeight: "64px",
     },
@@ -55,7 +58,7 @@ const Header = () => {
   const getUserEmail = () => 'employee@example.com';
 
   return (
-    <AppBarStyled position="sticky" color="default">
+    <AppBarStyled position="static" color="default">
       <ToolbarStyled>
         {/* Employee Portal Title */}
         <Typography
@@ -64,11 +67,12 @@ const Header = () => {
             fontWeight: 'bold',
             color: 'white',
             fontSize: '1.25rem',
+            marginLeft: 1,
           }}
         >
           Employee Portal
         </Typography>
-
+        
         <Box flexGrow={1} />
         <Stack spacing={1} direction="row" alignItems="center">
           {/* Profile Dropdown */}
@@ -80,6 +84,11 @@ const Header = () => {
               aria-haspopup="true"
               onClick={handleClick2}
               color="inherit"
+              sx={{
+                ...(typeof anchorEl2 === 'object' && {
+                  color: 'primary.main',
+                }),
+              }}
             >
               <Avatar
                 src={"/images/profile/user2.jpg"}
@@ -90,37 +99,18 @@ const Header = () => {
             <Menu
               id="account-menu"
               anchorEl={anchorEl2}
+              keepMounted
               open={Boolean(anchorEl2)}
               onClose={handleClose2}
-              onClick={handleClose2}
-              PaperProps={{
-                elevation: 0,
-                sx: {
-                  overflow: "visible",
-                  filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
-                  mt: 1.5,
-                  "& .MuiAvatar-root": {
-                    width: 32,
-                    height: 32,
-                    ml: -0.5,
-                    mr: 1,
-                  },
-                  "&:before": {
-                    content: '""',
-                    display: "block",
-                    position: "absolute",
-                    top: 0,
-                    right: 14,
-                    width: 10,
-                    height: 10,
-                    bgcolor: "background.paper",
-                    transform: "translateY(-50%) rotate(45deg)",
-                    zIndex: 0,
-                  },
+
+              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              sx={{
+                '& .MuiMenu-paper': {
+                  width: '360px',
+                  p: 4,
                 },
               }}
-              transformOrigin={{ horizontal: "right", vertical: "top" }}
-              anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             >
               <Typography variant="h5">Employee Profile</Typography>
               <Stack direction="row" py={3} spacing={2} alignItems="center">

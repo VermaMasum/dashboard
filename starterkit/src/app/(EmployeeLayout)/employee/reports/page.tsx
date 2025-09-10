@@ -33,7 +33,7 @@ import {
   Assessment,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
-import axios from 'axios';
+import axios from '@/utils/axios';
 
 interface Report {
   _id: string;
@@ -95,8 +95,13 @@ const EmployeeReports = () => {
         report.employee && report.employee._id === user?.id
       );
 
+      // Filter projects to only show those assigned to the current employee
+      const assignedProjects = projectsRes.data.filter((project: Project) => 
+        project.employees && project.employees.includes(user?._id)
+      );
+
       setReports(employeeReports);
-      setProjects(projectsRes.data);
+      setProjects(assignedProjects);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch data');
     } finally {
@@ -167,9 +172,11 @@ const EmployeeReports = () => {
     }
   };
 
-  const filteredReports = reports.filter(report => 
-    new Date(report.date).toDateString() === new Date(selectedDate).toDateString()
-  );
+  const filteredReports = reports.filter(report => {
+    const reportDate = new Date(report.date);
+    const filterDate = new Date(selectedDate);
+    return reportDate.toDateString() === filterDate.toDateString();
+  });
 
   const totalHoursToday = filteredReports.reduce((sum, report) => sum + report.hoursWorked, 0);
 

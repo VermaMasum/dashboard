@@ -25,12 +25,23 @@ router.get("/", protect, async (req, res) => {
     // If user is employee, only show their own reports
     if (req.user.role === "employee") {
       query.employee = req.user._id;
+      console.log('🔍 Employee filtering reports for user ID:', req.user._id);
     }
     // If user is admin or superAdmin, show all reports
     
     const reports = await Report.find(query)
       .populate("project", "name")
       .populate("employee", "username");
+    
+    console.log('📊 Reports query result:', reports.length, 'reports');
+    if (reports.length > 0) {
+      console.log('📊 Sample report:', {
+        id: reports[0]._id,
+        employee: reports[0].employee,
+        project: reports[0].project
+      });
+    }
+    
     res.json(reports);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });

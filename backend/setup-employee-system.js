@@ -47,10 +47,10 @@ async function setupEmployeeSystem() {
       console.log(`${emp.username}/password123`);
     }
 
-    console.log('\n🎯 Test Instructions:');
+    console.log('\n🎯 Test Instructions:'); 
     console.log('1. Start backend: node server.js');
     console.log('2. Start frontend: cd starterkit && npm run dev');
-    console.log('3. Go to: http://localhost:3000/auth/employee-login');
+    console.log('3. Go to: it doeshttp://localhost:3000/auth/employee-login');
     console.log('4. Use any of the credentials above');
 
   } catch (error) {
@@ -61,3 +61,5 @@ async function setupEmployeeSystem() {
 }
 
 setupEmployeeSystem();
+
+

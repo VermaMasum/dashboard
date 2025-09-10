@@ -55,7 +55,18 @@ const Header = () => {
   return (
     <AppBarStyled position="sticky" color="default">
       <ToolbarStyled>
-        {/* Dashboard Title - Removed as requested */}
+        {/* Dashboard Title */}
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 'bold',
+            color: 'white',
+            fontSize: '1.25rem',
+            marginLeft: 1,
+          }}
+        >
+          Dashboard
+        </Typography>
         {/* ------------------------------------------- */}
         {/* Toggle Button Sidebar */}
         {/* ------------------------------------------- */}

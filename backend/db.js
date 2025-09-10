@@ -2,12 +2,12 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect("mongodb://localhost:27017/AdminModule", {
-      useNewUrlParser: true,
-      useunifiedTopology: true,
-    });
+    const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/employee-dashboard";
+    console.log('🔗 Connecting to MongoDB:', mongoURI);
+    await mongoose.connect(mongoURI);
+    console.log('✅ MongoDB connected successfully');
   } catch (err) {
-    console.error(err.message);
+    console.error('❌ MongoDB connection error:', err.message);
     process.exit(1);
   }
 };

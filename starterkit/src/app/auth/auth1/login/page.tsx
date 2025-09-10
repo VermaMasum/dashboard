@@ -68,13 +68,13 @@ export default function Login () {
         alignItems="center"
       >
         <Box p={4}>
-          <AuthLogin
-            title="Welcome to Admin"
-            subtext={
-              <Typography variant="subtitle1" color="textSecondary" mb={1}>
-                Your Admin Dashboard
-              </Typography>
-            }
+            <AuthLogin
+              title="Welcome to Dashboard"
+              subtext={
+                <Typography variant="subtitle1" color="textSecondary" mb={1}>
+                  Admin & Employee Login
+                </Typography>
+              }
             subtitle={
               <Stack direction="row" spacing={1} mt={3}>
                 <Typography color="textSecondary" variant="h6" fontWeight="500">

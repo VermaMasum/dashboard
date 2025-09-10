@@ -10,7 +10,7 @@ import ProjectDetails from "@/app/admin/project-details/page";
 import DailyReports from "@/app/admin/daily-reports/page";
 import EmployeeManagement from "@/app/admin/employees/page";
 import EmployeeList from "@/app/admin/employee-list/page";
-import EmployeeDashboard from "@/app/employee/dashboard/page";
+// EmployeeDashboard is handled by separate layout
 
 const BCrumb = [
   {
@@ -40,8 +40,6 @@ export default function Dashboard() {
         return <EmployeeManagement />;
       case 'employee-list':
         return <EmployeeList />;
-      case 'EmployeeDashboard':
-        return <EmployeeDashboard />;
       default:
         return <AdminDashboard />;
     }

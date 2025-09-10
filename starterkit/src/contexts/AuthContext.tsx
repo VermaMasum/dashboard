@@ -53,15 +53,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       let response;
       try {
         // Try regular auth first (for admin/superAdmin)
+        console.log('🔄 Trying admin auth for user:', username);
         response = await axios.post('/auth/login', { username, password });
-        console.log('✅ Admin login successful for user:', username);
+        console.log('✅ Admin login successful for user:', username, 'Response:', response.data);
       } catch (adminError: any) {
+        console.log('❌ Admin login failed:', adminError.response?.status, adminError.response?.data);
         if (adminError.response?.status === 401) {
           // If admin login fails, try employee auth
           console.log('🔄 Trying employee auth for user:', username);
           response = await axios.post('/employee-auth/login', { username, password });
-          console.log('✅ Employee login successful for user:', username);
+          console.log('✅ Employee login successful for user:', username, 'Response:', response.data);
         } else {
+          console.log('❌ Admin login error (not 401):', adminError.message);
           throw adminError;
         }
       }
@@ -151,7 +154,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      console.log('👤 User state updated:', user.username, 'Role:', user.role);
+      console.log('👤 User state updated:', user.username, 'Role:', user.role, 'ID:', user.id);
+    } else {
+      console.log('👤 User state cleared');
     }
   }, [user]);
 

@@ -15,45 +15,41 @@ interface MenuitemsType {
   external?: boolean;
 }
 
-import { IconHome, IconClipboardList, IconReportAnalytics, IconUser, IconLogout } from "@tabler/icons-react";
+import { 
+  Home as IconHome, 
+  Assignment as IconClipboardList, 
+  Assessment as IconReportAnalytics, 
+  Person as IconUser,
+  PieChart as IconPieChart
+} from "@mui/icons-material";
 
 // Employee menu items
 const Menuitems: MenuitemsType[] = [
   {
     navlabel: true,
-    subheader: "Dashboard",
+    subheader: "HOME",
   },
   {
     id: uniqueId(),
-    title: "My Dashboard",
-    icon: IconHome,
+    title: "Starter Page",
+    icon: IconPieChart,
     href: "/employee/dashboard",
   },
   {
     navlabel: true,
-    subheader: "Work",
+    subheader: "DASHBOARD",
   },
   {
     id: uniqueId(),
-    title: "My Daily Reports",
-    icon: IconReportAnalytics,
-    href: "/employee/reports",
-  },
-  {
-    id: uniqueId(),
-    title: "My Projects",
+    title: "Project Details",
     icon: IconClipboardList,
-    href: "/employee/projects",
-  },
-  {
-    navlabel: true,
-    subheader: "Profile",
+    href: "tab=1",
   },
   {
     id: uniqueId(),
-    title: "My Profile",
-    icon: IconUser,
-    href: "/employee/profile",
+    title: "Daily Reports",
+    icon: IconReportAnalytics,
+    href: "tab=2",
   },
 ];
 
