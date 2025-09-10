@@ -25,11 +25,20 @@ const Header = () => {
   const { user, logout } = useAuth();
 
   const handleClick2 = (event: any) => {
+    console.log('Profile icon clicked, opening dropdown');
+    console.log('Current anchorEl2:', anchorEl2);
     setAnchorEl2(event.currentTarget);
+    console.log('New anchorEl2 set to:', event.currentTarget);
   };
 
   const handleClose2 = () => {
     setAnchorEl2(null);
+  };
+
+  const handleLogout = () => {
+    console.log('Logout clicked');
+    handleClose2();
+    logout();
   };
 
   const AppBarStyled = styled(AppBar)(({ theme }) => ({
@@ -74,7 +83,7 @@ const Header = () => {
         </Typography>
         
         <Box flexGrow={1} />
-        <Stack spacing={1} direction="row" alignItems="center">
+        <Stack spacing={1} direction="row" alignItems="center" sx={{ marginRight: 2 }}>
           {/* Profile Dropdown */}
           <Box>
             <IconButton
@@ -102,13 +111,16 @@ const Header = () => {
               keepMounted
               open={Boolean(anchorEl2)}
               onClose={handleClose2}
-
+              onOpen={() => console.log('Menu opened, anchorEl2:', anchorEl2)}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              disablePortal={false}
               sx={{
                 '& .MuiMenu-paper': {
                   width: '360px',
                   p: 4,
+                  mt: 1,
+                  zIndex: 9999,
                 },
               }}
             >
@@ -137,7 +149,7 @@ const Header = () => {
               <Divider />
               <Box mt={2}>
                 <Button
-                  onClick={logout}
+                  onClick={handleLogout}
                   variant="outlined"
                   color="primary"
                   fullWidth

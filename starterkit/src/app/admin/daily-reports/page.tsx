@@ -241,9 +241,9 @@ const DailyReports = () => {
   return (
     <Box>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4" component="h1">
+        {/* <Typography variant="h4" component="h1">
           Daily Reports
-        </Typography>
+        </Typography> */}
         <Button
           variant="contained"
           startIcon={<Add />}

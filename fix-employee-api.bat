@@ -44,3 +44,4 @@ echo 2. Go to Employee Management - should show employees
 echo 3. Go to Project Details - should allow employee assignment
 echo ========================================
 pause
+

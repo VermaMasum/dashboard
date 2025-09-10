@@ -20,36 +20,28 @@ import {
   Assignment as IconClipboardList, 
   Assessment as IconReportAnalytics, 
   Person as IconUser,
-  PieChart as IconPieChart
+  PieChart as IconPieChart,
+  Dashboard as IconDashboard,
+  ViewModule as IconViewModule
 } from "@mui/icons-material";
 
 // Employee menu items
 const Menuitems: MenuitemsType[] = [
   {
     navlabel: true,
-    subheader: "HOME",
-  },
-  {
-    id: uniqueId(),
-    title: "Starter Page",
-    icon: IconPieChart,
-    href: "/employee/dashboard",
-  },
-  {
-    navlabel: true,
     subheader: "DASHBOARD",
   },
   {
     id: uniqueId(),
-    title: "Project Details",
-    icon: IconClipboardList,
-    href: "tab=1",
+    title: "Full Dashboard",
+    icon: IconDashboard,
+    href: "/employee/dashboard-full",
   },
   {
     id: uniqueId(),
-    title: "Daily Reports",
-    icon: IconReportAnalytics,
-    href: "tab=2",
+    title: "Simple Dashboard",
+    icon: IconViewModule,
+    href: "/employee/dashboard-simple",
   },
 ];
 

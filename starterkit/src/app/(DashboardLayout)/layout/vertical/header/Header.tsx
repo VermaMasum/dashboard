@@ -65,7 +65,7 @@ const Header = () => {
             marginLeft: 1,
           }}
         >
-          Dashboard
+          {/* Dashboard */}
         </Typography>
         {/* ------------------------------------------- */}
         {/* Toggle Button Sidebar */}

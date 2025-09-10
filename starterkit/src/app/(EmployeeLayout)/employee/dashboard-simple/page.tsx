@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   Button,
-  Grid,
   List,
   ListItem,
   ListItemText,
@@ -98,7 +97,7 @@ interface Report {
   hoursWorked: number;
 }
 
-const EmployeeDashboard = () => {
+const EmployeeDashboardSimple = () => {
   const { user } = useAuth();
   const { activeTab, setActiveTab } = useDashboard();
   const [stats, setStats] = useState<EmployeeStats>({
@@ -139,13 +138,11 @@ const EmployeeDashboard = () => {
     console.log('🔍 Dashboard useEffect - user changed:', user);
     if (user) {
       console.log('🔍 User is available, fetching dashboard data...');
-    fetchDashboardData();
+      fetchDashboardData();
     } else {
       console.log('🔍 No user available, not fetching data');
     }
   }, [user]);
-
-  // No need for URL parameter handling since we're using context
 
   const fetchDashboardData = async () => {
     try {
@@ -190,32 +187,25 @@ const EmployeeDashboard = () => {
 
       // Calculate today's reports
       const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
       const todayReports = employeeReports.filter((report: any) => {
         const reportDate = new Date(report.date);
-        return reportDate.toDateString() === today.toDateString();
+        return reportDate >= todayStart && reportDate < todayEnd;
       });
 
-      // Calculate today's hours
-      const todayHours = todayReports.reduce((sum: number, report: any) => sum + (report.hoursWorked || 0), 0);
-
-      // Calculate total hours
+      const totalHoursToday = todayReports.reduce((sum: number, report: any) => sum + (report.hoursWorked || 0), 0);
       const totalHours = employeeReports.reduce((sum: number, report: any) => sum + (report.hoursWorked || 0), 0);
 
       setStats({
         totalReports: todayReports.length,
-        totalHours: todayHours,
+        totalHours: totalHoursToday,
         currentProjects: assignedProjects.length,
         thisWeekHours: employeeReports.length,
       });
 
-      // Get recent reports (last 5)
-      const sortedReports = employeeReports
-        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 5);
-      
-      setRecentReports(sortedReports);
-      
-      // Set data for tabs
+      setRecentReports(employeeReports.slice(0, 5));
       setProjects(assignedProjects);
       setReports(employeeReports);
       setProjectReports(employeeReports);
@@ -228,30 +218,11 @@ const EmployeeDashboard = () => {
     }
   };
 
-  // Tab change handler
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
-  // Report dialog handlers
-  const handleOpenReportDialog = (report?: Report) => {
-    if (report) {
-      setEditingReport(report);
-      setFormData({
-        project: report.project._id,
-        date: report.date,
-        details: report.details,
-        hoursWorked: report.hoursWorked,
-      });
-    } else {
-      setEditingReport(null);
-      setFormData({
-        project: '',
-        date: new Date().toISOString().split('T')[0],
-        details: '',
-        hoursWorked: 0,
-      });
-    }
+  const handleOpenReportDialog = () => {
     setReportDialogOpen(true);
   };
 
@@ -335,192 +306,21 @@ const EmployeeDashboard = () => {
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Loading your dashboard...</Typography>
+        <Typography>Loading...</Typography>
       </Box>
     );
   }
 
   return (
     <Box>
-      {/* Breadcrumbs */}
-      <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-        <Link
-          underline="hover"
-          color="inherit"
-          href="/employee/dashboard"
-          sx={{ display: 'flex', alignItems: 'center' }}
-        >
-          <Home sx={{ mr: 0.5 }} fontSize="inherit" />
-          Dashboard
-        </Link>
-        <Typography color="text.primary">Employee Dashboard</Typography>
-      </Breadcrumbs>
-
-      {/* Welcome Section - Simplified */}
-      {/* <Box mb={4}>
-        <Typography variant="body1" color="text.secondary">
-          Welcome, {user?.username}!
+      {/* Simple Title */}
+      <Box mb={4}>
+        <Typography variant="h4" fontWeight="700" color="text.primary" gutterBottom>
+          Employee Dashboard
         </Typography>
-      </Box> */}
-
-      {/* Stats Cards */}
-      <Box display="flex" flexWrap="wrap" gap={3} sx={{ mb: 4 }}>
-        <Box flex="1" minWidth="250px">
-          <Card 
-            sx={{ 
-              border: '1px solid',
-              borderColor: 'divider',
-              '&:hover': {
-                boxShadow: 3,
-                transform: 'translateY(-2px)'
-              },
-              transition: 'all 0.2s ease-in-out'
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom fontWeight="500">
-                    Today's Reports
-                  </Typography>
-                  <Typography variant="h3" fontWeight="700" color="primary.main">
-                    {stats.totalReports}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '50%',
-                    backgroundColor: 'primary.light',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Assessment color="primary" sx={{ fontSize: 28 }} />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
-        <Box flex="1" minWidth="250px">
-          <Card 
-            sx={{ 
-              border: '1px solid',
-              borderColor: 'divider',
-              '&:hover': {
-                boxShadow: 3,
-                transform: 'translateY(-2px)'
-              },
-              transition: 'all 0.2s ease-in-out'
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom fontWeight="500">
-                    Hours Today
-                  </Typography>
-                  <Typography variant="h3" fontWeight="700" color="success.main">
-                    {stats.totalHours}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '50%',
-                    backgroundColor: 'success.light',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <TrendingUp color="success" sx={{ fontSize: 28 }} />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
-        <Box flex="1" minWidth="250px">
-          <Card 
-            sx={{ 
-              border: '1px solid',
-              borderColor: 'divider',
-              '&:hover': {
-                boxShadow: 3,
-                transform: 'translateY(-2px)'
-              },
-              transition: 'all 0.2s ease-in-out'
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom fontWeight="500">
-                    Total Projects
-                  </Typography>
-                  <Typography variant="h3" fontWeight="700" color="warning.main">
-                    {stats.currentProjects}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '50%',
-                    backgroundColor: 'warning.light',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Work color="warning" sx={{ fontSize: 28 }} />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
-        <Box flex="1" minWidth="250px">
-          <Card 
-            sx={{ 
-              border: '1px solid',
-              borderColor: 'divider',
-              '&:hover': {
-                boxShadow: 3,
-                transform: 'translateY(-2px)'
-              },
-              transition: 'all 0.2s ease-in-out'
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom fontWeight="500">
-                    Total Reports
-                  </Typography>
-                  <Typography variant="h3" fontWeight="700" color="info.main">
-                    {stats.thisWeekHours}
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: '50%',
-                    backgroundColor: 'info.light',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
-                  <Person color="info" sx={{ fontSize: 28 }} />
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
+        <Typography variant="h6" color="text.secondary">
+          Manage your projects and reports
+        </Typography>
       </Box>
 
       {/* Tabs Interface */}
@@ -538,283 +338,283 @@ const EmployeeDashboard = () => {
           {/* Overview Tab */}
           {activeTab === 0 && (
             <Box>
-      {/* Quick Actions */}
-      <Box mb={4}>
-        <Typography variant="h6" gutterBottom fontWeight="600">
-          Quick Actions
-        </Typography>
-        <Box display="flex" gap={3} flexWrap="wrap">
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => handleOpenReportDialog()}
-            sx={{
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              boxShadow: 2,
-              '&:hover': {
-                boxShadow: 4,
-                transform: 'translateY(-1px)'
-              },
-              transition: 'all 0.2s ease-in-out'
-            }}
-          >
-            Create Daily Report
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<Assignment />}
-            onClick={() => setActiveTab(1)}
-            sx={{
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              textTransform: 'none',
-              fontWeight: 600,
-              borderWidth: 2,
-              '&:hover': {
-                borderWidth: 2,
-                transform: 'translateY(-1px)',
-                boxShadow: 2
-              },
-              transition: 'all 0.2s ease-in-out'
-            }}
-          >
-            View Projects
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Recent Reports */}
-      <Box display="flex" flexWrap="wrap" gap={3}>
-        <Box flex="2" minWidth="400px">
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Reports
-              </Typography>
-              {recentReports.length === 0 ? (
-                <Box textAlign="center" py={6}>
-                  <Box
-                    sx={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: '50%',
-                      backgroundColor: 'primary.light',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      margin: '0 auto 24px',
-                      opacity: 0.7
-                    }}
-                  >
-                    <Assignment sx={{ fontSize: 40, color: 'primary.main' }} />
-                  </Box>
-                  <Typography color="text.secondary" variant="h6" gutterBottom fontWeight="600">
-                    No reports yet
-                  </Typography>
-                  <Typography color="text.secondary" variant="body2" sx={{ maxWidth: 300, margin: '0 auto' }}>
-                    Start tracking your daily work by creating your first report
-                  </Typography>
+              {/* Quick Actions */}
+              <Box mb={4}>
+                <Typography variant="h6" gutterBottom fontWeight="600">
+                  Quick Actions
+                </Typography>
+                <Box display="flex" gap={3} flexWrap="wrap">
                   <Button
                     variant="contained"
                     startIcon={<Add />}
                     onClick={() => handleOpenReportDialog()}
                     sx={{
-                      mt: 3,
+                      px: 3,
+                      py: 1.5,
                       borderRadius: 2,
                       textTransform: 'none',
                       fontWeight: 600,
-                      px: 3,
-                      py: 1
+                      boxShadow: 2,
+                      '&:hover': {
+                        boxShadow: 4,
+                        transform: 'translateY(-1px)'
+                      },
+                      transition: 'all 0.2s ease-in-out'
                     }}
                   >
-                    Create First Report
+                    Create Daily Report
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Assignment />}
+                    onClick={() => setActiveTab(1)}
+                    sx={{
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      borderWidth: 2,
+                      '&:hover': {
+                        borderWidth: 2,
+                        transform: 'translateY(-1px)',
+                        boxShadow: 2
+                      },
+                      transition: 'all 0.2s ease-in-out'
+                    }}
+                  >
+                    View Projects
                   </Button>
                 </Box>
-              ) : (
-                <Box>
-                  {recentReports.map((report, index) => (
-                    <Card 
-                      key={report._id} 
-                      sx={{ 
-                        mb: 2, 
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '&:hover': {
-                          boxShadow: 2,
-                          borderColor: 'primary.main'
-                        },
-                        transition: 'all 0.2s ease-in-out'
-                      }}
-                    >
-                      <CardContent sx={{ py: 2 }}>
-                        <Box display="flex" alignItems="center" gap={2}>
+              </Box>
+
+              {/* Recent Reports */}
+              <Box display="flex" flexWrap="wrap" gap={3}>
+                <Box flex="2" minWidth="400px">
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        Recent Reports
+                      </Typography>
+                      {recentReports.length === 0 ? (
+                        <Box textAlign="center" py={6}>
                           <Box
                             sx={{
-                              width: 40,
-                              height: 40,
+                              width: 80,
+                              height: 80,
                               borderRadius: '50%',
-                              backgroundColor: 'primary.main',
+                              backgroundColor: 'primary.light',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              color: 'white'
+                              margin: '0 auto 24px',
+                              opacity: 0.7
                             }}
                           >
-                            <Assignment fontSize="small" />
+                            <Assignment sx={{ fontSize: 40, color: 'primary.main' }} />
                           </Box>
-                          <Box flex={1}>
-                            <Box display="flex" alignItems="center" gap={2} mb={1}>
-                              <Typography variant="h6" fontWeight="600" color="text.primary">
-                              {report.project?.name || 'Unknown Project'}
-                            </Typography>
-                            <Chip 
-                              label={`${report.hoursWorked}h`} 
-                              size="small" 
-                              color="primary" 
-                                sx={{ fontWeight: 600 }}
-                            />
-                          </Box>
-                            <Typography variant="body2" color="text.secondary">
-                              {new Date(report.date).toLocaleDateString('en-US', {
-                                weekday: 'short',
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </Typography>
-                          </Box>
+                          <Typography color="text.secondary" variant="h6" gutterBottom fontWeight="600">
+                            No reports yet
+                          </Typography>
+                          <Typography color="text.secondary" variant="body2" sx={{ maxWidth: 300, margin: '0 auto' }}>
+                            Start tracking your daily work by creating your first report
+                          </Typography>
+                          <Button
+                            variant="contained"
+                            startIcon={<Add />}
+                            onClick={() => handleOpenReportDialog()}
+                            sx={{
+                              mt: 3,
+                              borderRadius: 2,
+                              textTransform: 'none',
+                              fontWeight: 600,
+                              px: 3,
+                              py: 1
+                            }}
+                          >
+                            Create First Report
+                          </Button>
                         </Box>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      ) : (
+                        <Box>
+                          {recentReports.map((report, index) => (
+                            <Card 
+                              key={report._id} 
+                              sx={{ 
+                                mb: 2, 
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                '&:hover': {
+                                  boxShadow: 2,
+                                  borderColor: 'primary.main'
+                                },
+                                transition: 'all 0.2s ease-in-out'
+                              }}
+                            >
+                              <CardContent sx={{ py: 2 }}>
+                                <Box display="flex" alignItems="center" gap={2}>
+                                  <Box
+                                    sx={{
+                                      width: 40,
+                                      height: 40,
+                                      borderRadius: '50%',
+                                      backgroundColor: 'primary.main',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      color: 'white'
+                                    }}
+                                  >
+                                    <Assignment fontSize="small" />
+                                  </Box>
+                                  <Box flex={1}>
+                                    <Box display="flex" alignItems="center" gap={2} mb={1}>
+                                      <Typography variant="h6" fontWeight="600" color="text.primary">
+                                        {report.project?.name || 'Unknown Project'}
+                                      </Typography>
+                                      <Chip
+                                        label={`${report.hoursWorked}h`}
+                                        size="small"
+                                        color="primary"
+                                        sx={{ fontWeight: 600 }}
+                                      />
+                                    </Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                      {new Date(report.date).toLocaleDateString('en-US', {
+                                        weekday: 'short',
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                      })}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
                 </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Box>
 
-        <Box flex="1" minWidth="300px">
-          <Card 
-            sx={{ 
-              border: '1px solid',
-              borderColor: 'divider',
-              backgroundColor: 'white',
-              '&:hover': {
-                boxShadow: 3,
-                transform: 'translateY(-2px)'
-              },
-              transition: 'all 0.2s ease-in-out'
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box textAlign="center" mb={3}>
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    borderRadius: '50%',
-                    backgroundColor: 'primary.light',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 16px',
-                    border: '3px solid',
-                    borderColor: 'primary.main'
-                  }}
-                >
-                  <Person sx={{ fontSize: 40, color: 'primary.main' }} />
-                </Box>
-                <Typography variant="h5" fontWeight="700" gutterBottom color="text.primary">
-                  {user?.username}
-                </Typography>
-                <Chip
-                  label="Employee"
-                  color="primary"
-                  variant="outlined"
-                  sx={{
-                    fontWeight: 600,
-                    borderWidth: 2
-                  }}
-                />
-              </Box>
-              
-              <Box 
-                sx={{ 
-                  backgroundColor: 'grey.50',
-                  borderRadius: 2,
-                  p: 2,
-                  mb: 2,
-                  border: '1px solid',
-                  borderColor: 'grey.200'
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
-                      backgroundColor: 'primary.light',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
+                <Box flex="1" minWidth="300px">
+                  <Card 
+                    sx={{ 
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      backgroundColor: 'white',
+                      '&:hover': {
+                        boxShadow: 3,
+                        transform: 'translateY(-2px)'
+                      },
+                      transition: 'all 0.2s ease-in-out'
                     }}
                   >
-                    <Assessment sx={{ fontSize: 16, color: 'primary.main' }} />
-                  </Box>
-                  <Typography variant="body2" fontWeight="500" color="text.secondary">
-                    Member Since
-                  </Typography>
-                </Box>
-                <Typography variant="body1" fontWeight="600" sx={{ ml: 4 }} color="text.primary">
-                  {new Date().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </Typography>
-              </Box>
+                    <CardContent sx={{ p: 3 }}>
+                      <Box textAlign="center" mb={3}>
+                        <Box
+                          sx={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: '50%',
+                            backgroundColor: 'primary.light',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto 16px',
+                            border: '3px solid',
+                            borderColor: 'primary.main'
+                          }}
+                        >
+                          <Person sx={{ fontSize: 40, color: 'primary.main' }} />
+                        </Box>
+                        <Typography variant="h5" fontWeight="700" gutterBottom color="text.primary">
+                          {user?.username}
+                        </Typography>
+                        <Chip
+                          label="Employee"
+                          color="primary"
+                          variant="outlined"
+                          sx={{
+                            fontWeight: 600,
+                            borderWidth: 2
+                          }}
+                        />
+                      </Box>
+                      
+                      <Box 
+                        sx={{ 
+                          backgroundColor: 'grey.50',
+                          borderRadius: 2,
+                          p: 2,
+                          mb: 2,
+                          border: '1px solid',
+                          borderColor: 'grey.200'
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={2} mb={1}>
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              backgroundColor: 'primary.light',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <Assessment sx={{ fontSize: 16, color: 'primary.main' }} />
+                          </Box>
+                          <Typography variant="body2" fontWeight="500" color="text.secondary">
+                            Member Since
+                          </Typography>
+                        </Box>
+                        <Typography variant="body1" fontWeight="600" sx={{ ml: 4 }} color="text.primary">
+                          {new Date().toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </Typography>
+                      </Box>
 
-              <Box 
-                sx={{ 
-                  backgroundColor: 'grey.50',
-                  borderRadius: 2,
-                  p: 2,
-                  border: '1px solid',
-                  borderColor: 'grey.200'
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={2} mb={1}>
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
-                      backgroundColor: 'success.light',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <Work sx={{ fontSize: 16, color: 'success.main' }} />
-                  </Box>
-                  <Typography variant="body2" fontWeight="500" color="text.secondary">
-                    Active Projects
-                  </Typography>
+                      <Box 
+                        sx={{ 
+                          backgroundColor: 'grey.50',
+                          borderRadius: 2,
+                          p: 2,
+                          border: '1px solid',
+                          borderColor: 'grey.200'
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={2} mb={1}>
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              backgroundColor: 'success.light',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            <Work sx={{ fontSize: 16, color: 'success.main' }} />
+                          </Box>
+                          <Typography variant="body2" fontWeight="500" color="text.secondary">
+                            Active Projects
+                          </Typography>
+                        </Box>
+                        <Typography variant="h4" fontWeight="700" sx={{ ml: 4 }} color="success.main">
+                          {stats.currentProjects}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
                 </Box>
-                <Typography variant="h4" fontWeight="700" sx={{ ml: 4 }} color="success.main">
-                  {stats.currentProjects}
-                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Box>
-      </Box>
             </Box>
           )}
 
@@ -899,9 +699,9 @@ const EmployeeDashboard = () => {
           {activeTab === 2 && (
             <Box>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                {/* <Typography variant="h6">
+                <Typography variant="h6">
                   Daily Reports
-                </Typography> */}
+                </Typography>
                 <Button
                   variant="contained"
                   startIcon={<Add />}
@@ -934,57 +734,69 @@ const EmployeeDashboard = () => {
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
                   InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 200 }}
                 />
               </Box>
 
               {/* Reports Table */}
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Date</TableCell>
-                      <TableCell>Project</TableCell>
-                      <TableCell>Hours</TableCell>
-                      <TableCell>Details</TableCell>
-                      <TableCell>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredReports.length === 0 ? (
+              <Card>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
                       <TableRow>
-                        <TableCell colSpan={5} align="center">
-                          <Typography color="text.secondary" py={2}>
-                            No reports found for the selected filters.
-                          </Typography>
-                        </TableCell>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Project</TableCell>
+                        <TableCell>Hours</TableCell>
+                        <TableCell>Details</TableCell>
+                        <TableCell>Actions</TableCell>
                       </TableRow>
-                    ) : (
-                      filteredReports.map((report) => (
-                        <TableRow key={report._id}>
-                          <TableCell>
-                            {new Date(report.date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>{report.project.name}</TableCell>
-                          <TableCell>{report.hoursWorked}</TableCell>
-                          <TableCell>
-                            <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                              {report.details}
+                    </TableHead>
+                    <TableBody>
+                      {filteredReports.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center">
+                            <Typography color="text.secondary" py={2}>
+                              No reports found for the selected filters.
                             </Typography>
                           </TableCell>
-                          <TableCell>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleOpenReportDialog(report)}
-                            >
-                              <Edit />
-                            </IconButton>
-                          </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                      ) : (
+                        filteredReports.map((report) => (
+                          <TableRow key={report._id}>
+                            <TableCell>
+                              {new Date(report.date).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>{report.project.name}</TableCell>
+                            <TableCell>{report.hoursWorked}</TableCell>
+                            <TableCell>
+                              <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                                {report.details}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <IconButton
+                                color="primary"
+                                onClick={() => {
+                                  setEditingReport(report);
+                                  setFormData({
+                                    project: report.project._id,
+                                    date: new Date(report.date).toISOString().split('T')[0],
+                                    details: report.details,
+                                    hoursWorked: report.hoursWorked,
+                                  });
+                                  setReportDialogOpen(true);
+                                }}
+                              >
+                                <Edit />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Card>
             </Box>
           )}
         </Box>
@@ -1197,4 +1009,4 @@ const EmployeeDashboard = () => {
   );
 };
 
-export default EmployeeDashboard;
+export default EmployeeDashboardSimple;
