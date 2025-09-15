@@ -16,6 +16,8 @@ import {
   Alert,
   CircularProgress,
   Grid,
+  Breadcrumbs,
+  Link,
 } from '@mui/material';
 import {
   Person,
@@ -86,6 +88,20 @@ const EmployeeList = () => {
 
   return (
     <Box>
+      {/* Breadcrumb Navigation */}
+      <Box sx={{ px: 3, pb: 2 }}>
+        <Breadcrumbs sx={{ mb: 2 }}>
+          <Link
+            href="/admin/dashboard"
+            color="inherit"
+            sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Admin
+          </Link>
+          <Typography color="text.primary">Employee List</Typography>
+        </Breadcrumbs>
+      </Box>
+
       <Typography variant="h4" component="h1" gutterBottom>
         Employee List
       </Typography>

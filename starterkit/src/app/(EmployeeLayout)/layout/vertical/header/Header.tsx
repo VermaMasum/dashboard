@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState } from "react";
 import {
@@ -25,18 +24,18 @@ const Header = () => {
   const { user, logout } = useAuth();
 
   const handleClick2 = (event: any) => {
-    console.log('Profile icon clicked, opening dropdown');
-    console.log('Current anchorEl2:', anchorEl2);
+    console.log("Profile icon clicked, opening dropdown");
+    console.log("Current anchorEl2:", anchorEl2);
     setAnchorEl2(event.currentTarget);
-    console.log('New anchorEl2 set to:', event.currentTarget);
+    console.log("New anchorEl2 set to:", event.currentTarget);
   };
 
-  const handleClose2 = () => {
+  const handleClose2: () => void = () => {
     setAnchorEl2(null);
   };
 
   const handleLogout = () => {
-    console.log('Logout clicked');
+    console.log("Logout clicked");
     handleClose2();
     logout();
   };
@@ -59,12 +58,12 @@ const Header = () => {
     color: theme.palette.warning.contrastText,
   }));
 
-  const getUserDisplayName = () => user?.username || 'Employee';
+  const getUserDisplayName = () => user?.username || "Employee";
   const getUserRole = () => {
-    if (user?.role === 'employee') return 'Employee';
-    return 'Employee';
+    if (user?.role === "employee") return "Employee";
+    return "Employee";
   };
-  const getUserEmail = () => 'employee@example.com';
+  const getUserEmail = () => "employee@example.com";
 
   return (
     <AppBarStyled position="static" color="default">
@@ -73,17 +72,22 @@ const Header = () => {
         <Typography
           variant="h6"
           sx={{
-            fontWeight: 'bold',
-            color: 'white',
-            fontSize: '1.25rem',
-            marginLeft: 1,
+            fontWeight: "bold",
+            color: "white",
+            fontSize: "1.25rem",
+            marginRight: 1,
           }}
         >
           Employee Portal
         </Typography>
-        
+
         <Box flexGrow={1} />
-        <Stack spacing={1} direction="row" alignItems="center" sx={{ marginRight: 2 }}>
+        <Stack
+          spacing={1}
+          direction="row"
+          alignItems="center"
+          sx={{ marginRight: 2 }}
+        >
           {/* Profile Dropdown */}
           <Box>
             <IconButton
@@ -94,8 +98,8 @@ const Header = () => {
               onClick={handleClick2}
               color="inherit"
               sx={{
-                ...(typeof anchorEl2 === 'object' && {
-                  color: 'primary.main',
+                ...(typeof anchorEl2 === "object" && {
+                  color: "primary.main",
                 }),
               }}
             >
@@ -111,24 +115,33 @@ const Header = () => {
               keepMounted
               open={Boolean(anchorEl2)}
               onClose={handleClose2}
-              onOpen={() => console.log('Menu opened, anchorEl2:', anchorEl2)}
-              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+              // onOpen={() => console.log('Menu opened, anchorEl2:', anchorEl2)}
+              anchorOrigin={{ horizontal: "right", vertical: "top" }}
+              transformOrigin={{ horizontal: "right", vertical: "bottom" }}
               disablePortal={false}
               sx={{
-                '& .MuiMenu-paper': {
-                  width: '360px',
+                "& .MuiMenu-paper": {
+                  width: "360px",
                   p: 4,
                   mt: 1,
+                  mr: 1,
                   zIndex: 9999,
                 },
               }}
             >
               <Typography variant="h5">Employee Profile</Typography>
               <Stack direction="row" py={3} spacing={2} alignItems="center">
-                <Avatar src={"/images/profile/user2.jpg"} alt={"ProfileImg"} sx={{ width: 95, height: 95 }} />
+                <Avatar
+                  src={"/images/profile/user2.jpg"}
+                  alt={"ProfileImg"}
+                  sx={{ width: 95, height: 95 }}
+                />
                 <Box>
-                  <Typography variant="subtitle2" color="textPrimary" fontWeight={600}>
+                  <Typography
+                    variant="subtitle2"
+                    color="textPrimary"
+                    fontWeight={600}
+                  >
                     {getUserDisplayName()}
                   </Typography>
                   <Typography variant="subtitle2" color="textSecondary">

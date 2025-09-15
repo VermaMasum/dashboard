@@ -42,7 +42,7 @@ export default function RootLayout({
   return (
     <ProtectedRoute allowedRoles={['admin', 'superAdmin']}>
       <MainWrapper>
-        <title>Admin Dashboard</title>
+        {/* <title>Admin Dashboard</title> */}
         {/* ------------------------------------------- */}
         {/* Header */}
         {/* ------------------------------------------- */}

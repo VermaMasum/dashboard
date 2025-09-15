@@ -33,6 +33,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import {
   Assessment,
@@ -47,6 +49,8 @@ import {
   Visibility,
   People,
   AccessTime,
+  CalendarToday,
+  DateRange,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDashboard } from '@/contexts/DashboardContext';
@@ -62,29 +66,27 @@ interface EmployeeStats {
 interface RecentReport {
   _id: string;
   date: string;
+  hoursWorked: number;
+  details: string;
   project: {
+    _id: string;
     name: string;
   };
-  details: string;
-  hoursWorked: number;
 }
 
 interface Project {
   _id: string;
   name: string;
   description: string;
-  status: string;
-  createdAt: string;
   date: string;
-  employees?: Array<{
-    _id: string;
-    username: string;
-  }>;
+  employees: any[];
 }
 
 interface Report {
   _id: string;
   date: string;
+  hoursWorked: number;
+  details: string;
   project: {
     _id: string;
     name: string;
@@ -93,6 +95,11 @@ interface Report {
     _id: string;
     username: string;
   };
+}
+
+interface FormData {
+  project: string;
+  date: string;
   details: string;
   hoursWorked: number;
 }
@@ -116,20 +123,29 @@ const EmployeeDashboardSimple = () => {
   // Reports data
   const [reports, setReports] = useState<Report[]>([]);
   const [filteredReports, setFilteredReports] = useState<Report[]>([]);
-  const [selectedProject, setSelectedProject] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
-  // Report dialog state
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
-  const [editingReport, setEditingReport] = useState<Report | null>(null);
-  const [formData, setFormData] = useState({
+  // Form data
+  const [formData, setFormData] = useState<FormData>({
     project: '',
-    date: new Date().toISOString().split('T')[0],
+    date: '',
     details: '',
     hoursWorked: 0,
   });
-
-  // Project details modal state
+  
+  // Dialog states
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [editingReport, setEditingReport] = useState<Report | null>(null);
+  
+  // Filter states
+  const [selectedProject, setSelectedProject] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedWeek, setSelectedWeek] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [reportView, setReportView] = useState('daily');
+  
+  // Project details modal
   const [projectDetailsOpen, setProjectDetailsOpen] = useState(false);
   const [selectedProjectDetails, setSelectedProjectDetails] = useState<Project | null>(null);
   const [projectReportsForModal, setProjectReportsForModal] = useState<Report[]>([]);
@@ -223,6 +239,13 @@ const EmployeeDashboardSimple = () => {
   };
 
   const handleOpenReportDialog = () => {
+    setFormData({
+      project: '',
+      date: new Date().toISOString().split('T')[0], // Default to today
+      details: '',
+      hoursWorked: 0,
+    });
+    setEditingReport(null);
     setReportDialogOpen(true);
   };
 
@@ -299,9 +322,56 @@ const EmployeeDashboardSimple = () => {
       .reduce((total, report) => total + (report.hoursWorked || 0), 0);
   };
 
+  // Helper function to get week start and end dates
+  const getWeekRange = (date: Date) => {
+    const dayOfWeek = date.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(date);
+    monday.setDate(date.getDate() + mondayOffset);
+    monday.setHours(0, 0, 0, 0);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    
+    return { start: monday, end: sunday };
+  };
+
+  // Helper function to get month start and end dates
+  const getMonthRange = (date: Date) => {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { start, end };
+  };
+
+  // Filter reports by week
+  const getWeeklyReports = (weekDate: Date) => {
+    const { start, end } = getWeekRange(weekDate);
+    return reports.filter(report => {
+      const reportDate = new Date(report.date);
+      return reportDate >= start && reportDate <= end;
+    });
+  };
+
+  // Filter reports by month
+  const getMonthlyReports = (monthDate: Date) => {
+    const { start, end } = getMonthRange(monthDate);
+    return reports.filter(report => {
+      const reportDate = new Date(report.date);
+      return reportDate >= start && reportDate <= end;
+    });
+  };
+
   useEffect(() => {
     filterReports();
   }, [selectedProject, selectedDate, reports]);
+
+  // Update reportView when activeTab changes
+  useEffect(() => {
+    if (activeTab === 2) setReportView('daily');
+    else if (activeTab === 3) setReportView('weekly');
+    else if (activeTab === 4) setReportView('monthly');
+  }, [activeTab]);
 
   if (loading) {
     return (
@@ -315,12 +385,59 @@ const EmployeeDashboardSimple = () => {
     <Box>
       {/* Simple Title */}
       <Box mb={4}>
-        <Typography variant="h4" fontWeight="700" color="text.primary" gutterBottom>
-          Employee Dashboard
-        </Typography>
-        <Typography variant="h6" color="text.secondary">
-          Manage your projects and reports
-        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box>
+            <Typography variant="h4" fontWeight="700" color="text.primary" gutterBottom>
+              Employee Dashboard
+            </Typography>
+            <Typography variant="h6" color="text.secondary">
+              Manage your projects and reports
+            </Typography>
+          </Box>
+          <ToggleButtonGroup
+            value={reportView}
+            exclusive
+            onChange={(event, newView) => {
+              if (newView !== null) {
+                setReportView(newView);
+                // Switch to the appropriate tab
+                if (newView === 'daily') setActiveTab(2);
+                else if (newView === 'weekly') setActiveTab(3);
+                else if (newView === 'monthly') setActiveTab(4);
+              }
+            }}
+            sx={{
+              '& .MuiToggleButton-root': {
+                border: '1px solid #e0e0e0',
+                borderRadius: '8px',
+                px: 3,
+                py: 1,
+                textTransform: 'none',
+                fontWeight: 500,
+                '&.Mui-selected': {
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: '#1565c0',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: '#f5f5f5',
+                },
+              },
+            }}
+          >
+            <ToggleButton value="daily">
+              Daily
+            </ToggleButton>
+            <ToggleButton value="weekly">
+              Weekly
+            </ToggleButton>
+            <ToggleButton value="monthly">
+              Monthly
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
       </Box>
 
       {/* Tabs Interface */}
@@ -330,6 +447,8 @@ const EmployeeDashboardSimple = () => {
             <Tab label="Overview" />
             <Tab label="Project Details" />
             <Tab label="Daily Reports" />
+            <Tab label="Weekly Reports" />
+            <Tab label="Monthly Reports" />
           </Tabs>
         </Box>
 
@@ -338,283 +457,146 @@ const EmployeeDashboardSimple = () => {
           {/* Overview Tab */}
           {activeTab === 0 && (
             <Box>
-              {/* Quick Actions */}
-              <Box mb={4}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
-                  Quick Actions
-                </Typography>
-                <Box display="flex" gap={3} flexWrap="wrap">
-                  <Button
-                    variant="contained"
-                    startIcon={<Add />}
-                    onClick={() => handleOpenReportDialog()}
-                    sx={{
-                      px: 3,
-                      py: 1.5,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      boxShadow: 2,
-                      '&:hover': {
-                        boxShadow: 4,
-                        transform: 'translateY(-1px)'
-                      },
-                      transition: 'all 0.2s ease-in-out'
-                    }}
-                  >
-                    Create Daily Report
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Assignment />}
-                    onClick={() => setActiveTab(1)}
-                    sx={{
-                      px: 3,
-                      py: 1.5,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      borderWidth: 2,
-                      '&:hover': {
-                        borderWidth: 2,
-                        transform: 'translateY(-1px)',
-                        boxShadow: 2
-                      },
-                      transition: 'all 0.2s ease-in-out'
-                    }}
-                  >
-                    View Projects
-                  </Button>
-                </Box>
-              </Box>
+              <Typography variant="h6" gutterBottom>
+                Welcome to your dashboard!
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                Use the tabs above to navigate between different sections.
+              </Typography>
+
+              {/* Employee Profile Summary */}
+              <Card sx={{ mb: 3, background: 'white', border: '1px solid #e0e0e0' }}>
+                <CardContent>
+                  <Box display="flex" alignItems="center" gap={3}>
+                    <Box
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        background: '#1976d2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '2rem',
+                        color: 'white'
+                      }}
+                    >
+                      {user?.username?.charAt(0).toUpperCase() || 'E'}
+                    </Box>
+                    <Box>
+                      <Typography variant="h5" fontWeight="bold" gutterBottom color="primary">
+                        {user?.username || 'Employee'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Employee ID: {user?.id || 'N/A'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Role: Employee
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+
+              {/* Recent Projects */}
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Recent Projects
+                  </Typography>
+                  {projects.length === 0 ? (
+                    <Typography color="text.secondary" textAlign="center" py={2}>
+                      No projects assigned yet.
+                    </Typography>
+                  ) : (
+                    <List>
+                      {projects.slice(0, 3).map((project) => (
+                        <ListItem key={project._id} divider>
+                          <ListItemIcon>
+                            <Work color="primary" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={project.name}
+                            secondary={
+                              <Box>
+                                <Typography variant="body2" color="text.secondary">
+                                  {project.description || 'No description'}
+                                </Typography>
+                                <Box display="flex" alignItems="center" gap={1} mt={1}>
+                                  <People fontSize="small" color="action" />
+                                  <Typography variant="caption" color="text.secondary">
+                                    {project.employees?.length || 0} members
+                                  </Typography>
+                                  <AccessTime fontSize="small" color="action" />
+                                  <Typography variant="caption" color="text.secondary">
+                                    {calculateProjectTotalHours(project._id)}h total
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            }
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => handleViewProjectDetails(project)}
+                            title="View Details"
+                          >
+                            <Visibility />
+                          </IconButton>
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Recent Reports */}
-              <Box display="flex" flexWrap="wrap" gap={3}>
-                <Box flex="2" minWidth="400px">
-                  <Card>
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        Recent Reports
-                      </Typography>
-                      {recentReports.length === 0 ? (
-                        <Box textAlign="center" py={6}>
-                          <Box
-                            sx={{
-                              width: 80,
-                              height: 80,
-                              borderRadius: '50%',
-                              backgroundColor: 'primary.light',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              margin: '0 auto 24px',
-                              opacity: 0.7
-                            }}
-                          >
-                            <Assignment sx={{ fontSize: 40, color: 'primary.main' }} />
-                          </Box>
-                          <Typography color="text.secondary" variant="h6" gutterBottom fontWeight="600">
-                            No reports yet
-                          </Typography>
-                          <Typography color="text.secondary" variant="body2" sx={{ maxWidth: 300, margin: '0 auto' }}>
-                            Start tracking your daily work by creating your first report
-                          </Typography>
-                          <Button
-                            variant="contained"
-                            startIcon={<Add />}
-                            onClick={() => handleOpenReportDialog()}
-                            sx={{
-                              mt: 3,
-                              borderRadius: 2,
-                              textTransform: 'none',
-                              fontWeight: 600,
-                              px: 3,
-                              py: 1
-                            }}
-                          >
-                            Create First Report
-                          </Button>
-                        </Box>
-                      ) : (
-                        <Box>
-                          {recentReports.map((report, index) => (
-                            <Card 
-                              key={report._id} 
-                              sx={{ 
-                                mb: 2, 
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                '&:hover': {
-                                  boxShadow: 2,
-                                  borderColor: 'primary.main'
-                                },
-                                transition: 'all 0.2s ease-in-out'
-                              }}
-                            >
-                              <CardContent sx={{ py: 2 }}>
-                                <Box display="flex" alignItems="center" gap={2}>
-                                  <Box
-                                    sx={{
-                                      width: 40,
-                                      height: 40,
-                                      borderRadius: '50%',
-                                      backgroundColor: 'primary.main',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      color: 'white'
-                                    }}
-                                  >
-                                    <Assignment fontSize="small" />
-                                  </Box>
-                                  <Box flex={1}>
-                                    <Box display="flex" alignItems="center" gap={2} mb={1}>
-                                      <Typography variant="h6" fontWeight="600" color="text.primary">
-                                        {report.project?.name || 'Unknown Project'}
-                                      </Typography>
-                                      <Chip
-                                        label={`${report.hoursWorked}h`}
-                                        size="small"
-                                        color="primary"
-                                        sx={{ fontWeight: 600 }}
-                                      />
-                                    </Box>
-                                    <Typography variant="body2" color="text.secondary">
-                                      {new Date(report.date).toLocaleDateString('en-US', {
-                                        weekday: 'short',
-                                        year: 'numeric',
-                                        month: 'short',
-                                        day: 'numeric'
-                                      })}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </Box>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Box>
-
-                <Box flex="1" minWidth="300px">
-                  <Card 
-                    sx={{ 
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      backgroundColor: 'white',
-                      '&:hover': {
-                        boxShadow: 3,
-                        transform: 'translateY(-2px)'
-                      },
-                      transition: 'all 0.2s ease-in-out'
-                    }}
-                  >
-                    <CardContent sx={{ p: 3 }}>
-                      <Box textAlign="center" mb={3}>
-                        <Box
-                          sx={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: '50%',
-                            backgroundColor: 'primary.light',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            margin: '0 auto 16px',
-                            border: '3px solid',
-                            borderColor: 'primary.main'
-                          }}
-                        >
-                          <Person sx={{ fontSize: 40, color: 'primary.main' }} />
-                        </Box>
-                        <Typography variant="h5" fontWeight="700" gutterBottom color="text.primary">
-                          {user?.username}
-                        </Typography>
-                        <Chip
-                          label="Employee"
-                          color="primary"
-                          variant="outlined"
-                          sx={{
-                            fontWeight: 600,
-                            borderWidth: 2
-                          }}
-                        />
-                      </Box>
-                      
-                      <Box 
-                        sx={{ 
-                          backgroundColor: 'grey.50',
-                          borderRadius: 2,
-                          p: 2,
-                          mb: 2,
-                          border: '1px solid',
-                          borderColor: 'grey.200'
-                        }}
-                      >
-                        <Box display="flex" alignItems="center" gap={2} mb={1}>
-                          <Box
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: '50%',
-                              backgroundColor: 'primary.light',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <Assessment sx={{ fontSize: 16, color: 'primary.main' }} />
-                          </Box>
-                          <Typography variant="body2" fontWeight="500" color="text.secondary">
-                            Member Since
-                          </Typography>
-                        </Box>
-                        <Typography variant="body1" fontWeight="600" sx={{ ml: 4 }} color="text.primary">
-                          {new Date().toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </Typography>
-                      </Box>
-
-                      <Box 
-                        sx={{ 
-                          backgroundColor: 'grey.50',
-                          borderRadius: 2,
-                          p: 2,
-                          border: '1px solid',
-                          borderColor: 'grey.200'
-                        }}
-                      >
-                        <Box display="flex" alignItems="center" gap={2} mb={1}>
-                          <Box
-                            sx={{
-                              width: 32,
-                              height: 32,
-                              borderRadius: '50%',
-                              backgroundColor: 'success.light',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center'
-                            }}
-                          >
-                            <Work sx={{ fontSize: 16, color: 'success.main' }} />
-                          </Box>
-                          <Typography variant="body2" fontWeight="500" color="text.secondary">
-                            Active Projects
-                          </Typography>
-                        </Box>
-                        <Typography variant="h4" fontWeight="700" sx={{ ml: 4 }} color="success.main">
-                          {stats.currentProjects}
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Box>
-              </Box>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Recent Reports
+                  </Typography>
+                  {recentReports.length === 0 ? (
+                    <Typography color="text.secondary" textAlign="center" py={2}>
+                      No reports submitted yet.
+                    </Typography>
+                  ) : (
+                    <List>
+                      {recentReports.slice(0, 3).map((report) => (
+                        <ListItem key={report._id} divider>
+                          <ListItemIcon>
+                            <Assessment color="primary" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={
+                              <Box display="flex" alignItems="center" gap={1}>
+                                <Typography variant="subtitle2">
+                                  {report.project.name}
+                                </Typography>
+                                <Chip
+                                  label={`${report.hoursWorked}h`}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                />
+                              </Box>
+                            }
+                            secondary={
+                              <Box>
+                                <Typography variant="body2" color="text.secondary">
+                                  {new Date(report.date).toLocaleDateString()}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                  {report.details}
+                                </Typography>
+                              </Box>
+                            }
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                  )}
+                </CardContent>
+              </Card>
             </Box>
           )}
 
@@ -739,43 +721,49 @@ const EmployeeDashboardSimple = () => {
               </Box>
 
               {/* Reports Table */}
-              <Card>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Date</TableCell>
-                        <TableCell>Project</TableCell>
-                        <TableCell>Hours</TableCell>
-                        <TableCell>Details</TableCell>
-                        <TableCell>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredReports.length === 0 ? (
+              {filteredReports.length === 0 ? (
+                <Typography color="text.secondary" textAlign="center" py={4}>
+                  No reports found. Try adjusting your filters or add a new report.
+                </Typography>
+              ) : (
+                <Card>
+                  <TableContainer>
+                    <Table>
+                      <TableHead>
                         <TableRow>
-                          <TableCell colSpan={5} align="center">
-                            <Typography color="text.secondary" py={2}>
-                              No reports found for the selected filters.
-                            </Typography>
-                          </TableCell>
+                          <TableCell>Date</TableCell>
+                          <TableCell>Project</TableCell>
+                          <TableCell>Hours</TableCell>
+                          <TableCell>Description</TableCell>
+                          <TableCell>Action</TableCell>
                         </TableRow>
-                      ) : (
-                        filteredReports.map((report) => (
-                          <TableRow key={report._id}>
+                      </TableHead>
+                      <TableBody>
+                        {filteredReports.map((report) => (
+                          <TableRow key={report._id} hover>
                             <TableCell>
                               {new Date(report.date).toLocaleDateString()}
                             </TableCell>
-                            <TableCell>{report.project.name}</TableCell>
-                            <TableCell>{report.hoursWorked}</TableCell>
                             <TableCell>
-                              <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                              <Chip
+                                label={report.project.name}
+                                size="small"
+                                variant="outlined"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="medium">
+                                {report.hoursWorked}h
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" sx={{ maxWidth: 200 }}>
                                 {report.details}
                               </Typography>
                             </TableCell>
                             <TableCell>
                               <IconButton
-                                color="primary"
+                                size="small"
                                 onClick={() => {
                                   setEditingReport(report);
                                   setFormData({
@@ -791,31 +779,390 @@ const EmployeeDashboardSimple = () => {
                               </IconButton>
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Card>
+              )}
+            </Box>
+          )}
+
+          {/* Weekly Reports Tab */}
+          {activeTab === 3 && (
+            <Box>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography variant="h6">
+                  Weekly Reports
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<CalendarToday />}
+                  onClick={() => window.location.href = '/employee/weekly-reports'}
+                >
+                  View Full Weekly Reports
+                </Button>
+              </Box>
+
+              {/* Weekly Filters */}
+              <Box display="flex" gap={2} mb={3} flexWrap="wrap">
+                <TextField
+                  type="date"
+                  label="From Date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 200 }}
+                />
+                <TextField
+                  type="date"
+                  label="To Date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 200 }}
+                />
+                <FormControl sx={{ minWidth: 200 }}>
+                  <InputLabel>Project</InputLabel>
+                  <Select
+                    value={selectedProject}
+                    onChange={(e) => setSelectedProject(e.target.value)}
+                    label="Project"
+                  >
+                    <MenuItem value="">All Projects</MenuItem>
+                    {projects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {/* Weekly Summary */}
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    {fromDate && toDate ? 
+                      `Reports from ${new Date(fromDate).toLocaleDateString()} to ${new Date(toDate).toLocaleDateString()}` : 
+                      'This Week\'s Summary'
+                    }
+                  </Typography>
+                  {(() => {
+                    let filteredReports = reports;
+                    
+                    // Filter by date range if provided
+                    if (fromDate && toDate) {
+                      const startDate = new Date(fromDate);
+                      const endDate = new Date(toDate);
+                      endDate.setHours(23, 59, 59, 999); // Include the entire end date
+                      
+                      filteredReports = reports.filter(report => {
+                        const reportDate = new Date(report.date);
+                        return reportDate >= startDate && reportDate <= endDate;
+                      });
+                    } else {
+                      // Default to current week if no date range
+                      const weekDate = new Date();
+                      filteredReports = getWeeklyReports(weekDate);
+                    }
+                    
+                    // Filter by project if selected
+                    if (selectedProject) {
+                      filteredReports = filteredReports.filter(report => report.project._id === selectedProject);
+                    }
+                    
+                    return (
+                      <Box display="flex" gap={3} flexWrap="wrap">
+                        <Box>
+                          <Typography variant="h4" color="primary" fontWeight="bold">
+                            {filteredReports.length}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Reports This Week
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="h4" color="primary" fontWeight="bold">
+                            {filteredReports.reduce((total, report) => total + (report.hoursWorked || 0), 0)}h
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Hours This Week
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="h4" color="primary" fontWeight="bold">
+                            {new Set(filteredReports.map(report => report.project._id)).size}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Active Projects
+                          </Typography>
+                        </Box>
+                      </Box>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Weekly Reports Table */}
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Weekly Activity
+                  </Typography>
+                  {(() => {
+                    let filteredReports = reports;
+                    
+                    // Filter by date range if provided
+                    if (fromDate && toDate) {
+                      const startDate = new Date(fromDate);
+                      const endDate = new Date(toDate);
+                      endDate.setHours(23, 59, 59, 999); // Include the entire end date
+                      
+                      filteredReports = reports.filter(report => {
+                        const reportDate = new Date(report.date);
+                        return reportDate >= startDate && reportDate <= endDate;
+                      });
+                    } else {
+                      // Default to current week if no date range
+                      const weekDate = new Date();
+                      filteredReports = getWeeklyReports(weekDate);
+                    }
+                    
+                    // Filter by project if selected
+                    if (selectedProject) {
+                      filteredReports = filteredReports.filter(report => report.project._id === selectedProject);
+                    }
+                    
+                    return filteredReports.length === 0 ? (
+                      <Typography color="text.secondary" textAlign="center" py={2}>
+                        No reports found for the selected date range.
+                      </Typography>
+                    ) : (
+                      <TableContainer>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Date</TableCell>
+                              <TableCell>Project</TableCell>
+                              <TableCell>Hours</TableCell>
+                              <TableCell>Description</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {filteredReports.map((report) => (
+                              <TableRow key={report._id} hover>
+                                <TableCell>
+                                  {new Date(report.date).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={report.project.name}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2" fontWeight="medium">
+                                    {report.hoursWorked}h
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2" sx={{ maxWidth: 200 }}>
+                                    {report.details}
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </Box>
+          )}
+
+          {/* Monthly Reports Tab */}
+          {activeTab === 4 && (
+            <Box>
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography variant="h6">
+                  Monthly Reports
+                </Typography>
+                <Button
+                  variant="contained"
+                  startIcon={<DateRange />}
+                  onClick={() => window.location.href = '/employee/monthly-reports'}
+                >
+                  View Full Monthly Reports
+                </Button>
+              </Box>
+
+              {/* Monthly Filters */}
+              <Box display="flex" gap={2} mb={3} flexWrap="wrap">
+                <TextField
+                  type="month"
+                  label="Select Month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  sx={{ minWidth: 200 }}
+                />
+                <FormControl sx={{ minWidth: 200 }}>
+                  <InputLabel>Project</InputLabel>
+                  <Select
+                    value={selectedProject}
+                    onChange={(e) => setSelectedProject(e.target.value)}
+                    label="Project"
+                  >
+                    <MenuItem value="">All Projects</MenuItem>
+                    {projects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {/* Monthly Summary */}
+              <Card sx={{ mb: 3 }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    {selectedMonth ? `${new Date(selectedMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} Summary` : 'This Month\'s Summary'}
+                  </Typography>
+                  {(() => {
+                    const monthDate = selectedMonth ? new Date(selectedMonth + '-01') : new Date();
+                    const monthlyReports = getMonthlyReports(monthDate);
+                    const filteredReports = selectedProject 
+                      ? monthlyReports.filter(report => report.project._id === selectedProject)
+                      : monthlyReports;
+                    
+                    return (
+                      <Box display="flex" gap={3} flexWrap="wrap">
+                        <Box>
+                          <Typography variant="h4" color="primary" fontWeight="bold">
+                            {filteredReports.length}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Reports This Month
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="h4" color="primary" fontWeight="bold">
+                            {filteredReports.reduce((total, report) => total + (report.hoursWorked || 0), 0)}h
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Hours This Month
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="h4" color="primary" fontWeight="bold">
+                            {new Set(filteredReports.map(report => report.project._id)).size}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Active Projects
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="h4" color="primary" fontWeight="bold">
+                            {filteredReports.length > 0 ? Math.round(filteredReports.reduce((total, report) => total + (report.hoursWorked || 0), 0) / filteredReports.length * 10) / 10 : 0}h
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Avg Hours/Report
+                          </Typography>
+                        </Box>
+                      </Box>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+              {/* Monthly Reports Table */}
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Monthly Activity
+                  </Typography>
+                  {(() => {
+                    const monthDate = selectedMonth ? new Date(selectedMonth + '-01') : new Date();
+                    const monthlyReports = getMonthlyReports(monthDate);
+                    const filteredReports = selectedProject 
+                      ? monthlyReports.filter(report => report.project._id === selectedProject)
+                      : monthlyReports;
+                    
+                    return filteredReports.length === 0 ? (
+                      <Typography color="text.secondary" textAlign="center" py={2}>
+                        No reports found for the selected month.
+                      </Typography>
+                    ) : (
+                      <TableContainer>
+                        <Table>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Date</TableCell>
+                              <TableCell>Project</TableCell>
+                              <TableCell>Hours</TableCell>
+                              <TableCell>Description</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {filteredReports.map((report) => (
+                              <TableRow key={report._id} hover>
+                                <TableCell>
+                                  {new Date(report.date).toLocaleDateString()}
+                                </TableCell>
+                                <TableCell>
+                                  <Chip
+                                    label={report.project.name}
+                                    size="small"
+                                    variant="outlined"
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2" fontWeight="medium">
+                                    {report.hoursWorked}h
+                                  </Typography>
+                                </TableCell>
+                                <TableCell>
+                                  <Typography variant="body2" sx={{ maxWidth: 200 }}>
+                                    {report.details}
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    );
+                  })()}
+                </CardContent>
               </Card>
             </Box>
           )}
         </Box>
       </Box>
 
-      {/* Report Dialog */}
-      <Dialog open={reportDialogOpen} onClose={handleCloseReportDialog} maxWidth="sm" fullWidth>
+      {/* Add/Edit Report Dialog */}
+      <Dialog
+        open={reportDialogOpen}
+        onClose={handleCloseReportDialog}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>
-          {editingReport ? 'Edit Report' : 'Create New Report'}
+          {editingReport ? 'Edit Report' : 'Add New Report'}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ pt: 1 }}>
-            <FormControl fullWidth margin="normal">
+          <Box sx={{ pt: 2 }}>
+            <FormControl fullWidth sx={{ mb: 2 }}>
               <InputLabel>Project</InputLabel>
               <Select
                 value={formData.project}
                 onChange={(e) => setFormData({ ...formData, project: e.target.value })}
                 label="Project"
-                required
               >
                 {projects.map((project) => (
                   <MenuItem key={project._id} value={project._id}>
@@ -824,46 +1171,49 @@ const EmployeeDashboardSimple = () => {
                 ))}
               </Select>
             </FormControl>
+            
             <TextField
               fullWidth
               type="date"
               label="Date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              margin="normal"
               InputLabelProps={{ shrink: true }}
-              required
+              sx={{ mb: 2 }}
             />
+            
             <TextField
               fullWidth
               type="number"
               label="Hours Worked"
               value={formData.hoursWorked}
               onChange={(e) => setFormData({ ...formData, hoursWorked: Number(e.target.value) })}
-              margin="normal"
-              required
+              inputProps={{ min: 0, max: 24, step: 0.5 }}
+              sx={{ mb: 2 }}
             />
+            
             <TextField
               fullWidth
-              label="Details"
               multiline
               rows={4}
+              label="Work Details"
               value={formData.details}
               onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-              margin="normal"
-              required
+              placeholder="Describe what you worked on..."
             />
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseReportDialog}>Cancel</Button>
+          <Button onClick={handleCloseReportDialog}>
+            Cancel
+          </Button>
           <Button onClick={handleSaveReport} variant="contained">
-            {editingReport ? 'Update' : 'Create'}
+            {editingReport ? 'Update Report' : 'Add Report'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Project Details Modal */}
+      {/* Project Details Dialog */}
       <Dialog
         open={projectDetailsOpen}
         onClose={handleCloseProjectDetails}
@@ -871,75 +1221,60 @@ const EmployeeDashboardSimple = () => {
         fullWidth
       >
         <DialogTitle>
-          <Box display="flex" alignItems="center" gap={2}>
-            <Work color="primary" />
-            <Typography variant="h6">
-              {selectedProjectDetails?.name} - Project Details
-            </Typography>
-          </Box>
+          Project Details
         </DialogTitle>
         <DialogContent>
           {selectedProjectDetails && (
             <Box>
-              {/* Project Information */}
+              <Typography variant="h6" gutterBottom>
+                {selectedProjectDetails.name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                {selectedProjectDetails.description}
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={2} mb={3}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Date Created
+                  </Typography>
+                  <Typography variant="body1">
+                    {new Date(selectedProjectDetails.date).toLocaleDateString()}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Team Size
+                  </Typography>
+                  <Typography variant="body1">
+                    {selectedProjectDetails.employees?.length || 0} members
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Hours
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium" color="primary">
+                    {calculateProjectTotalHours(selectedProjectDetails._id)}h
+                  </Typography>
+                </Box>
+              </Box>
+              
+              {/* Team Members */}
               <Card sx={{ mb: 3 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>
-                    Project Information
+                    Team Members
                   </Typography>
-                  <Box display="flex" flexDirection="column" gap={2}>
-                    <Box display="flex" flexWrap="wrap" gap={2}>
-                      <Box flex="1" minWidth="200px">
-                        <Typography variant="body2" color="text.secondary">
-                          Project Name
-                        </Typography>
-                        <Typography variant="body1" fontWeight="medium">
-                          {selectedProjectDetails.name}
-                        </Typography>
-                      </Box>
-                      <Box flex="1" minWidth="200px">
-                        <Typography variant="body2" color="text.secondary">
-                          Created Date
-                        </Typography>
-                        <Typography variant="body1">
-                          {new Date(selectedProjectDetails.date).toLocaleDateString()}
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        Description
-                      </Typography>
-                      <Typography variant="body1">
-                        {selectedProjectDetails.description || 'No description provided'}
-                      </Typography>
-                    </Box>
-                    <Box display="flex" flexWrap="wrap" gap={2}>
-                      <Box flex="1" minWidth="200px">
-                        <Typography variant="body2" color="text.secondary">
-                          Team Members
-                        </Typography>
-                        <Box display="flex" flexWrap="wrap" gap={1} mt={1}>
-                          {selectedProjectDetails.employees?.map((emp: any, index: number) => (
-                            <Chip
-                              key={index}
-                              label={emp.username || 'Unknown'}
-                              size="small"
-                              color="primary"
-                              variant="outlined"
-                            />
-                          ))}
-                        </Box>
-                      </Box>
-                      <Box flex="1" minWidth="200px">
-                        <Typography variant="body2" color="text.secondary">
-                          Total Hours Spent
-                        </Typography>
-                        <Typography variant="body1" fontWeight="medium" color="primary">
-                          {calculateProjectTotalHours(selectedProjectDetails._id)} hours
-                        </Typography>
-                      </Box>
-                    </Box>
+                  <Box display="flex" flexWrap="wrap" gap={1}>
+                    {selectedProjectDetails.employees?.map((emp: any, index: number) => (
+                      <Chip
+                        key={index}
+                        label={emp.username || 'Unknown'}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
                   </Box>
                 </CardContent>
               </Card>
@@ -956,13 +1291,13 @@ const EmployeeDashboardSimple = () => {
                     </Typography>
                   ) : (
                     <TableContainer>
-                      <Table size="small">
+                      <Table>
                         <TableHead>
                           <TableRow>
-                            <TableCell><strong>Date</strong></TableCell>
-                            <TableCell><strong>Employee</strong></TableCell>
-                            <TableCell><strong>Hours</strong></TableCell>
-                            <TableCell><strong>Details</strong></TableCell>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Employee</TableCell>
+                            <TableCell>Hours</TableCell>
+                            <TableCell>Description</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>

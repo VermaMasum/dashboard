@@ -16,13 +16,10 @@ interface MenuitemsType {
 }
 
 import { 
-  Home as IconHome, 
-  Assignment as IconClipboardList, 
-  Assessment as IconReportAnalytics, 
-  Person as IconUser,
-  PieChart as IconPieChart,
   Dashboard as IconDashboard,
-  ViewModule as IconViewModule
+  Work as IconWork,
+  Assessment as IconAssessment,
+  Person as IconPerson
 } from "@mui/icons-material";
 
 // Employee menu items
@@ -33,15 +30,21 @@ const Menuitems: MenuitemsType[] = [
   },
   {
     id: uniqueId(),
-    title: "Full Dashboard",
+    title: "Overview",
     icon: IconDashboard,
-    href: "/employee/dashboard-full",
+    href: "/employee/overview",
   },
   {
     id: uniqueId(),
-    title: "Simple Dashboard",
-    icon: IconViewModule,
-    href: "/employee/dashboard-simple",
+    title: "Projects",
+    icon: IconWork,
+    href: "/employee/projects",
+  },
+  {
+    id: uniqueId(),
+    title: "Reports",
+    icon: IconAssessment,
+    href: "/employee/reports",
   },
 ];
 

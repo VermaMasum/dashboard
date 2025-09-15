@@ -14,7 +14,7 @@ interface MenuitemsType {
   variant?: string;
   external?: boolean;
 }
-import { IconBoxMultiple, IconPoint, IconChartPie, IconClipboardList, IconReportAnalytics, IconUsers } from "@tabler/icons-react";
+import { IconBoxMultiple, IconPoint, IconChartPie, IconClipboardList, IconReportAnalytics, IconUsers, IconCalendar, IconChevronDown, IconChevronRight, IconReport } from "@tabler/icons-react";
 
 // Function to get menu items based on user role
 export const getMenuItems = (userRole?: string): MenuitemsType[] => {
@@ -42,9 +42,9 @@ export const getMenuItems = (userRole?: string): MenuitemsType[] => {
     },
     {
       id: uniqueId(),
-      title: "Daily Reports",
-      icon: IconReportAnalytics,
-      href: "/admin/daily-reports",
+      title: "Reports",
+      icon: IconReport,
+      href: "/admin/dashboard",
     },
   ];
 

@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, CircularProgress, Box } from "@mui/material";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
-import Breadcrumb from "@/app/(DashboardLayout)/layout/shared/breadcrumb/Breadcrumb";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContent } from "@/contexts/ContentContext";
 import AdminDashboard from "@/app/admin/dashboard/page";
@@ -12,12 +11,6 @@ import EmployeeManagement from "@/app/admin/employees/page";
 import EmployeeList from "@/app/admin/employee-list/page";
 // EmployeeDashboard is handled by separate layout
 
-const BCrumb = [
-  {
-    to: "/",
-    title: "Dashboard",
-  },
-];
 
 export default function Dashboard() {
   const [isLoading, setLoading] = useState(true);
@@ -60,22 +53,6 @@ export default function Dashboard() {
     }
   };
 
-  const getBreadcrumbItems = () => {
-    const baseItems = [
-      {
-        to: "/",
-        title: "Dashboard",
-      },
-    ];
-
-    if (currentContent !== 'dashboard') {
-      baseItems.push({
-        title: getPageTitle(),
-      });
-    }
-
-    return baseItems;
-  };
 
   if (isLoading || authLoading) {
     return (
@@ -87,7 +64,6 @@ export default function Dashboard() {
 
   return (
     <PageContainer title={getPageTitle()} description="Admin Dashboard">
-      <Breadcrumb title={getPageTitle()} items={getBreadcrumbItems()} />
       {renderContent()}
     </PageContainer>
   );

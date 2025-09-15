@@ -1,17 +1,12 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
-  Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Alert,
   Card,
   CardContent,
+  Breadcrumbs,
+  Link,
   Table,
   TableBody,
   TableCell,
@@ -19,36 +14,23 @@ import {
   TableHead,
   TableRow,
   Paper,
-  IconButton,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  ToggleButton,
+  ToggleButtonGroup,
+  Button,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Chip,
-} from '@mui/material';
-import {
-  Add,
-  Edit,
-  Delete,
-  Assessment,
-} from '@mui/icons-material';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from '@/utils/axios';
-
-interface Report {
-  _id: string;
-  date: string;
-  project: {
-    _id: string;
-    name: string;
-  };
-  employee: {
-    _id: string;
-    username: string;
-  };
-  details: string;
-  hoursWorked: number;
-}
+} from "@mui/material";
+import { Add, Home } from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "@/utils/axios";
 
 interface Project {
   _id: string;
@@ -56,232 +38,589 @@ interface Project {
   description: string;
 }
 
+interface Report {
+  _id: string;
+  project: {
+    _id: string;
+    name: string;
+  };
+  date: string;
+  details: string;
+  hoursWorked: number;
+  employee: {
+    _id: string;
+    username: string;
+  };
+}
+
+interface FormData {
+  project: string;
+  date: string;
+  details: string;
+  hoursWorked: number;
+}
+
 const EmployeeReports = () => {
   const { user } = useAuth();
-  const [reports, setReports] = useState<Report[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [reportView, setReportView] = useState("daily");
+
+  // Filter states - Set defaults to current date/week/month
+  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  });
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [fromDate, setFromDate] = useState(() => {
+    const today = new Date();
+    const monday = new Date(today);
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    monday.setDate(today.getDate() + mondayOffset);
+    return monday.toISOString().split("T")[0];
+  });
+  const [toDate, setToDate] = useState(() => {
+    const today = new Date();
+    const monday = new Date(today);
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    monday.setDate(today.getDate() + mondayOffset);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    return sunday.toISOString().split("T")[0];
+  });
 
   // Dialog states
-  const [reportDialog, setReportDialog] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<Report | null>(null);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    project: '',
-    details: '',
+  const [formData, setFormData] = useState<FormData>({
+    project: "",
+    date: "",
+    details: "",
     hoursWorked: 0,
   });
 
-  // Filter states
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-
   useEffect(() => {
+    if (user) {
     fetchData();
-  }, []);
+    }
+  }, [user]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [reportsRes, projectsRes] = await Promise.all([
-        axios.get('/reports'),
-        axios.get('/projects'),
+      console.log("🔄 Fetching reports data for user:", user?.username);
+
+      const [projectsResponse, reportsResponse] = await Promise.all([
+        axios.get("/projects"),
+        axios.get("/reports"),
       ]);
 
-      // Filter reports for current employee only
-      const employeeReports = reportsRes.data.filter((report: Report) => 
-        report.employee && report.employee._id === user?.id
-      );
+      console.log("📋 Projects response:", projectsResponse.data);
+      console.log("📊 Reports response:", reportsResponse.data);
+      console.log("📊 Reports sample:", reportsResponse.data[0]);
 
-      // Filter projects to only show those assigned to the current employee
-      const assignedProjects = projectsRes.data.filter((project: Project) => 
-        project.employees && project.employees.includes(user?._id)
-      );
-
-      setReports(employeeReports);
-      setProjects(assignedProjects);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch data');
+      setProjects(projectsResponse.data);
+      setReports(reportsResponse.data);
+    } catch (error: any) {
+      console.error("❌ Error fetching data:", error);
+      console.error("Error details:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenDialog = (report?: Report) => {
+  // Helper functions
+  const getWeekRange = (date: string) => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(d.setDate(diff));
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    console.log('📅 Week range for date', date, ':', monday.toISOString(), 'to', sunday.toISOString());
+    return { start: monday, end: sunday };
+  };
+
+  const getMonthRange = (month: string) => {
+    const [year, monthNum] = month.split("-");
+    const start = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+    const end = new Date(parseInt(year), parseInt(monthNum), 0);
+    console.log('📅 Month range for', month, ':', start.toISOString(), 'to', end.toISOString());
+    return { start, end };
+  };
+
+  // Filter functions
+  const getDailyReports = () => {
+    let filtered = reports;
+
+    console.log('🔍 Daily Reports Filter Debug:');
+    console.log('Total reports:', reports.length);
+    console.log('Selected project:', selectedProject);
+    console.log('Selected date:', selectedDate);
+
+    if (selectedProject) {
+      filtered = filtered.filter(
+        (report) => report.project._id === selectedProject
+      );
+      console.log('After project filter:', filtered.length);
+    }
+
+    if (selectedDate) {
+      filtered = filtered.filter((report) => {
+        // Handle different date formats
+        const reportDate = new Date(report.date).toISOString().split('T')[0];
+        const selectedDateFormatted = new Date(selectedDate).toISOString().split('T')[0];
+        console.log('Comparing dates:', reportDate, 'vs', selectedDateFormatted);
+        return reportDate === selectedDateFormatted;
+      });
+      console.log('After date filter:', filtered.length);
+    }
+
+    console.log('Final filtered reports:', filtered);
+    return filtered;
+  };
+
+  const getWeeklyReports = () => {
+    let filtered = reports;
+
+    console.log('🔍 Weekly Reports Filter Debug:');
+    console.log('Total reports:', reports.length);
+    console.log('Selected project:', selectedProject);
+    console.log('From date:', fromDate);
+    console.log('To date:', toDate);
+
+    if (selectedProject) {
+      filtered = filtered.filter(
+        (report) => report.project._id === selectedProject
+      );
+      console.log('After project filter:', filtered.length);
+    }
+
+    if (fromDate && toDate) {
+      filtered = filtered.filter((report) => {
+        const reportDate = new Date(report.date).toISOString().split('T')[0];
+        const fromDateFormatted = new Date(fromDate).toISOString().split('T')[0];
+        const toDateFormatted = new Date(toDate).toISOString().split('T')[0];
+        console.log('Comparing dates:', reportDate, 'between', fromDateFormatted, 'and', toDateFormatted);
+        return reportDate >= fromDateFormatted && reportDate <= toDateFormatted;
+      });
+      console.log('After date range filter:', filtered.length);
+    }
+
+    console.log('Final weekly filtered reports:', filtered);
+    return filtered;
+  };
+
+  const getMonthlyReports = () => {
+    let filtered = reports;
+
+    console.log('🔍 Monthly Reports Filter Debug:');
+    console.log('Total reports:', reports.length);
+    console.log('Selected project:', selectedProject);
+    console.log('Selected month:', selectedMonth);
+
+    if (selectedProject) {
+      filtered = filtered.filter(
+        (report) => report.project._id === selectedProject
+      );
+      console.log('After project filter:', filtered.length);
+    }
+
+    if (selectedMonth) {
+      const { start, end } = getMonthRange(selectedMonth);
+      console.log('Month range:', start.toISOString(), 'to', end.toISOString());
+      filtered = filtered.filter((report) => {
+        const reportDate = new Date(report.date);
+        const reportDateFormatted = reportDate.toISOString().split('T')[0];
+        const startFormatted = start.toISOString().split('T')[0];
+        const endFormatted = end.toISOString().split('T')[0];
+        console.log('Comparing report date:', reportDateFormatted, 'between', startFormatted, 'and', endFormatted);
+        return reportDate >= start && reportDate <= end;
+      });
+      console.log('After month filter:', filtered.length);
+    }
+
+    console.log('Final monthly filtered reports:', filtered);
+    return filtered;
+  };
+
+  // Dialog handlers
+  const handleOpenReportDialog = (report?: Report) => {
     if (report) {
       setEditingReport(report);
       setFormData({
         project: report.project._id,
+        date: report.date,
         details: report.details,
         hoursWorked: report.hoursWorked,
       });
     } else {
       setEditingReport(null);
       setFormData({
-        project: '',
-        details: '',
+        project: "",
+        date: new Date().toISOString().split("T")[0],
+        details: "",
         hoursWorked: 0,
       });
     }
-    setReportDialog(true);
+    setReportDialogOpen(true);
   };
 
-  const handleCloseDialog = () => {
-    setReportDialog(false);
+  const handleCloseReportDialog = () => {
+    setReportDialogOpen(false);
     setEditingReport(null);
     setFormData({
-      project: '',
-      details: '',
+      project: "",
+      date: "",
+      details: "",
       hoursWorked: 0,
     });
   };
 
-  const handleSubmit = async () => {
+  const handleSaveReport = async () => {
     try {
-      const reportData = {
-        ...formData,
-        employee: user?.id, // Set current employee
-        date: selectedDate,
-      };
-
       if (editingReport) {
-        await axios.put(`/reports/${editingReport._id}`, reportData);
-        setSuccess('Report updated successfully');
+        await axios.put(`/reports/${editingReport._id}`, formData);
       } else {
-        await axios.post('/reports', reportData);
-        setSuccess('Report created successfully');
+        await axios.post("/reports", formData);
       }
-      handleCloseDialog();
-      fetchData();
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save report');
+      await fetchData();
+      handleCloseReportDialog();
+    } catch (error: any) {
+      console.error("Error saving report:", error);
     }
   };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this report?')) {
-      try {
-        await axios.delete(`/reports/${id}`);
-        setSuccess('Report deleted successfully');
-        fetchData();
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to delete report');
-      }
-    }
-  };
-
-  const filteredReports = reports.filter(report => {
-    const reportDate = new Date(report.date);
-    const filterDate = new Date(selectedDate);
-    return reportDate.toDateString() === filterDate.toDateString();
-  });
-
-  const totalHoursToday = filteredReports.reduce((sum, report) => sum + report.hoursWorked, 0);
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Loading your reports...</Typography>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
+        <Typography>Loading...</Typography>
       </Box>
     );
   }
 
   return (
-    <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">
-          My Daily Reports
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => handleOpenDialog()}
+    <Box sx={{ p: 3 }}>
+      {/* Header */}
+      <Box sx={{ mb: 1 }}>
+        <Breadcrumbs sx={{ mb: 3 }}>
+          <Link
+            href="/employee/overview"
+            color="inherit"
+            sx={{ display: "flex", alignItems: "center" }}
+          >
+            <Home sx={{ mr: 0.5, fontSize: 20 }} />
+            Employee Portal
+          </Link>
+          <Typography color="text.primary">Reports</Typography>
+        </Breadcrumbs>
+
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
         >
-          Create Report
-        </Button>
+          {/* Toggle Button Group - Left Side */}
+          <ToggleButtonGroup
+            value={reportView}
+            exclusive
+            onChange={(event, newView) => {
+              if (newView !== null) {
+                setReportView(newView);
+              }
+            }}
+            sx={{
+              "& .MuiToggleButton-root": {
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                px: 3,
+                py: 1.5,
+                textTransform: "none",
+                fontWeight: "bold",
+                "&.Mui-selected": {
+                  backgroundColor: "#2196F3",
+                  color: "white",
+                  "&:hover": {
+                    backgroundColor: "#1976D2",
+                  },
+                },
+                "&:hover": {
+                  backgroundColor: "#f5f5f5",
+                },
+              },
+            }}
+          >
+            <ToggleButton value="daily">Daily Reports</ToggleButton>
+            <ToggleButton value="weekly">Weekly Reports</ToggleButton>
+            <ToggleButton value="monthly">Monthly Reports</ToggleButton>
+          </ToggleButtonGroup>
+
+          {/* Add Report Button - Right Side */}
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpenReportDialog()}
+            sx={{
+              background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+              color: "white",
+              px: 3,
+              py: 1.5,
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: "bold",
+              "&:hover": {
+                background: "linear-gradient(45deg, #1976D2 30%, #1CB5E0 90%)",
+              },
+            }}
+          >
+            Add Report
+          </Button>
+        </Box>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-          {error}
-        </Alert>
+      {/* Spacing below toggle buttons */}
+      <Box sx={{ mb: 3 }} />
+
+      {/* Daily Reports */}
+      {reportView === "daily" && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Daily Reports ({getDailyReports().length} reports)
+            </Typography>
+
+            {/* Filters */}
+            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap", alignItems: "center" }}>
+              <TextField
+                label="Date"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: 150 }}
+              />
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Project</InputLabel>
+                <Select
+                  value={selectedProject}
+                  onChange={(e) => setSelectedProject(e.target.value)}
+                  label="Project"
+                >
+                  <MenuItem value="">All Projects</MenuItem>
+                  {projects.map((project) => (
+                    <MenuItem key={project._id} value={project._id}>
+                      {project.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  const today = new Date();
+                  setSelectedDate(today.toISOString().split("T")[0]);
+                  setSelectedProject("");
+                }}
+                sx={{ minWidth: 120 }}
+              >
+                Reset to Today
+              </Button>
+            </Box>
+
+            {/* Daily Reports Table */}
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Project</TableCell>
+                    <TableCell>Details</TableCell>
+                    <TableCell>Hours</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {getDailyReports().map((report) => (
+                    <TableRow key={report._id}>
+                      <TableCell>
+                        {new Date(report.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={report.project.name}
+                          color="primary"
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>{report.details}</TableCell>
+                      <TableCell>{report.hoursWorked}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
       )}
 
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
-          {success}
-        </Alert>
+      {/* Weekly Reports */}
+      {reportView === "weekly" && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Weekly Reports ({getWeeklyReports().length} reports)
+            </Typography>
+
+            {/* Filters */}
+            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap", alignItems: "center" }}>
+              <TextField
+                label="From Date"
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: 150 }}
+              />
+              <TextField
+                label="To Date"
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: 150 }}
+              />
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Project</InputLabel>
+                <Select
+                  value={selectedProject}
+                  onChange={(e) => setSelectedProject(e.target.value)}
+                  label="Project"
+                >
+                  <MenuItem value="">All Projects</MenuItem>
+                  {projects.map((project) => (
+                    <MenuItem key={project._id} value={project._id}>
+                      {project.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  const today = new Date();
+                  const monday = new Date(today);
+                  const dayOfWeek = today.getDay();
+                  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+                  monday.setDate(today.getDate() + mondayOffset);
+                  const sunday = new Date(monday);
+                  sunday.setDate(monday.getDate() + 6);
+                  setFromDate(monday.toISOString().split("T")[0]);
+                  setToDate(sunday.toISOString().split("T")[0]);
+                  setSelectedProject("");
+                }}
+                sx={{ minWidth: 120 }}
+              >
+                Reset to This Week
+              </Button>
+            </Box>
+
+            {/* Weekly Reports Table */}
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Project</TableCell>
+                    <TableCell>Details</TableCell>
+                    <TableCell>Hours</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {getWeeklyReports().map((report) => (
+                    <TableRow key={report._id}>
+                      <TableCell>
+                        {new Date(report.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={report.project.name}
+                          color="primary"
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>{report.details}</TableCell>
+                      <TableCell>{report.hoursWorked}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Stats Cards */}
-      <Box display="flex" gap={3} mb={4} flexWrap="wrap">
-        <Card sx={{ flex: '1 1 200px', minWidth: 200 }}>
+      {/* Monthly Reports */}
+      {reportView === "monthly" && (
+        <Card>
           <CardContent>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Typography color="textSecondary" gutterBottom>
-                  Today's Reports
-                </Typography>
-                <Typography variant="h4">
-                  {filteredReports.length}
-                </Typography>
-              </Box>
-              <Assessment color="primary" />
-            </Box>
-          </CardContent>
-        </Card>
-        <Card sx={{ flex: '1 1 200px', minWidth: 200 }}>
-          <CardContent>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Typography color="textSecondary" gutterBottom>
-                  Hours Today
-                </Typography>
-                <Typography variant="h4">
-                  {totalHoursToday}
-                </Typography>
-              </Box>
-              <Assessment color="success" />
-            </Box>
-          </CardContent>
-        </Card>
-        <Card sx={{ flex: '1 1 200px', minWidth: 200 }}>
-          <CardContent>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Typography color="textSecondary" gutterBottom>
-                  Total Reports
-                </Typography>
-                <Typography variant="h4">
-                  {reports.length}
-                </Typography>
-              </Box>
-              <Assessment color="warning" />
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
+            <Typography variant="h6" gutterBottom>
+              Monthly Reports ({getMonthlyReports().length} reports)
+            </Typography>
 
-      {/* Date Filter */}
-      <Box display="flex" gap={2} mb={3} alignItems="center">
-        <TextField
-          type="date"
-          label="Select Date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-        <Button
-          variant="outlined"
-          onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
-        >
-          Today
-        </Button>
-      </Box>
+            {/* Filters */}
+            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap", alignItems: "center" }}>
+              <TextField
+                label="Month"
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                sx={{ minWidth: 150 }}
+                placeholder="YYYY-MM"
+              />
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Project</InputLabel>
+                <Select
+                  value={selectedProject}
+                  onChange={(e) => setSelectedProject(e.target.value)}
+                  label="Project"
+                >
+                  <MenuItem value="">All Projects</MenuItem>
+                  {projects.map((project) => (
+                    <MenuItem key={project._id} value={project._id}>
+                      {project.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  const today = new Date();
+                  setSelectedMonth(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`);
+                  setSelectedProject("");
+                }}
+                sx={{ minWidth: 120 }}
+              >
+                Reset to This Month
+              </Button>
+            </Box>
 
-      {/* Reports Table */}
+            {/* Monthly Reports Table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -290,72 +629,52 @@ const EmployeeReports = () => {
               <TableCell>Project</TableCell>
               <TableCell>Details</TableCell>
               <TableCell>Hours</TableCell>
-              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredReports.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  <Typography color="text.secondary" py={2}>
-                    No reports found for this date. Create your first report!
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredReports.map((report) => (
+                  {getMonthlyReports().map((report) => (
                 <TableRow key={report._id}>
                   <TableCell>
                     {new Date(report.date).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
                     <Chip 
-                      label={report.project?.name || 'Unknown Project'} 
+                          label={report.project.name}
+                          color="primary"
                       size="small" 
-                      color="primary" 
                     />
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                      {report.details}
-                    </Typography>
-                  </TableCell>
+                      <TableCell>{report.details}</TableCell>
                   <TableCell>{report.hoursWorked}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleOpenDialog(report)}
-                      color="primary"
-                    >
-                      <Edit />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDelete(report._id)}
-                      color="error"
-                    >
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
                 </TableRow>
-              ))
-            )}
+                  ))}
           </TableBody>
         </Table>
       </TableContainer>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Report Dialog */}
-      <Dialog open={reportDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
+      {/* Add/Edit Report Dialog */}
+      <Dialog
+        open={reportDialogOpen}
+        onClose={handleCloseReportDialog}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>
-          {editingReport ? 'Edit Report' : 'Create New Report'}
+          {editingReport ? "Edit Report" : "Add New Report"}
         </DialogTitle>
         <DialogContent>
-          <FormControl fullWidth margin="normal">
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+            <FormControl fullWidth>
             <InputLabel>Project</InputLabel>
             <Select
               value={formData.project}
-              onChange={(e) => setFormData({ ...formData, project: e.target.value })}
-              required
+                onChange={(e) =>
+                  setFormData({ ...formData, project: e.target.value })
+                }
+                label="Project"
             >
               {projects.map((project) => (
                 <MenuItem key={project._id} value={project._id}>
@@ -364,30 +683,47 @@ const EmployeeReports = () => {
               ))}
             </Select>
           </FormControl>
+
           <TextField
+              label="Date"
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+              InputLabelProps={{ shrink: true }}
             fullWidth
-            label="Report Details"
+            />
+
+            <TextField
+              label="Details"
+              multiline
+              rows={3}
             value={formData.details}
-            onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-            margin="normal"
-            multiline
-            rows={4}
-            required
-          />
+              onChange={(e) =>
+                setFormData({ ...formData, details: e.target.value })
+              }
+              fullWidth
+            />
+
           <TextField
-            fullWidth
             label="Hours Worked"
             type="number"
             value={formData.hoursWorked}
-            onChange={(e) => setFormData({ ...formData, hoursWorked: Number(e.target.value) })}
-            margin="normal"
-            inputProps={{ min: 0, step: 0.5 }}
-          />
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  hoursWorked: parseFloat(e.target.value) || 0,
+                })
+              }
+              fullWidth
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
-            {editingReport ? 'Update' : 'Create'}
+          <Button onClick={handleCloseReportDialog}>Cancel</Button>
+          <Button onClick={handleSaveReport} variant="contained">
+            {editingReport ? "Update Report" : "Add Report"}
           </Button>
         </DialogActions>
       </Dialog>

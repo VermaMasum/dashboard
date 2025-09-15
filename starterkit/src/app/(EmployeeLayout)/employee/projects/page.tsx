@@ -5,20 +5,24 @@ import {
   Typography,
   Card,
   CardContent,
-  Chip,
-  Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
+  Breadcrumbs,
+  Link,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Paper,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Chip,
 } from '@mui/material';
-import {
-  Work,
-  Assignment,
-  Person,
-  Schedule,
-} from '@mui/icons-material';
+import { Home, Visibility, People, AccessTime } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from '@/utils/axios';
 
@@ -26,321 +30,320 @@ interface Project {
   _id: string;
   name: string;
   description: string;
-  status: string;
+  date: string;
+  employees: Array<{
+    _id: string;
+    username: string;
+  }>;
   createdAt: string;
 }
 
-interface ProjectReport {
+interface Report {
   _id: string;
-  date: string;
   project: {
     _id: string;
     name: string;
   };
+  date: string;
   details: string;
   hoursWorked: number;
+  employee: {
+    _id: string;
+    username: string;
+  };
 }
 
 const EmployeeProjects = () => {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [projectDetailsOpen, setProjectDetailsOpen] = useState(false);
+  const [selectedProjectDetails, setSelectedProjectDetails] = useState<Project | null>(null);
+  const [projectReportsForModal, setProjectReportsForModal] = useState<Report[]>([]);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log('📊 Fetching employee projects data for:', user?.username);
+      console.log('🔄 Fetching projects data for user:', user?.username);
       
-      // Fetch all projects and reports
       const [projectsResponse, reportsResponse] = await Promise.all([
         axios.get('/projects'),
         axios.get('/reports'),
       ]);
 
-      console.log('📊 All projects response:', projectsResponse.data);
-      console.log('📊 All reports response:', reportsResponse.data);
+      console.log('📋 Projects response:', projectsResponse.data);
+      console.log('📊 Reports response:', reportsResponse.data);
 
-      // Filter projects assigned to current employee
-      const assignedProjects = projectsResponse.data.filter((project: any) => 
-        project.employees && project.employees.includes(user?._id)
-      );
-
-      // Filter employee's reports
-      const employeeReports = reportsResponse.data.filter((report: any) => 
-        report.employee && report.employee._id === user?._id
-      );
-
-      console.log('📊 Assigned projects:', assignedProjects);
-      console.log('📊 Employee reports:', employeeReports);
-
-      setProjects(assignedProjects);
-      setProjectReports(employeeReports);
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
+      setProjects(projectsResponse.data);
+      setReports(reportsResponse.data);
+    } catch (error: any) {
+      console.error('❌ Error fetching data:', error);
+      console.error('Error details:', error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Get projects that the employee has worked on
-  const getEmployeeProjects = () => {
-    const workedOnProjectIds = new Set(projectReports.map(report => report.project._id));
-    return projects.filter(project => workedOnProjectIds.has(project._id));
+  const calculateProjectTotalHours = (projectId: string) => {
+    return reports
+      .filter(report => report.project._id === projectId)
+      .reduce((total, report) => total + (report.hoursWorked || 0), 0);
   };
 
-  // Get project statistics
-  const getProjectStats = (projectId: string) => {
-    const projectReportsList = projectReports.filter(report => report.project._id === projectId);
-    const totalHours = projectReportsList.reduce((sum, report) => sum + report.hoursWorked, 0);
-    const totalReports = projectReportsList.length;
-    const lastWorked = projectReportsList.length > 0 
-      ? new Date(Math.max(...projectReportsList.map(r => new Date(r.date).getTime())))
-      : null;
+  const handleViewProjectDetails = async (project: Project) => {
+    try {
+      setSelectedProjectDetails(project);
+      
+      // Fetch reports for this specific project
+      const projectReportsResponse = await axios.get(`/reports?project=${project._id}`);
+      setProjectReportsForModal(projectReportsResponse.data);
+      
+      setProjectDetailsOpen(true);
+    } catch (error) {
+      console.error('Error fetching project details:', error);
+    }
+  };
 
-    return { totalHours, totalReports, lastWorked };
+  const handleCloseProjectDetails = () => {
+    setProjectDetailsOpen(false);
+    setSelectedProjectDetails(null);
+    setProjectReportsForModal([]);
   };
 
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Loading your projects...</Typography>
+        <Typography>Loading...</Typography>
       </Box>
     );
   }
 
-  const employeeProjects = getEmployeeProjects();
-
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        My Projects
-      </Typography>
-      <Typography variant="body1" color="text.secondary" mb={4}>
-        Projects you have worked on and your contribution to each project.
-      </Typography>
+    <Box sx={{ p: 3 }}>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Breadcrumbs sx={{ mb: 2 }}>
+          <Link href="/employee/overview" color="inherit" sx={{ display: 'flex', alignItems: 'center' }}>
+            <Home sx={{ mr: 0.5, fontSize: 20 }} />
+            Employee Portal
+          </Link>
+          <Typography color="text.primary">Projects</Typography>
+        </Breadcrumbs>
+        
+        {/* <Box>
+          <Typography variant="h4" fontWeight="bold" gutterBottom>
+            My Projects
+          </Typography>
+          <Typography variant="h6" color="text.secondary">
+            Manage and view all your assigned projects
+          </Typography>
+        </Box> */}
+      </Box>
 
-      {/* Stats Overview */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Active Projects
-                  </Typography>
-                  <Typography variant="h4">
-                    {employeeProjects.length}
-                  </Typography>
-                </Box>
-                <Work color="primary" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Total Hours
-                  </Typography>
-                  <Typography variant="h4">
-                    {projectReports.reduce((sum, report) => sum + report.hoursWorked, 0)}
-                  </Typography>
-                </Box>
-                <Schedule color="success" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Total Reports
-                  </Typography>
-                  <Typography variant="h4">
-                    {projectReports.length}
-                  </Typography>
-                </Box>
-                <Assignment color="warning" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Avg Hours/Project
-                  </Typography>
-                  <Typography variant="h4">
-                    {employeeProjects.length > 0 
-                      ? Math.round(projectReports.reduce((sum, report) => sum + report.hoursWorked, 0) / employeeProjects.length)
-                      : 0
-                    }
-                  </Typography>
-                </Box>
-                <Person color="info" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Projects List */}
-      {employeeProjects.length === 0 ? (
+      {/* Projects Table */}
+      {projects.length === 0 ? (
         <Card>
           <CardContent>
-            <Box textAlign="center" py={4}>
-              <Work sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
-                No Projects Yet
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                You haven't worked on any projects yet. Start by creating your first daily report!
-              </Typography>
-            </Box>
+            <Typography color="text.secondary" textAlign="center" py={4}>
+              No projects assigned to you yet.
+            </Typography>
           </CardContent>
         </Card>
       ) : (
-        <Grid container spacing={3}>
-          {employeeProjects.map((project) => {
-            const stats = getProjectStats(project._id);
-            return (
-              <Grid item xs={12} md={6} key={project._id}>
-                <Card>
-                  <CardContent>
-                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                      <Typography variant="h6" gutterBottom>
-                        {project.name}
-                      </Typography>
-                      <Chip 
-                        label={project.status || 'Active'} 
-                        color="primary" 
-                        size="small" 
-                      />
-                    </Box>
-                    
-                    <Typography variant="body2" color="text.secondary" mb={3}>
-                      {project.description || 'No description available'}
-                    </Typography>
-
-                    <Box display="flex" gap={2} mb={2}>
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Total Hours
+        <Card>
+          <CardContent>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell><strong>Project Name</strong></TableCell>
+                    <TableCell><strong>Description</strong></TableCell>
+                    <TableCell><strong>Created Date</strong></TableCell>
+                    <TableCell><strong>Team Members</strong></TableCell>
+                    <TableCell><strong>Total Hours</strong></TableCell>
+                    <TableCell><strong>Actions</strong></TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {projects.map((project) => (
+                    <TableRow key={project._id} hover>
+                      <TableCell>
+                        <Typography variant="subtitle2" fontWeight="medium">
+                          {project.name}
                         </Typography>
-                        <Typography variant="h6" color="primary">
-                          {stats.totalHours}h
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 200 }}>
+                          {project.description || 'No description'}
                         </Typography>
-                      </Box>
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Reports
-                        </Typography>
-                        <Typography variant="h6" color="secondary">
-                          {stats.totalReports}
-                        </Typography>
-                      </Box>
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Last Worked
-                        </Typography>
+                      </TableCell>
+                      <TableCell>
                         <Typography variant="body2">
-                          {stats.lastWorked 
-                            ? stats.lastWorked.toLocaleDateString()
-                            : 'Never'
-                          }
+                          {project.date ? new Date(project.date).toLocaleDateString() : 'N/A'}
                         </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Recent Reports for this project */}
-                    <Box>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Recent Reports
-                      </Typography>
-                      {projectReports
-                        .filter(report => report.project._id === project._id)
-                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                        .slice(0, 3)
-                        .map((report) => (
-                          <Box key={report._id} display="flex" justifyContent="space-between" alignItems="center" py={1}>
-                            <Typography variant="body2" noWrap sx={{ flex: 1, mr: 2 }}>
-                              {report.details}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {report.hoursWorked}h
-                            </Typography>
-                          </Box>
-                        ))}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            );
-          })}
-        </Grid>
+                      </TableCell>
+                      <TableCell>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <People fontSize="small" color="action" />
+                          <Typography variant="body2">
+                            {project.employees ? project.employees.length : 0} member(s)
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <AccessTime fontSize="small" color="action" />
+                          <Typography variant="body2" fontWeight="medium">
+                            {calculateProjectTotalHours(project._id)}h
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleViewProjectDetails(project)}
+                          title="View Details"
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </CardContent>
+        </Card>
       )}
 
-      {/* All Available Projects */}
-      <Box mt={4}>
-        <Typography variant="h5" gutterBottom>
-          All Available Projects
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mb={3}>
-          Complete list of all projects in the system.
-        </Typography>
-        
-        <Paper>
-          <List>
-            {projects.map((project, index) => (
-              <ListItem key={project._id} divider={index < projects.length - 1}>
-                <ListItemIcon>
-                  <Work color="primary" />
-                </ListItemIcon>
-                <ListItemText
-                  primary={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography variant="subtitle1">
-                        {project.name}
-                      </Typography>
-                      <Chip 
-                        label={project.status || 'Active'} 
-                        size="small" 
-                        color={employeeProjects.some(p => p._id === project._id) ? 'primary' : 'default'}
-                      />
+      {/* Project Details Dialog */}
+      <Dialog
+        open={projectDetailsOpen}
+        onClose={handleCloseProjectDetails}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Project Details: {selectedProjectDetails?.name}
+        </DialogTitle>
+        <DialogContent>
+          {selectedProjectDetails && (
+            <Box>
+              <Typography variant="body1" paragraph>
+                {selectedProjectDetails.description}
+              </Typography>
+              <Box display="flex" flexWrap="wrap" gap={2} mb={3}>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Created Date
+                  </Typography>
+                  <Typography variant="body1">
+                    {selectedProjectDetails.date ? new Date(selectedProjectDetails.date).toLocaleDateString() : 'N/A'}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Team Members
+                  </Typography>
+                  {selectedProjectDetails.employees && selectedProjectDetails.employees.length > 0 ? (
+                    <Box display="flex" flexWrap="wrap" gap={1}>
+                      {selectedProjectDetails.employees.map((employee) => (
+                        <Chip
+                          key={employee._id}
+                          label={employee.username}
+                          size="small"
+                          variant="outlined"
+                          sx={{ 
+                            fontSize: '0.75rem',
+                            height: '24px'
+                          }}
+                        />
+                      ))}
                     </Box>
-                  }
-                  secondary={
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {project.description || 'No description available'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Created: {new Date(project.createdAt).toLocaleDateString()}
-                      </Typography>
-                    </Box>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
-      </Box>
+                  ) : (
+                    <Typography variant="body2" color="text.secondary">
+                      No members assigned
+                    </Typography>
+                  )}
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Hours
+                  </Typography>
+                  <Typography variant="body1" fontWeight="medium" color="primary">
+                    {calculateProjectTotalHours(selectedProjectDetails._id)}h
+                  </Typography>
+                </Box>
+              </Box>
+              
+              {/* Project Reports */}
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Project Reports ({projectReportsForModal.length})
+                  </Typography>
+                  {projectReportsForModal.length === 0 ? (
+                    <Typography color="text.secondary" textAlign="center" py={2}>
+                      No reports found for this project.
+                    </Typography>
+                  ) : (
+                    <TableContainer>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Employee</TableCell>
+                            <TableCell>Hours</TableCell>
+                            <TableCell>Description</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {projectReportsForModal.map((report) => (
+                            <TableRow key={report._id}>
+                              <TableCell>
+                                {new Date(report.date).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <Chip
+                                  label={report.employee?.username || 'Unknown'}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" fontWeight="medium">
+                                  {report.hoursWorked}h
+                                </Typography>
+                              </TableCell>
+                              <TableCell>
+                                <Typography variant="body2" sx={{ maxWidth: 200 }}>
+                                  {report.details}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                </CardContent>
+              </Card>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseProjectDetails} variant="contained">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

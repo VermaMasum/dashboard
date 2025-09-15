@@ -26,6 +26,8 @@ import {
   DialogActions,
   IconButton,
   CircularProgress,
+  Breadcrumbs,
+  Link,
 } from '@mui/material';
 import {
   Add,
@@ -170,6 +172,20 @@ const EmployeeManagement = () => {
 
   return (
     <Box>
+      {/* Breadcrumb Navigation */}
+      <Box sx={{ px: 3, pb: 2 }}>
+        <Breadcrumbs sx={{ mb: 2 }}>
+          <Link
+            href="/admin/dashboard"
+            color="inherit"
+            sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          >
+            Admin
+          </Link>
+          <Typography color="text.primary">Employees Management</Typography>
+        </Breadcrumbs>
+      </Box>
+
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         {/* <Typography variant="h4" component="h1">
           Employee Management

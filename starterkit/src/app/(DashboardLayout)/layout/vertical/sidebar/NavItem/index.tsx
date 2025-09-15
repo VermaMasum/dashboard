@@ -59,8 +59,11 @@ export default function NavItem  ({ item, level, pathDirect, hideMenu, onClick }
     // Map href to content type
     const contentMap: { [key: string]: string } = {
       '/': 'dashboard',
+      '/admin/dashboard': 'dashboard',
       '/admin/project-details': 'project-details',
       '/admin/daily-reports': 'daily-reports',
+      '/admin/weekly-reports': 'weekly-reports',
+      '/admin/monthly-reports': 'monthly-reports',
       '/admin/employees': 'employees',
       '/admin/employee-list': 'employee-list',
     };

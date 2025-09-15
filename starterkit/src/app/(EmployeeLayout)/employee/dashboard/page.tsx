@@ -530,6 +530,7 @@ const EmployeeDashboard = () => {
             <Tab label="Overview" />
             <Tab label="Project Details" />
             <Tab label="Daily Reports" />
+            <Tab label="Weekly Reports" />
           </Tabs>
         </Box>
 
@@ -1184,6 +1185,26 @@ const EmployeeDashboard = () => {
                   )}
                 </CardContent>
               </Card>
+            </Box>
+          )}
+
+          {/* Weekly Reports Tab */}
+          {activeTab === 3 && (
+            <Box>
+              <Typography variant="h6" gutterBottom>
+                Weekly Reports Summary
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                View your weekly work summary, project breakdown, and team overview.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => window.open('/employee/weekly-reports', '_blank')}
+                sx={{ mt: 2 }}
+              >
+                Open Weekly Reports
+              </Button>
             </Box>
           )}
         </DialogContent>
