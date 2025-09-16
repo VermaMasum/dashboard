@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useContent } from "@/contexts/ContentContext";
 import AdminDashboard from "@/app/admin/dashboard/page";
 import ProjectDetails from "@/app/admin/project-details/page";
+import AdminTimeTracker from "@/app/admin/time-tracker/page";
 import DailyReports from "@/app/admin/daily-reports/page";
 import EmployeeManagement from "@/app/admin/employees/page";
 import EmployeeList from "@/app/admin/employee-list/page";
@@ -27,6 +28,8 @@ export default function Dashboard() {
     switch (currentContent) {
       case 'project-details':
         return <ProjectDetails />;
+      case 'time-tracker':
+        return <AdminTimeTracker />;
       case 'daily-reports':
         return <DailyReports />;
       case 'employees':
@@ -42,6 +45,8 @@ export default function Dashboard() {
     switch (currentContent) {
       case 'project-details':
         return 'Project Details';
+      case 'time-tracker':
+        return 'Time Tracker';
       case 'daily-reports':
         return 'Daily Reports';
       case 'employees':

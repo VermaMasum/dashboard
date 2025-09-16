@@ -19,7 +19,8 @@ import {
   Dashboard as IconDashboard,
   Work as IconWork,
   Assessment as IconAssessment,
-  Person as IconPerson
+  Person as IconPerson,
+  AccessTime as IconTime
 } from "@mui/icons-material";
 
 // Employee menu items
@@ -45,6 +46,12 @@ const Menuitems: MenuitemsType[] = [
     title: "Reports",
     icon: IconAssessment,
     href: "/employee/reports",
+  },
+  {
+    id: uniqueId(),
+    title: "Time Tracker",
+    icon: IconTime,
+    href: "/employee/time-tracker",
   },
 ];
 

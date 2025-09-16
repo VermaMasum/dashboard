@@ -61,6 +61,7 @@ export default function NavItem  ({ item, level, pathDirect, hideMenu, onClick }
       '/': 'dashboard',
       '/admin/dashboard': 'dashboard',
       '/admin/project-details': 'project-details',
+      '/admin/time-tracker': 'time-tracker',
       '/admin/daily-reports': 'daily-reports',
       '/admin/weekly-reports': 'weekly-reports',
       '/admin/monthly-reports': 'monthly-reports',
