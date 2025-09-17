@@ -113,6 +113,9 @@ const EmployeeTimeTracker = () => {
   // Filter states
   const [filterProject, setFilterProject] = useState("");
 
+  // Expand/collapse states
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     fetchData();
   }, [currentDate, viewMode, filterProject]);
@@ -141,6 +144,26 @@ const EmployeeTimeTracker = () => {
       });
 
       let allReports = reportsRes.data;
+      
+      // Debug: Log the raw data
+      console.log("Employee - Raw reports data:", allReports);
+      
+      // Ensure duration and description are properly set for each report
+      allReports = allReports.map((report: any) => {
+        // Debug: Log each report
+        console.log("Employee - Processing report:", report);
+        
+        return {
+          ...report,
+          duration: report.duration || (report.hoursWorked ? report.hoursWorked * 60 : 0) || 0,
+          description: report.description || report.details || report.title || "No description provided",
+          category: report.category || "General",
+          // Ensure project object is properly set
+          project: report.project || { _id: 'unknown', name: 'General Work' },
+        };
+      });
+
+      console.log("Employee - Processed reports:", allReports);
 
       // Apply project filter if selected
       if (filterProject) {
@@ -149,6 +172,7 @@ const EmployeeTimeTracker = () => {
         );
       }
 
+      console.log("Employee - Final time entries set:", allReports);
       setTimeEntries(allReports);
     } catch (err: any) {
       console.error("Error fetching time tracker data:", err);
@@ -214,6 +238,40 @@ const EmployeeTimeTracker = () => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}:${String(mins).padStart(2, "0")}`;
+  };
+
+  // Format duration as hours (decimal)
+  const formatDurationAsHours = (minutes: number) => {
+    if (!minutes || isNaN(minutes) || minutes < 0) {
+      return "0.0";
+    }
+    const hours = minutes / 60;
+    return hours.toFixed(1);
+  };
+
+  // Calculate total hours for current view
+  const calculateTotalHours = () => {
+    if (viewMode === "day") {
+      // Filter entries for the exact currentDate only
+      const filteredEntries = timeEntries.filter((entry) => {
+        const entryDate = new Date(entry.date);
+        return entryDate.toDateString() === currentDate.toDateString();
+      });
+      const totalMinutes = filteredEntries.reduce((sum, entry) => {
+        return sum + (entry.duration || 0);
+      }, 0);
+      return formatDurationAsHours(totalMinutes) + "h";
+    } else {
+      const { startDate, endDate } = getDateRange(currentDate, viewMode);
+      const filteredEntries = timeEntries.filter((entry) => {
+        const entryDate = new Date(entry.date);
+        return entryDate >= startDate && entryDate <= endDate;
+      });
+      const totalMinutes = filteredEntries.reduce((sum, entry) => {
+        return sum + (entry.duration || 0);
+      }, 0);
+      return formatDurationAsHours(totalMinutes) + "h";
+    }
   };
 
   const getWeekDays = () => {
@@ -288,13 +346,22 @@ const EmployeeTimeTracker = () => {
 
   const handleSaveEntry = async () => {
     try {
+      // Parse duration properly
+      let durationInMinutes = 0;
+      if (duration && duration.includes(":")) {
+        const [hours, minutes] = duration.split(":").map(Number);
+        durationInMinutes = (hours || 0) * 60 + (minutes || 0);
+      } else if (duration) {
+        // Handle case where duration is just a number (hours)
+        durationInMinutes = parseFloat(duration) * 60;
+      }
+
       const entryData = {
         project: selectedProject,
         category: category,
         description: description,
-        duration:
-          parseInt(duration.split(":")[0]) * 60 +
-          parseInt(duration.split(":")[1]),
+        duration: durationInMinutes,
+        hoursWorked: durationInMinutes / 60, // Also set hoursWorked for compatibility
         date: selectedDate,
         employee: user?.id,
       };
@@ -335,6 +402,18 @@ const EmployeeTimeTracker = () => {
     setViewMode("day");
   };
 
+  const toggleExpanded = (entryId: string) => {
+    setExpandedEntries(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(entryId)) {
+        newSet.delete(entryId);
+      } else {
+        newSet.add(entryId);
+      }
+      return newSet;
+    });
+  };
+
   if (loading) {
     return (
       <Box
@@ -353,7 +432,7 @@ const EmployeeTimeTracker = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Breadcrumbs */}
-      <Breadcrumbs sx={{ mb: 3 }}>
+      {/* <Breadcrumbs sx={{ mb: 3 }}>
         <Link
           href="/employee/overview"
           color="inherit"
@@ -362,7 +441,7 @@ const EmployeeTimeTracker = () => {
           Employee
         </Link>
         <Typography color="text.primary">Time Tracker</Typography>
-      </Breadcrumbs>
+      </Breadcrumbs> */}
 
       {/* Header */}
       <Box sx={{ mb: 3 }}>
@@ -419,7 +498,7 @@ const EmployeeTimeTracker = () => {
                 </Button>
               </Box>
 
-              {/* Center - Date Display and Project Filter */}
+              {/* Center - Date Display, Total Hours, and Project Filter */}
               <Box
                 sx={{
                   display: "flex",
@@ -437,6 +516,22 @@ const EmployeeTimeTracker = () => {
                     year: "numeric",
                   })}
                 </Typography>
+
+                {/* Total Hours Display */}
+                <Box sx={{ 
+                  backgroundColor: "#e3f2fd", 
+                  px: 2, 
+                  py: 1, 
+                  borderRadius: 2,
+                  border: "1px solid #2196f3"
+                }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
+                    Total {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} Hours
+                  </Typography>
+                  <Typography variant="h6" fontWeight="bold" color="primary">
+                    {calculateTotalHours()}
+                  </Typography>
+                </Box>
 
                 {/* Project Filter */}
                 <FormControl size="small" sx={{ minWidth: 150 }}>
@@ -572,6 +667,11 @@ const EmployeeTimeTracker = () => {
                   return entryDate.toDateString() === dayDate.toDateString();
                 });
                 
+                // Debug: Log entries for days that have data
+                if (dayEntries.length > 0) {
+                  console.log("Employee - Month day entries for", dayDate.toDateString(), ":", dayEntries);
+                }
+                
                 days.push(
                   <Box
                     key={i}
@@ -604,14 +704,11 @@ const EmployeeTimeTracker = () => {
                     {dayEntries.slice(0, 3).map((entry, index) => {
                       const colors = ["#2196f3", "#e91e63", "#4caf50", "#ff9800", "#9c27b0"];
                       const color = colors[index % colors.length];
+                      const isExpanded = expandedEntries.has(entry._id);
                       
                       return (
                         <Box
                           key={entry._id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDetails(entry);
-                          }}
                           sx={{
                             backgroundColor: color,
                             color: "white",
@@ -621,25 +718,69 @@ const EmployeeTimeTracker = () => {
                             cursor: "pointer",
                             fontSize: 10,
                             fontWeight: "bold",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
+                            position: "relative",
                             "&:hover": {
                               opacity: 0.8,
                             },
                           }}
                         >
-                          <Typography variant="caption" sx={{ fontWeight: "bold" }}>
-                            {entry.project?.name || 'Unassigned Project'}
-                          </Typography>
-                          <Typography variant="caption" sx={{ 
-                            display: "block", 
-                            opacity: 0.9, 
-                            fontSize: "9px",
-                            mt: 0.5
-                          }}>
-                            {formatDuration(entry.duration || 0)}
-                          </Typography>
+                          <Box
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewDetails(entry);
+                            }}
+                            sx={{ flex: 1 }}
+                          >
+                            <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                              {entry.project?.name || 'General Work'}
+                            </Typography>
+                            {isExpanded && (
+                              <Typography variant="caption" sx={{ 
+                                display: "block", 
+                                opacity: 0.9, 
+                                fontSize: "8px",
+                                mt: 0.5,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis"
+                              }}>
+                                {entry.description ? entry.description.substring(0, 20) + (entry.description.length > 20 ? '...' : '') : 'No description'}
+                              </Typography>
+                            )}
+                            <Typography variant="caption" sx={{ 
+                              display: "block", 
+                              opacity: 0.9, 
+                              fontSize: "9px",
+                              mt: 0.5
+                            }}>
+                              {formatDurationAsHours(entry.duration || 0)}h
+                            </Typography>
+                          </Box>
+                          <Box
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleExpanded(entry._id);
+                            }}
+                            sx={{
+                              position: "absolute",
+                              top: 2,
+                              right: 2,
+                              width: 12,
+                              height: 12,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "rgba(255,255,255,0.2)",
+                              borderRadius: "50%",
+                              cursor: "pointer",
+                              "&:hover": {
+                                backgroundColor: "rgba(255,255,255,0.3)",
+                              }
+                            }}
+                          >
+                            <Typography variant="caption" sx={{ fontSize: "8px", fontWeight: "bold" }}>
+                              {isExpanded ? "−" : "+"}
+                            </Typography>
+                          </Box>
                         </Box>
                       );
                     })}
@@ -680,24 +821,32 @@ const EmployeeTimeTracker = () => {
             }}
           >
             <Typography variant="h6" fontWeight="bold">
-              {currentDate.toLocaleDateString("en-US", { 
+              {currentDate.toLocaleDateString("en-US", {
                 weekday: "long",
-                month: "long", 
+                month: "long",
                 day: "numeric",
                 year: "numeric"
               })}
             </Typography>
+          {/* Total Hours for Day */}
+          {/* Removed duplicate Total Day Hours box to avoid duplication */}
           </Box>
 
           {/* Day Entries - Enhanced Grid Layout */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {timeEntries.filter(
-              (entry) =>
-                new Date(entry.date).toDateString() ===
-                currentDate.toDateString()
-            ).map((entry, entryIndex) => {
+            {(() => {
+              const dayEntries = timeEntries.filter(
+                (entry) =>
+                  new Date(entry.date).toDateString() ===
+                  currentDate.toDateString()
+              );
+              
+              console.log("Employee - Day entries for", currentDate.toDateString(), ":", dayEntries);
+              
+              return dayEntries.map((entry, entryIndex) => {
               const colors = ["#2196f3", "#e91e63", "#4caf50", "#ff9800", "#9c27b0"];
               const color = colors[entryIndex % colors.length];
+              const isExpanded = expandedEntries.has(entry._id);
               
               return (
                 <Card
@@ -708,6 +857,7 @@ const EmployeeTimeTracker = () => {
                     borderRadius: 2,
                     p: 2,
                     cursor: "pointer",
+                    position: "relative",
                     "&:hover": {
                       transform: "translateY(-2px)",
                       boxShadow: 4,
@@ -720,11 +870,13 @@ const EmployeeTimeTracker = () => {
                   <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Box sx={{ flex: 1 }}>
                       <Typography variant="h6" sx={{ fontWeight: "bold", mb: 0.5 }}>
-                        {entry.project?.name || 'Unassigned Project'}
+                        {entry.project?.name || 'General Work'}
                       </Typography>
-                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
-                        {entry.description || "No description provided."}
-                      </Typography>
+                      {isExpanded && (
+                        <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                          {entry.description || "No description provided."}
+                        </Typography>
+                      )}
                       <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                         <Chip
                           label={entry.category || "General"}
@@ -739,7 +891,7 @@ const EmployeeTimeTracker = () => {
                     </Box>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Typography variant="h5" fontWeight="bold">
-                        {formatDuration(entry.duration || 0)}
+                        {formatDurationAsHours(entry.duration || 0)}h
                       </Typography>
                       <Button
                         variant="outlined"
@@ -761,9 +913,36 @@ const EmployeeTimeTracker = () => {
                       </Button>
                     </Box>
                   </Box>
+                  
+                  {/* Expand/Collapse Button */}
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpanded(entry._id);
+                    }}
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      minWidth: 24,
+                      width: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "rgba(255,255,255,0.3)",
+                      }
+                    }}
+                  >
+                    <Typography variant="caption" sx={{ fontSize: "12px", fontWeight: "bold" }}>
+                      {isExpanded ? "−" : "+"}
+                    </Typography>
+                  </Button>
                 </Card>
               );
-            })}
+            });
+            })()}
             
             {timeEntries.filter(
               (entry) =>
@@ -850,6 +1029,8 @@ const EmployeeTimeTracker = () => {
                 return entryDate.toDateString() === day.toDateString();
               });
 
+              console.log("Employee - Week day entries for", day.toDateString(), ":", dayEntries);
+
               return (
                 <Box
                   key={dayIndex}
@@ -866,11 +1047,11 @@ const EmployeeTimeTracker = () => {
                     dayEntries.map((entry, entryIndex) => {
                       const colors = ["#2196f3", "#e91e63", "#4caf50", "#ff9800", "#9c27b0"];
                       const color = colors[entryIndex % colors.length];
+                      const isExpanded = expandedEntries.has(entry._id);
 
                       return (
                         <Box
                           key={entry._id}
-                          onClick={() => handleViewDetails(entry)}
                           sx={{
                             backgroundColor: color,
                             color: "white",
@@ -880,34 +1061,84 @@ const EmployeeTimeTracker = () => {
                             cursor: "pointer",
                             fontSize: "0.75rem",
                             fontWeight: "bold",
+                            position: "relative",
                             "&:hover": {
                               opacity: 0.8,
                             },
                           }}
                         >
-                          <Typography
-                            variant="body2"
+                          <Box
+                            onClick={() => handleViewDetails(entry)}
+                            sx={{ flex: 1 }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                display: "block",
+                                fontWeight: "bold",
+                                mb: 0.5,
+                              }}
+                            >
+                              {entry.project?.name || 'General Work'}
+                            </Typography>
+                            {isExpanded && (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: "0.7rem",
+                                  opacity: 0.9,
+                                  display: "block",
+                                  mb: 0.5,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {entry.description ? entry.description.substring(0, 15) + (entry.description.length > 15 ? '...' : '') : 'No description'}
+                              </Typography>
+                            )}
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: "0.75rem",
+                                opacity: 0.9,
+                                display: "block",
+                              }}
+                            >
+                              {formatDurationAsHours(entry.duration || 0)}h
+                            </Typography>
+                          </Box>
+                          
+                          {/* Expand/Collapse Button */}
+                          <Box
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleExpanded(entry._id);
+                            }}
                             sx={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              display: "block",
-                              fontWeight: "bold",
-                              mb: 0.5,
+                              position: "absolute",
+                              top: 2,
+                              right: 2,
+                              width: 16,
+                              height: 16,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "rgba(255,255,255,0.2)",
+                              borderRadius: "50%",
+                              cursor: "pointer",
+                              "&:hover": {
+                                backgroundColor: "rgba(255,255,255,0.3)",
+                              }
                             }}
                           >
-                            {entry.project?.name || 'Unassigned Project'}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              fontSize: "0.75rem",
-                              opacity: 0.9,
-                              display: "block",
-                            }}
-                          >
-                            {formatDuration(entry.duration || 0)}
-                          </Typography>
+                            <Typography variant="caption" sx={{ fontSize: "10px", fontWeight: "bold" }}>
+                              {isExpanded ? "−" : "+"}
+                            </Typography>
+                          </Box>
                         </Box>
                       );
                     })
@@ -1016,7 +1247,7 @@ const EmployeeTimeTracker = () => {
                   Project
                 </Typography>
                 <Typography variant="body1">
-                  {selectedEntry.project?.name || 'Unassigned Project'}
+                  {selectedEntry.project?.name || 'General Work'}
                 </Typography>
               </Box>
               <Box>
@@ -1040,7 +1271,7 @@ const EmployeeTimeTracker = () => {
                   Duration
                 </Typography>
                 <Typography variant="body1">
-                  {formatDuration(selectedEntry.duration || 0)}
+                  {formatDurationAsHours(selectedEntry.duration || 0)}h
                 </Typography>
               </Box>
               <Box>

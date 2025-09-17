@@ -75,7 +75,10 @@ const EmployeeReports = () => {
   });
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}`;
   });
   const [fromDate, setFromDate] = useState(() => {
     const today = new Date();
@@ -108,7 +111,7 @@ const EmployeeReports = () => {
 
   useEffect(() => {
     if (user) {
-    fetchData();
+      fetchData();
     }
   }, [user]);
 
@@ -144,7 +147,14 @@ const EmployeeReports = () => {
     const monday = new Date(d.setDate(diff));
     const sunday = new Date(monday);
     sunday.setDate(monday.getDate() + 6);
-    console.log('📅 Week range for date', date, ':', monday.toISOString(), 'to', sunday.toISOString());
+    console.log(
+      "📅 Week range for date",
+      date,
+      ":",
+      monday.toISOString(),
+      "to",
+      sunday.toISOString()
+    );
     return { start: monday, end: sunday };
   };
 
@@ -152,7 +162,14 @@ const EmployeeReports = () => {
     const [year, monthNum] = month.split("-");
     const start = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
     const end = new Date(parseInt(year), parseInt(monthNum), 0);
-    console.log('📅 Month range for', month, ':', start.toISOString(), 'to', end.toISOString());
+    console.log(
+      "📅 Month range for",
+      month,
+      ":",
+      start.toISOString(),
+      "to",
+      end.toISOString()
+    );
     return { start, end };
   };
 
@@ -160,94 +177,117 @@ const EmployeeReports = () => {
   const getDailyReports = () => {
     let filtered = reports;
 
-    console.log('🔍 Daily Reports Filter Debug:');
-    console.log('Total reports:', reports.length);
-    console.log('Selected project:', selectedProject);
-    console.log('Selected date:', selectedDate);
+    console.log("🔍 Daily Reports Filter Debug:");
+    console.log("Total reports:", reports.length);
+    console.log("Selected project:", selectedProject);
+    console.log("Selected date:", selectedDate);
 
     if (selectedProject) {
       filtered = filtered.filter(
         (report) => report.project._id === selectedProject
       );
-      console.log('After project filter:', filtered.length);
+      console.log("After project filter:", filtered.length);
     }
 
     if (selectedDate) {
       filtered = filtered.filter((report) => {
         // Handle different date formats
-        const reportDate = new Date(report.date).toISOString().split('T')[0];
-        const selectedDateFormatted = new Date(selectedDate).toISOString().split('T')[0];
-        console.log('Comparing dates:', reportDate, 'vs', selectedDateFormatted);
+        const reportDate = new Date(report.date).toISOString().split("T")[0];
+        const selectedDateFormatted = new Date(selectedDate)
+          .toISOString()
+          .split("T")[0];
+        console.log(
+          "Comparing dates:",
+          reportDate,
+          "vs",
+          selectedDateFormatted
+        );
         return reportDate === selectedDateFormatted;
       });
-      console.log('After date filter:', filtered.length);
+      console.log("After date filter:", filtered.length);
     }
 
-    console.log('Final filtered reports:', filtered);
+    console.log("Final filtered reports:", filtered);
     return filtered;
   };
 
   const getWeeklyReports = () => {
     let filtered = reports;
 
-    console.log('🔍 Weekly Reports Filter Debug:');
-    console.log('Total reports:', reports.length);
-    console.log('Selected project:', selectedProject);
-    console.log('From date:', fromDate);
-    console.log('To date:', toDate);
+    console.log("🔍 Weekly Reports Filter Debug:");
+    console.log("Total reports:", reports.length);
+    console.log("Selected project:", selectedProject);
+    console.log("From date:", fromDate);
+    console.log("To date:", toDate);
 
     if (selectedProject) {
       filtered = filtered.filter(
         (report) => report.project._id === selectedProject
       );
-      console.log('After project filter:', filtered.length);
+      console.log("After project filter:", filtered.length);
     }
 
     if (fromDate && toDate) {
       filtered = filtered.filter((report) => {
-        const reportDate = new Date(report.date).toISOString().split('T')[0];
-        const fromDateFormatted = new Date(fromDate).toISOString().split('T')[0];
-        const toDateFormatted = new Date(toDate).toISOString().split('T')[0];
-        console.log('Comparing dates:', reportDate, 'between', fromDateFormatted, 'and', toDateFormatted);
+        const reportDate = new Date(report.date).toISOString().split("T")[0];
+        const fromDateFormatted = new Date(fromDate)
+          .toISOString()
+          .split("T")[0];
+        const toDateFormatted = new Date(toDate).toISOString().split("T")[0];
+        console.log(
+          "Comparing dates:",
+          reportDate,
+          "between",
+          fromDateFormatted,
+          "and",
+          toDateFormatted
+        );
         return reportDate >= fromDateFormatted && reportDate <= toDateFormatted;
       });
-      console.log('After date range filter:', filtered.length);
+      console.log("After date range filter:", filtered.length);
     }
 
-    console.log('Final weekly filtered reports:', filtered);
+    console.log("Final weekly filtered reports:", filtered);
     return filtered;
   };
 
   const getMonthlyReports = () => {
     let filtered = reports;
 
-    console.log('🔍 Monthly Reports Filter Debug:');
-    console.log('Total reports:', reports.length);
-    console.log('Selected project:', selectedProject);
-    console.log('Selected month:', selectedMonth);
+    console.log("🔍 Monthly Reports Filter Debug:");
+    console.log("Total reports:", reports.length);
+    console.log("Selected project:", selectedProject);
+    console.log("Selected month:", selectedMonth);
 
     if (selectedProject) {
       filtered = filtered.filter(
         (report) => report.project._id === selectedProject
       );
-      console.log('After project filter:', filtered.length);
+      console.log("After project filter:", filtered.length);
     }
 
     if (selectedMonth) {
       const { start, end } = getMonthRange(selectedMonth);
-      console.log('Month range:', start.toISOString(), 'to', end.toISOString());
+      console.log("Month range:", start.toISOString(), "to", end.toISOString());
       filtered = filtered.filter((report) => {
         const reportDate = new Date(report.date);
-        const reportDateFormatted = reportDate.toISOString().split('T')[0];
-        const startFormatted = start.toISOString().split('T')[0];
-        const endFormatted = end.toISOString().split('T')[0];
-        console.log('Comparing report date:', reportDateFormatted, 'between', startFormatted, 'and', endFormatted);
+        const reportDateFormatted = reportDate.toISOString().split("T")[0];
+        const startFormatted = start.toISOString().split("T")[0];
+        const endFormatted = end.toISOString().split("T")[0];
+        console.log(
+          "Comparing report date:",
+          reportDateFormatted,
+          "between",
+          startFormatted,
+          "and",
+          endFormatted
+        );
         return reportDate >= start && reportDate <= end;
       });
-      console.log('After month filter:', filtered.length);
+      console.log("After month filter:", filtered.length);
     }
 
-    console.log('Final monthly filtered reports:', filtered);
+    console.log("Final monthly filtered reports:", filtered);
     return filtered;
   };
 
@@ -326,6 +366,7 @@ const EmployeeReports = () => {
           </Link>
           <Typography color="text.primary">Reports</Typography>
         </Breadcrumbs>
+        {/* <Typography>Employee Reports</Typography> */}
 
         <Box
           sx={{
@@ -405,7 +446,15 @@ const EmployeeReports = () => {
             </Typography>
 
             {/* Filters */}
-            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap", alignItems: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                mb: 3,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
               <TextField
                 label="Date"
                 type="date"
@@ -486,7 +535,15 @@ const EmployeeReports = () => {
             </Typography>
 
             {/* Filters */}
-            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap", alignItems: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                mb: 3,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
               <TextField
                 label="From Date"
                 type="date"
@@ -582,7 +639,15 @@ const EmployeeReports = () => {
             </Typography>
 
             {/* Filters */}
-            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap", alignItems: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                gap: 2,
+                mb: 3,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
               <TextField
                 label="Month"
                 type="month"
@@ -611,7 +676,11 @@ const EmployeeReports = () => {
                 variant="outlined"
                 onClick={() => {
                   const today = new Date();
-                  setSelectedMonth(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`);
+                  setSelectedMonth(
+                    `${today.getFullYear()}-${String(
+                      today.getMonth() + 1
+                    ).padStart(2, "0")}`
+                  );
                   setSelectedProject("");
                 }}
                 sx={{ minWidth: 120 }}
@@ -621,36 +690,36 @@ const EmployeeReports = () => {
             </Box>
 
             {/* Monthly Reports Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Date</TableCell>
-              <TableCell>Project</TableCell>
-              <TableCell>Details</TableCell>
-              <TableCell>Hours</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Project</TableCell>
+                    <TableCell>Details</TableCell>
+                    <TableCell>Hours</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {getMonthlyReports().map((report) => (
-                <TableRow key={report._id}>
-                  <TableCell>
-                    {new Date(report.date).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Chip 
+                    <TableRow key={report._id}>
+                      <TableCell>
+                        {new Date(report.date).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
                           label={report.project.name}
                           color="primary"
-                      size="small" 
-                    />
-                  </TableCell>
+                          size="small"
+                        />
+                      </TableCell>
                       <TableCell>{report.details}</TableCell>
-                  <TableCell>{report.hoursWorked}</TableCell>
-                </TableRow>
+                      <TableCell>{report.hoursWorked}</TableCell>
+                    </TableRow>
                   ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                </TableBody>
+              </Table>
+            </TableContainer>
           </CardContent>
         </Card>
       )}
@@ -668,23 +737,23 @@ const EmployeeReports = () => {
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
             <FormControl fullWidth>
-            <InputLabel>Project</InputLabel>
-            <Select
-              value={formData.project}
+              <InputLabel>Project</InputLabel>
+              <Select
+                value={formData.project}
                 onChange={(e) =>
                   setFormData({ ...formData, project: e.target.value })
                 }
                 label="Project"
-            >
-              {projects.map((project) => (
-                <MenuItem key={project._id} value={project._id}>
-                  {project.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              >
+                {projects.map((project) => (
+                  <MenuItem key={project._id} value={project._id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-          <TextField
+            <TextField
               label="Date"
               type="date"
               value={formData.date}
@@ -692,24 +761,24 @@ const EmployeeReports = () => {
                 setFormData({ ...formData, date: e.target.value })
               }
               InputLabelProps={{ shrink: true }}
-            fullWidth
+              fullWidth
             />
 
             <TextField
               label="Details"
               multiline
               rows={3}
-            value={formData.details}
+              value={formData.details}
               onChange={(e) =>
                 setFormData({ ...formData, details: e.target.value })
               }
               fullWidth
             />
 
-          <TextField
-            label="Hours Worked"
-            type="number"
-            value={formData.hoursWorked}
+            <TextField
+              label="Hours Worked"
+              type="number"
+              value={formData.hoursWorked}
               onChange={(e) =>
                 setFormData({
                   ...formData,

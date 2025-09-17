@@ -93,7 +93,7 @@ const EmployeeProjects = () => {
 
   const calculateProjectTotalHours = (projectId: string) => {
     return reports
-      .filter(report => report.project._id === projectId)
+      .filter(report => report.project && report.project._id === projectId)
       .reduce((total, report) => total + (report.hoursWorked || 0), 0);
   };
 
