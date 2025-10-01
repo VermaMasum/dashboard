@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Grid,
   Button,
   Table,
   TableBody,
@@ -29,7 +28,7 @@ import {
   Select,
   MenuItem,
   Autocomplete,
-} from '@mui/material';
+} from "@mui/material";
 import {
   CalendarToday,
   TrendingUp,
@@ -43,9 +42,9 @@ import {
   Visibility,
   Person,
   DateRange,
-} from '@mui/icons-material';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from '@/utils/axios';
+} from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "@/utils/axios";
 
 interface Report {
   _id: string;
@@ -74,64 +73,62 @@ const EmployeeDailyReports = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [error, setError] = useState("");
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
   const [viewDialog, setViewDialog] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+
+  const fetchReports = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      // ...existing code...
+    } catch (err: any) {
+      // ...existing code...
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchProjects();
     fetchReports();
-  }, [selectedDate]);
+  }, [selectedDate, fetchReports]);
 
   const fetchProjects = async () => {
     try {
-      const response = await axios.get('/projects');
+      const response = await axios.get("/projects");
       setProjects(response.data);
     } catch (err: any) {
-      console.error('Error fetching projects:', err);
+      console.error("Error fetching projects:", err);
     }
   };
 
-  const fetchReports = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      const response = await axios.get('/reports', {
-        params: {
-          date: selectedDate,
-        }
-      });
-      setReports(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch reports');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Removed duplicate fetchReports
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(date).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatTime = (date: string) => {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(date).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getHoursColor = (hours: number) => {
-    if (hours >= 8) return 'success';
-    if (hours >= 6) return 'primary';
-    if (hours >= 4) return 'warning';
-    return 'error';
+    if (hours >= 8) return "success";
+    if (hours >= 6) return "primary";
+    if (hours >= 4) return "warning";
+    return "error";
   };
 
   const handleViewReport = (report: Report) => {
@@ -139,9 +136,13 @@ const EmployeeDailyReports = () => {
     setViewDialog(true);
   };
 
-  const totalHours = reports.reduce((sum, report) => sum + report.hoursWorked, 0);
+  const totalHours = reports.reduce(
+    (sum, report) => sum + report.hoursWorked,
+    0
+  );
   const totalReports = reports.length;
-  const uniqueProjects = new Set(reports.map(report => report.project._id)).size;
+  const uniqueProjects = new Set(reports.map((report) => report.project._id))
+    .size;
 
   if (loading) {
     return (
@@ -165,7 +166,14 @@ const EmployeeDailyReports = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <Box>
           <Typography variant="h4" gutterBottom>
             My Daily Reports
@@ -174,7 +182,7 @@ const EmployeeDailyReports = () => {
             {formatDate(selectedDate)}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <TextField
             type="date"
             value={selectedDate}
@@ -187,11 +195,11 @@ const EmployeeDailyReports = () => {
       </Box>
 
       {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 3 }}>
+        <Box sx={{ flex: "1 1 calc(25% - 12px)", minWidth: "250px" }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <AccessTime color="primary" sx={{ mr: 1 }} />
                 <Typography variant="h6">Total Hours</Typography>
               </Box>
@@ -203,11 +211,11 @@ const EmployeeDailyReports = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box sx={{ flex: "1 1 calc(25% - 12px)", minWidth: "250px" }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Assessment color="secondary" sx={{ mr: 1 }} />
                 <Typography variant="h6">Reports</Typography>
               </Box>
@@ -219,11 +227,11 @@ const EmployeeDailyReports = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box sx={{ flex: "1 1 calc(25% - 12px)", minWidth: "250px" }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Work color="success" sx={{ mr: 1 }} />
                 <Typography variant="h6">Projects</Typography>
               </Box>
@@ -235,11 +243,11 @@ const EmployeeDailyReports = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box sx={{ flex: "1 1 calc(25% - 12px)", minWidth: "250px" }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <TrendingUp color="warning" sx={{ mr: 1 }} />
                 <Typography variant="h6">Avg/Report</Typography>
               </Box>
@@ -251,22 +259,27 @@ const EmployeeDailyReports = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Reports Table */}
       <Card>
         <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-            <Typography variant="h6">
-              Daily Reports
-            </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 3,
+            }}
+          >
+            <Typography variant="h6">Daily Reports</Typography>
             <Button
               variant="contained"
               startIcon={<Add />}
               onClick={() => {
                 // Navigate to create report page or open dialog
-                console.log('Create new report');
+                console.log("Create new report");
               }}
             >
               Add Report
@@ -274,12 +287,13 @@ const EmployeeDailyReports = () => {
           </Box>
 
           {reports.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Box sx={{ textAlign: "center", py: 4 }}>
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 No reports found for this date
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Click "Add Report" to create your first report for today
+                Click &quot;Add Report&quot; to create your first report for
+                today
               </Typography>
             </Box>
           ) : (
@@ -309,7 +323,7 @@ const EmployeeDailyReports = () => {
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2" sx={{ maxWidth: 200 }}>
-                          {report.description || 'No description'}
+                          {report.description || "No description"}
                         </Typography>
                       </TableCell>
                       <TableCell align="right">
@@ -336,7 +350,7 @@ const EmployeeDailyReports = () => {
                           size="small"
                           onClick={() => {
                             // Edit report functionality
-                            console.log('Edit report:', report._id);
+                            console.log("Edit report:", report._id);
                           }}
                           title="Edit Report"
                         >
@@ -346,7 +360,7 @@ const EmployeeDailyReports = () => {
                           size="small"
                           onClick={() => {
                             // Delete report functionality
-                            console.log('Delete report:', report._id);
+                            console.log("Delete report:", report._id);
                           }}
                           title="Delete Report"
                           color="error"
@@ -370,14 +384,12 @@ const EmployeeDailyReports = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>
-          Report Details
-        </DialogTitle>
+        <DialogTitle>Report Details</DialogTitle>
         <DialogContent>
           {selectedReport && (
             <Box>
-              <Grid container spacing={2} sx={{ mt: 1 }}>
-                <Grid item xs={12} sm={6}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mt: 1 }}>
+                <Box sx={{ flex: "1 1 calc(50% - 8px)", minWidth: "200px" }}>
                   <Typography variant="subtitle2" color="text.secondary">
                     Project
                   </Typography>
@@ -387,50 +399,53 @@ const EmployeeDailyReports = () => {
                   <Typography variant="body2" color="text.secondary">
                     {selectedReport.project.description}
                   </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
+                </Box>
+                <Box sx={{ flex: "1 1 calc(50% - 8px)", minWidth: "200px" }}>
                   <Typography variant="subtitle2" color="text.secondary">
                     Hours Worked
                   </Typography>
                   <Typography variant="h6" color="primary">
                     {selectedReport.hoursWorked} hours
                   </Typography>
-                </Grid>
-                <Grid item xs={12}>
+                </Box>
+                <Box sx={{ flex: "1 1 100%", minWidth: "200px" }}>
                   <Typography variant="subtitle2" color="text.secondary">
                     Description
                   </Typography>
                   <Typography variant="body1">
-                    {selectedReport.description || 'No description provided'}
+                    {selectedReport.description || "No description provided"}
                   </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
+                </Box>
+                <Box sx={{ flex: "1 1 calc(50% - 8px)", minWidth: "200px" }}>
                   <Typography variant="subtitle2" color="text.secondary">
                     Date
                   </Typography>
                   <Typography variant="body1">
                     {formatDate(selectedReport.date)}
                   </Typography>
-                </Grid>
-                <Grid item xs={12} sm={6}>
+                </Box>
+                <Box sx={{ flex: "1 1 calc(50% - 8px)", minWidth: "200px" }}>
                   <Typography variant="subtitle2" color="text.secondary">
                     Time
                   </Typography>
                   <Typography variant="body1">
                     {formatTime(selectedReport.date)}
                   </Typography>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setViewDialog(false)}>Close</Button>
-          <Button variant="contained" onClick={() => {
-            setViewDialog(false);
-            // Edit functionality
-            console.log('Edit report:', selectedReport?._id);
-          }}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setViewDialog(false);
+              // Edit functionality
+              console.log("Edit report:", selectedReport?._id);
+            }}
+          >
             Edit Report
           </Button>
         </DialogActions>

@@ -4,7 +4,7 @@ import { Report } from "../types/report";
 
 interface ReportCardProps {
   report: Report;
-  onEdit: (report: Report) => void;
+  onEdit?: (report: Report) => void;
 }
 
 const colors = [
@@ -63,7 +63,7 @@ export default function ReportCard({ report, onEdit }: ReportCardProps) {
           variant="outlined"
           size="small"
           sx={{ color: "white", borderColor: "white" }}
-          onClick={() => onEdit(report)}
+          onClick={() => onEdit?.(report)}
         >
           Edit
         </Button>

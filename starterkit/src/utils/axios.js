@@ -1,9 +1,18 @@
- import axios from 'axios';
+import axios from 'axios';
+
+// Use your PC's IP address for mobile/network access
+// Change this IP if your PC's IP address changes
+const API_URL = 'http://192.168.1.26:5000/api';
 
 const axiosServices = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: API_URL,
   timeout: 10000,
 });
+
+// Log the API URL in development mode for debugging
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔗 API Base URL:', API_URL);
+}
 
 // Add request interceptor to include auth token
 axiosServices.interceptors.request.use(

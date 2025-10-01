@@ -9,15 +9,24 @@ const router = express.Router();
 // @access  Private (admin and superAdmin)
 router.get("/", protect, async (req, res) => {
   try {
-    const { date, project } = req.query;
+    const { date, project, startDate, endDate } = req.query;
     let query = {};
-    
+
     if (date) {
       const startDate = new Date(date);
       const endDate = new Date(date);
       endDate.setDate(endDate.getDate() + 1);
       query.date = { $gte: startDate, $lt: endDate };
     }
+
+    // Handle date range filtering for admin time tracker
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999); // Include the entire end date
+      query.date = { $gte: start, $lte: end };
+    }
+
     if (project) {
       query.project = project;
     }

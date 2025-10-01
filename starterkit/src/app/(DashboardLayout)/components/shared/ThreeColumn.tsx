@@ -6,9 +6,9 @@ const drawerWidth = 240;
 const secdrawerWidth = 320;
 
 type Props = {
-  middleChild: JSX.Element | string;
-  leftChild: JSX.Element | string;
-  rightChild: JSX.Element;
+  middleChild: React.ReactElement | string;
+  leftChild: React.ReactElement | string;
+  rightChild: React.ReactElement;
 };
 
 const ThreeColumn = ({ leftChild, middleChild, rightChild }: Props) => {

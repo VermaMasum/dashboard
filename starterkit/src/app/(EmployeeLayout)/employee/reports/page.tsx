@@ -5,8 +5,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Breadcrumbs,
-  Link,
   Table,
   TableBody,
   TableCell,
@@ -28,7 +26,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import { Add, Home } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from "@/utils/axios";
 
@@ -64,6 +62,10 @@ const EmployeeReports = () => {
   const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
+  // Track project status for filtering
+  const [projectStatusMap, setProjectStatusMap] = useState<
+    Record<string, string>
+  >({});
   const [loading, setLoading] = useState(true);
   const [reportView, setReportView] = useState("daily");
 
@@ -128,9 +130,18 @@ const EmployeeReports = () => {
       console.log("📋 Projects response:", projectsResponse.data);
       console.log("📊 Reports response:", reportsResponse.data);
       console.log("📊 Reports sample:", reportsResponse.data[0]);
+      console.log("📊 Total reports count:", reportsResponse.data.length);
 
       setProjects(projectsResponse.data);
       setReports(reportsResponse.data);
+      // Build a map of projectId -> status
+      const statusMap: Record<string, string> = {};
+      projectsResponse.data.forEach((project: any) => {
+        statusMap[project._id] = project.status || "unknown";
+      });
+      setProjectStatusMap(statusMap);
+      
+      console.log("📊 Project status map:", statusMap);
     } catch (error: any) {
       console.error("❌ Error fetching data:", error);
       console.error("Error details:", error.response?.data || error.message);
@@ -176,57 +187,52 @@ const EmployeeReports = () => {
   // Filter functions
   const getDailyReports = () => {
     let filtered = reports;
-
-    console.log("🔍 Daily Reports Filter Debug:");
-    console.log("Total reports:", reports.length);
-    console.log("Selected project:", selectedProject);
-    console.log("Selected date:", selectedDate);
-
+    console.log("📊 Daily reports - Total reports:", reports.length);
+    console.log("📊 Daily reports - Selected date:", selectedDate);
+    console.log("📊 Daily reports - Selected project:", selectedProject);
+    
+    // Filter by project if selected
     if (selectedProject) {
       filtered = filtered.filter(
-        (report) => report.project._id === selectedProject
+        (report) => report.project && report.project._id === selectedProject
       );
-      console.log("After project filter:", filtered.length);
+      console.log("📊 After project filter:", filtered.length);
     }
-
+    
+    // Filter by date
     if (selectedDate) {
       filtered = filtered.filter((report) => {
-        // Handle different date formats
         const reportDate = new Date(report.date).toISOString().split("T")[0];
         const selectedDateFormatted = new Date(selectedDate)
           .toISOString()
           .split("T")[0];
-        console.log(
-          "Comparing dates:",
+        const matches = reportDate === selectedDateFormatted;
+        console.log("📊 Date comparison:", {
           reportDate,
-          "vs",
-          selectedDateFormatted
-        );
-        return reportDate === selectedDateFormatted;
+          selectedDateFormatted,
+          matches,
+          reportId: report._id
+        });
+        return matches;
       });
-      console.log("After date filter:", filtered.length);
+      console.log("📊 After date filter:", filtered.length);
     }
-
-    console.log("Final filtered reports:", filtered);
+    
+    console.log("📊 Final daily reports count:", filtered.length);
     return filtered;
   };
 
   const getWeeklyReports = () => {
     let filtered = reports;
-
-    console.log("🔍 Weekly Reports Filter Debug:");
-    console.log("Total reports:", reports.length);
-    console.log("Selected project:", selectedProject);
-    console.log("From date:", fromDate);
-    console.log("To date:", toDate);
-
+    
+    // Filter by project if selected
     if (selectedProject) {
       filtered = filtered.filter(
-        (report) => report.project._id === selectedProject
+        (report) => report.project && report.project._id === selectedProject
       );
-      console.log("After project filter:", filtered.length);
     }
-
+    
+    // Filter by date range
     if (fromDate && toDate) {
       filtered = filtered.filter((report) => {
         const reportDate = new Date(report.date).toISOString().split("T")[0];
@@ -234,60 +240,32 @@ const EmployeeReports = () => {
           .toISOString()
           .split("T")[0];
         const toDateFormatted = new Date(toDate).toISOString().split("T")[0];
-        console.log(
-          "Comparing dates:",
-          reportDate,
-          "between",
-          fromDateFormatted,
-          "and",
-          toDateFormatted
-        );
         return reportDate >= fromDateFormatted && reportDate <= toDateFormatted;
       });
-      console.log("After date range filter:", filtered.length);
     }
-
-    console.log("Final weekly filtered reports:", filtered);
+    
     return filtered;
   };
 
   const getMonthlyReports = () => {
     let filtered = reports;
-
-    console.log("🔍 Monthly Reports Filter Debug:");
-    console.log("Total reports:", reports.length);
-    console.log("Selected project:", selectedProject);
-    console.log("Selected month:", selectedMonth);
-
+    
+    // Filter by project if selected
     if (selectedProject) {
       filtered = filtered.filter(
-        (report) => report.project._id === selectedProject
+        (report) => report.project && report.project._id === selectedProject
       );
-      console.log("After project filter:", filtered.length);
     }
-
+    
+    // Filter by month
     if (selectedMonth) {
       const { start, end } = getMonthRange(selectedMonth);
-      console.log("Month range:", start.toISOString(), "to", end.toISOString());
       filtered = filtered.filter((report) => {
         const reportDate = new Date(report.date);
-        const reportDateFormatted = reportDate.toISOString().split("T")[0];
-        const startFormatted = start.toISOString().split("T")[0];
-        const endFormatted = end.toISOString().split("T")[0];
-        console.log(
-          "Comparing report date:",
-          reportDateFormatted,
-          "between",
-          startFormatted,
-          "and",
-          endFormatted
-        );
         return reportDate >= start && reportDate <= end;
       });
-      console.log("After month filter:", filtered.length);
     }
-
-    console.log("Final monthly filtered reports:", filtered);
+    
     return filtered;
   };
 
@@ -296,7 +274,7 @@ const EmployeeReports = () => {
     if (report) {
       setEditingReport(report);
       setFormData({
-        project: report.project._id,
+        project: report.project?._id || "",
         date: report.date,
         details: report.details,
         hoursWorked: report.hoursWorked,
@@ -325,6 +303,12 @@ const EmployeeReports = () => {
   };
 
   const handleSaveReport = async () => {
+    // Prevent saving for projects not 'in progress' or 'completed'
+    const selectedProjectStatus = (projectStatusMap[formData.project] || "").trim().toLowerCase();
+    if (!(selectedProjectStatus === "in progress" || selectedProjectStatus === "completed")) {
+      alert("You cannot add a time entry for a project that is not in progress or completed.");
+      return;
+    }
     try {
       if (editingReport) {
         await axios.put(`/reports/${editingReport._id}`, formData);
@@ -354,19 +338,10 @@ const EmployeeReports = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ mb: 1 }}>
-        <Breadcrumbs sx={{ mb: 3 }}>
-          <Link
-            href="/employee/overview"
-            color="inherit"
-            sx={{ display: "flex", alignItems: "center" }}
-          >
-            <Home sx={{ mr: 0.5, fontSize: 20 }} />
-            Employee Portal
-          </Link>
-          <Typography color="text.primary">Reports</Typography>
-        </Breadcrumbs>
-        {/* <Typography>Employee Reports</Typography> */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
+          Reports
+        </Typography>
 
         <Box
           sx={{
@@ -510,7 +485,7 @@ const EmployeeReports = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={report.project.name}
+                          label={report.project?.name || "No Project"}
                           color="primary"
                           size="small"
                         />
@@ -614,7 +589,7 @@ const EmployeeReports = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={report.project.name}
+                          label={report.project?.name || "No Project"}
                           color="primary"
                           size="small"
                         />
@@ -708,7 +683,7 @@ const EmployeeReports = () => {
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={report.project.name}
+                          label={report.project?.name || "No Project"}
                           color="primary"
                           size="small"
                         />
@@ -745,11 +720,17 @@ const EmployeeReports = () => {
                 }
                 label="Project"
               >
-                {projects.map((project) => (
-                  <MenuItem key={project._id} value={project._id}>
-                    {project.name}
-                  </MenuItem>
-                ))}
+                {projects
+                  .filter((project) => {
+                    const status = (projectStatusMap[project._id] || "").trim().toLowerCase();
+                    // Only show projects with status 'in progress' or 'completed'
+                    return status === "in progress" || status === "completed";
+                  })
+                  .map((project) => (
+                    <MenuItem key={project._id} value={project._id}>
+                      {project.name}
+                    </MenuItem>
+                  ))}
               </Select>
             </FormControl>
 

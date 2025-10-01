@@ -4,7 +4,7 @@ import { AppState } from '@/store/store';
 
 type Props = {
   title: string;
-  children: JSX.Element | JSX.Element[];
+  children: React.ReactNode;
 };
 
 const BaseCard = ({ title, children }: Props) => {

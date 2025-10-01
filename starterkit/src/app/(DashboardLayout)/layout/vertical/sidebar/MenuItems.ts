@@ -26,13 +26,23 @@ export const getMenuItems = (userRole?: string): MenuitemsType[] => {
     },
     {
       id: uniqueId(),
-      title: "Starter Page",
+      title: "Dashboard",
       icon: IconChartPie,
-      href: "/",
+      href: "/admin/dashboard",
     },
     {
       navlabel: true,
-      subheader: "Dashboard",
+      subheader: "Reports",
+    },
+    {
+      id: uniqueId(),
+      title: "Reports",
+      icon: IconReport,
+      href: "/admin/reports",
+    },
+    {
+      navlabel: true,
+      subheader: "Projects",
     },
     {
       id: uniqueId(),
@@ -42,9 +52,10 @@ export const getMenuItems = (userRole?: string): MenuitemsType[] => {
     },
     {
       id: uniqueId(),
-      title: "Reports",
-      icon: IconReport,
-      href: "/admin/dashboard",
+      title: "Project History",
+      icon: IconReportAnalytics,
+      href: "/admin/project-history",
+      external: false,
     },
     {
       id: uniqueId(),

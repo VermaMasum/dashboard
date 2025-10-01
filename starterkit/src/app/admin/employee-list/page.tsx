@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -16,14 +16,10 @@ import {
   Alert,
   CircularProgress,
   Grid,
-  Breadcrumbs,
-  Link,
-} from '@mui/material';
-import {
-  Person,
-} from '@mui/icons-material';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from '@/utils/axios';
+} from "@mui/material";
+import { Person } from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "@/utils/axios";
 
 interface Employee {
   _id: string;
@@ -38,7 +34,7 @@ const EmployeeList = () => {
   const { user } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -47,11 +43,11 @@ const EmployeeList = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/users?role=employee');
+      const response = await axios.get("/users?role=employee");
       setEmployees(response.data);
     } catch (err: any) {
-      console.error('Error fetching employees:', err);
-      setError(err.response?.data?.message || 'Failed to fetch employees');
+      console.error("Error fetching employees:", err);
+      setError(err.response?.data?.message || "Failed to fetch employees");
     } finally {
       setLoading(false);
     }
@@ -59,19 +55,23 @@ const EmployeeList = () => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'primary';
-      case 'superAdmin': return 'secondary';
-      case 'employee': return 'default';
-      default: return 'default';
+      case "admin":
+        return "primary";
+      case "superAdmin":
+        return "secondary";
+      case "employee":
+        return "default";
+      default:
+        return "default";
     }
   };
 
   const getRoleStats = () => {
     const stats = {
       total: employees.length,
-      admin: employees.filter(emp => emp.role === 'admin').length,
-      superAdmin: employees.filter(emp => emp.role === 'superAdmin').length,
-      employee: employees.filter(emp => emp.role === 'employee').length,
+      admin: employees.filter((emp) => emp.role === "admin").length,
+      superAdmin: employees.filter((emp) => emp.role === "superAdmin").length,
+      employee: employees.filter((emp) => emp.role === "employee").length,
     };
     return stats;
   };
@@ -80,7 +80,12 @@ const EmployeeList = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <CircularProgress />
       </Box>
     );
@@ -88,26 +93,12 @@ const EmployeeList = () => {
 
   return (
     <Box>
-      {/* Breadcrumb Navigation */}
-      <Box sx={{ px: 3, pb: 2 }}>
-        <Breadcrumbs sx={{ mb: 2 }}>
-          <Link
-            href="/admin/dashboard"
-            color="inherit"
-            sx={{ textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
-          >
-            Admin
-          </Link>
-          <Typography color="text.primary">Employee List</Typography>
-        </Breadcrumbs>
-      </Box>
-
       <Typography variant="h4" component="h1" gutterBottom>
         Employee List
       </Typography>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
           {error}
         </Alert>
       )}
@@ -117,14 +108,16 @@ const EmployeeList = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <Box>
                   <Typography color="textSecondary" gutterBottom>
                     Total Employees
                   </Typography>
-                  <Typography variant="h4">
-                    {stats.total}
-                  </Typography>
+                  <Typography variant="h4">{stats.total}</Typography>
                 </Box>
                 <Person color="primary" />
               </Box>
@@ -134,16 +127,18 @@ const EmployeeList = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <Box>
                   <Typography color="textSecondary" gutterBottom>
                     Regular Employees
                   </Typography>
-                  <Typography variant="h4">
-                    {stats.employee}
-                  </Typography>
+                  <Typography variant="h4">{stats.employee}</Typography>
                 </Box>
-                <Person color="default" />
+                <Person color="action" />
               </Box>
             </CardContent>
           </Card>
@@ -151,14 +146,16 @@ const EmployeeList = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <Box>
                   <Typography color="textSecondary" gutterBottom>
                     Admins
                   </Typography>
-                  <Typography variant="h4">
-                    {stats.admin}
-                  </Typography>
+                  <Typography variant="h4">{stats.admin}</Typography>
                 </Box>
                 <Person color="primary" />
               </Box>
@@ -168,14 +165,16 @@ const EmployeeList = () => {
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <Box>
                   <Typography color="textSecondary" gutterBottom>
                     Super Admins
                   </Typography>
-                  <Typography variant="h4">
-                    {stats.superAdmin}
-                  </Typography>
+                  <Typography variant="h4">{stats.superAdmin}</Typography>
                 </Box>
                 <Person color="secondary" />
               </Box>
@@ -207,15 +206,15 @@ const EmployeeList = () => {
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Chip 
-                    label={employee.role} 
-                    size="small" 
+                  <Chip
+                    label={employee.role}
+                    size="small"
                     color={getRoleColor(employee.role) as any}
                   />
                 </TableCell>
-                <TableCell>{employee.email || 'N/A'}</TableCell>
-                <TableCell>{employee.phone || 'N/A'}</TableCell>
-                <TableCell>{employee.department || 'N/A'}</TableCell>
+                <TableCell>{employee.email || "N/A"}</TableCell>
+                <TableCell>{employee.phone || "N/A"}</TableCell>
+                <TableCell>{employee.department || "N/A"}</TableCell>
               </TableRow>
             ))}
           </TableBody>

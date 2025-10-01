@@ -17,7 +17,6 @@ import {
 import { useSelector } from '@/store/hooks';
 import { useTranslation } from 'react-i18next';
 import { AppState } from '@/store/store';
-import { useContent } from '@/contexts/ContentContext';
 
 type NavGroup = {
   [x: string]: any;
@@ -46,7 +45,6 @@ interface ItemType {
 
 export default function NavItem  ({ item, level, pathDirect, hideMenu, onClick }: ItemType) {
   const lgDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("lg"));
-  const { setCurrentContent } = useContent();
 
   const customizer = useSelector((state: AppState) => state.customizer);
   const Icon = item?.icon;
@@ -55,31 +53,8 @@ export default function NavItem  ({ item, level, pathDirect, hideMenu, onClick }
   const itemIcon =
     level > 1 ? <Icon stroke={1.5} size="1rem" /> : <Icon stroke={1.5} size="1.3rem" />;
 
-  const handleClick = () => {
-    // Map href to content type
-    const contentMap: { [key: string]: string } = {
-      '/': 'dashboard',
-      '/admin/dashboard': 'dashboard',
-      '/admin/project-details': 'project-details',
-      '/admin/time-tracker': 'time-tracker',
-      '/admin/daily-reports': 'daily-reports',
-      '/admin/weekly-reports': 'weekly-reports',
-      '/admin/monthly-reports': 'monthly-reports',
-      '/admin/employees': 'employees',
-      '/admin/employee-list': 'employee-list',
-    };
-    
-    const contentType = contentMap[item.href];
-    if (contentType) {
-      setCurrentContent(contentType as any);
-    }
-    
-    if (onClick) {
-      onClick();
-    }
-  };
 
-  const ListItemStyled = styled(ListItemButton)(() => ({
+  const ListItemStyled = styled(ListItemButton)(({ theme }) => ({
     whiteSpace: 'nowrap',
     marginBottom: '10px',
     padding: '9.5px 12px',
@@ -111,8 +86,7 @@ export default function NavItem  ({ item, level, pathDirect, hideMenu, onClick }
     to?: any;
   } = {
     component: item?.external ? 'a' : Link,
-    to: item?.href,
-    href: item?.external ? item?.href : '',
+    href: item?.href,
     target: item?.external ? '_blank' : '',
   };
 
@@ -121,7 +95,7 @@ export default function NavItem  ({ item, level, pathDirect, hideMenu, onClick }
       <ListItemStyled
         disabled={item?.disabled}
         selected={pathDirect === item?.href}
-        onClick={handleClick}>
+        {...listItemProps}>
 
         <ListItemIcon
           sx={{

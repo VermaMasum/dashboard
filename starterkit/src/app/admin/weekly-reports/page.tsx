@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Card,
@@ -34,7 +34,7 @@ import {
   Select,
   MenuItem,
   Autocomplete,
-} from '@mui/material';
+} from "@mui/material";
 import {
   CalendarToday,
   TrendingUp,
@@ -48,9 +48,9 @@ import {
   Download,
   Visibility,
   Person,
-} from '@mui/icons-material';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from '@/utils/axios';
+} from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "@/utils/axios";
 
 interface WeeklyData {
   weekStart: string;
@@ -103,13 +103,13 @@ const AdminWeeklyReports = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState(0);
   const [viewDialog, setViewDialog] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
-  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [filterByEmployee, setFilterByEmployee] = useState(false);
   const [fromDate, setFromDate] = useState(() => {
     const today = new Date();
@@ -131,44 +131,19 @@ const AdminWeeklyReports = () => {
   });
   const [showCurrentWeekOnly, setShowCurrentWeekOnly] = useState(true);
 
-  useEffect(() => {
-    fetchEmployees();
-    fetchProjects();
-    fetchWeeklyData();
-  }, [currentWeek, selectedEmployee, selectedProjectId, fromDate, toDate]);
-
-  const fetchEmployees = async () => {
-    try {
-      const response = await axios.get('/users/all');
-      const employeeUsers = response.data.filter((user: any) => user.role === 'employee');
-      setEmployees(employeeUsers);
-    } catch (err: any) {
-      console.error('Error fetching employees:', err);
-    }
-  };
-
-  const fetchProjects = async () => {
-    try {
-      const response = await axios.get('/projects');
-      setProjects(response.data);
-    } catch (err: any) {
-      console.error('Error fetching projects:', err);
-    }
-  };
-
-  const fetchWeeklyData = async () => {
+  const fetchWeeklyData = useCallback(async () => {
     try {
       setLoading(true);
-      setError('');
-      
+      setError("");
+
       // Fetch all reports from the same endpoint as daily reports
-      const response = await axios.get('/reports');
+      const response = await axios.get("/reports");
       const allReports = response.data;
-      
-      console.log('📊 Admin Weekly - All reports fetched:', allReports.length);
-      
+
+      console.log("📊 Admin Weekly - All reports fetched:", allReports.length);
+
       let weekStart, weekEnd;
-      
+
       // Use date range if provided, otherwise use currentWeek
       if (fromDate && toDate) {
         weekStart = new Date(fromDate);
@@ -180,46 +155,81 @@ const AdminWeeklyReports = () => {
         weekEnd = getWeekEnd(currentWeek);
         setShowCurrentWeekOnly(true);
       }
-      
-      console.log('📊 Admin Weekly - Date range:', {
+
+      console.log("📊 Admin Weekly - Date range:", {
         weekStart: weekStart.toISOString(),
         weekEnd: weekEnd.toISOString(),
         weekStartLocal: weekStart.toLocaleDateString(),
-        weekEndLocal: weekEnd.toLocaleDateString()
+        weekEndLocal: weekEnd.toLocaleDateString(),
       });
-      
+
       // Filter reports by date range
       let filteredReports = allReports.filter((report: any) => {
         const reportDate = new Date(report.date);
         return reportDate >= weekStart && reportDate <= weekEnd;
       });
-      
+
       // Filter by project if selected
       if (selectedProjectId) {
-        filteredReports = filteredReports.filter((report: any) => 
-          report.project._id === selectedProjectId
+        filteredReports = filteredReports.filter(
+          (report: any) => report.project._id === selectedProjectId
         );
       }
-      
+
       // Filter by employee if selected
       if (filterByEmployee && selectedEmployee) {
-        filteredReports = filteredReports.filter((report: any) => 
-          report.employee._id === selectedEmployee
+        filteredReports = filteredReports.filter(
+          (report: any) => report.employee._id === selectedEmployee
         );
       }
-      
-      console.log('📊 Admin Weekly - Filtered reports:', filteredReports.length);
-      
+
+      console.log(
+        "📊 Admin Weekly - Filtered reports:",
+        filteredReports.length
+      );
+
       // Process the filtered reports into weekly data format
-      const weeklyData = processReportsToWeeklyData(filteredReports, weekStart, weekEnd);
+      const weeklyData = processReportsToWeeklyData(
+        filteredReports,
+        weekStart,
+        weekEnd
+      );
       setWeeklyData(weeklyData);
     } catch (err: any) {
-      console.error('❌ Error fetching weekly data:', err);
-      setError(err.response?.data?.message || 'Failed to fetch weekly data');
+      console.error("❌ Error fetching weekly data:", err);
+      setError(err.response?.data?.message || "Failed to fetch weekly data");
     } finally {
       setLoading(false);
     }
+  }, [currentWeek, selectedEmployee, selectedProjectId, fromDate, toDate, filterByEmployee]);
+
+  useEffect(() => {
+    fetchEmployees();
+    fetchProjects();
+    fetchWeeklyData();
+  }, [fetchWeeklyData]);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await axios.get("/users/all");
+      const employeeUsers = response.data.filter(
+        (user: any) => user.role === "employee"
+      );
+      setEmployees(employeeUsers);
+    } catch (err: any) {
+      console.error("Error fetching employees:", err);
+    }
   };
+
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get("/projects");
+      setProjects(response.data);
+    } catch (err: any) {
+      console.error("Error fetching projects:", err);
+    }
+  };
+
 
   const getWeekStart = (date: Date) => {
     const dayOfWeek = date.getDay();
@@ -238,7 +248,11 @@ const AdminWeeklyReports = () => {
     return sunday;
   };
 
-  const processReportsToWeeklyData = (reports: any[], weekStart: Date, weekEnd: Date) => {
+  const processReportsToWeeklyData = (
+    reports: any[],
+    weekStart: Date,
+    weekEnd: Date
+  ) => {
     // Initialize weekly data structure
     const weeklyData = {
       weekStart: weekStart.toISOString(),
@@ -247,33 +261,33 @@ const AdminWeeklyReports = () => {
       totalReports: reports.length,
       dailyBreakdown: {} as any,
       projectBreakdown: {} as any,
-      employeeBreakdown: {} as any
+      employeeBreakdown: {} as any,
     };
 
     // Initialize daily breakdown
     for (let i = 0; i < 7; i++) {
       const day = new Date(weekStart);
       day.setDate(weekStart.getDate() + i);
-      const dayKey = day.toISOString().split('T')[0];
+      const dayKey = day.toISOString().split("T")[0];
       weeklyData.dailyBreakdown[dayKey] = {
         date: day.toISOString(),
-        dayName: day.toLocaleDateString('en-US', { weekday: 'long' }),
+        dayName: day.toLocaleDateString("en-US", { weekday: "long" }),
         hours: 0,
         reports: 0,
-        projects: []
+        projects: [],
       };
     }
 
     // Process each report
-    reports.forEach(report => {
+    reports.forEach((report) => {
       const reportDate = new Date(report.date);
-      const dayKey = reportDate.toISOString().split('T')[0];
+      const dayKey = reportDate.toISOString().split("T")[0];
       const projectId = report.project._id.toString();
       const employeeId = report.employee._id.toString();
-      
+
       // Update totals
       weeklyData.totalHours += report.hoursWorked;
-      
+
       // Update daily breakdown
       if (weeklyData.dailyBreakdown[dayKey]) {
         weeklyData.dailyBreakdown[dayKey].hours += report.hoursWorked;
@@ -282,34 +296,38 @@ const AdminWeeklyReports = () => {
           weeklyData.dailyBreakdown[dayKey].projects.push(projectId);
         }
       }
-      
+
       // Update project breakdown
       if (!weeklyData.projectBreakdown[projectId]) {
         weeklyData.projectBreakdown[projectId] = {
           project: report.project,
           hours: 0,
           reports: 0,
-          employees: []
+          employees: [],
         };
       }
       weeklyData.projectBreakdown[projectId].hours += report.hoursWorked;
       weeklyData.projectBreakdown[projectId].reports += 1;
-      if (!weeklyData.projectBreakdown[projectId].employees.includes(employeeId)) {
+      if (
+        !weeklyData.projectBreakdown[projectId].employees.includes(employeeId)
+      ) {
         weeklyData.projectBreakdown[projectId].employees.push(employeeId);
       }
-      
+
       // Update employee breakdown
       if (!weeklyData.employeeBreakdown[employeeId]) {
         weeklyData.employeeBreakdown[employeeId] = {
           employee: report.employee,
           hours: 0,
           reports: 0,
-          projects: []
+          projects: [],
         };
       }
       weeklyData.employeeBreakdown[employeeId].hours += report.hoursWorked;
       weeklyData.employeeBreakdown[employeeId].reports += 1;
-      if (!weeklyData.employeeBreakdown[employeeId].projects.includes(projectId)) {
+      if (
+        !weeklyData.employeeBreakdown[employeeId].projects.includes(projectId)
+      ) {
         weeklyData.employeeBreakdown[employeeId].projects.push(projectId);
       }
     });
@@ -317,34 +335,40 @@ const AdminWeeklyReports = () => {
     return weeklyData;
   };
 
-  const navigateWeek = (direction: 'prev' | 'next') => {
+  const navigateWeek = (direction: "prev" | "next") => {
     const newWeek = new Date(currentWeek);
-    newWeek.setDate(currentWeek.getDate() + (direction === 'next' ? 7 : -7));
+    newWeek.setDate(currentWeek.getDate() + (direction === "next" ? 7 : -7));
     setCurrentWeek(newWeek);
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     });
   };
 
   const formatWeekRange = (start: string, end: string) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
-    return `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    return `${startDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    })} - ${endDate.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    })}`;
   };
 
   const getDayColor = (hours: number) => {
-    if (hours >= 8) return 'success';
-    if (hours >= 4) return 'warning';
-    return 'error';
+    if (hours >= 8) return "success";
+    if (hours >= 4) return "warning";
+    return "error";
   };
 
   const handleViewProject = (projectId: string) => {
     const project = Object.values(weeklyData?.projectBreakdown || {}).find(
-      p => p.project._id === projectId
+      (p) => p.project._id === projectId
     );
     setSelectedProject(project);
     setViewDialog(true);
@@ -354,15 +378,18 @@ const AdminWeeklyReports = () => {
     setSelectedTab(newValue);
   };
 
-  const handleEmployeeFilterChange = (event: any, newValue: Employee | null) => {
-    setSelectedEmployee(newValue?._id || '');
+  const handleEmployeeFilterChange = (
+    event: any,
+    newValue: Employee | null
+  ) => {
+    setSelectedEmployee(newValue?._id || "");
     setFilterByEmployee(!!newValue);
   };
 
   const clearFilters = () => {
-    setSelectedEmployee('');
+    setSelectedEmployee("");
     setFilterByEmployee(false);
-    setSelectedProjectId('');
+    setSelectedProjectId("");
     // Reset to current week
     const today = new Date();
     const monday = new Date(today);
@@ -407,7 +434,14 @@ const AdminWeeklyReports = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <Box>
           <Typography variant="h4" gutterBottom>
             Weekly Reports - Admin View
@@ -415,15 +449,15 @@ const AdminWeeklyReports = () => {
           <Typography variant="body1" color="text.secondary">
             {formatWeekRange(weeklyData.weekStart, weeklyData.weekEnd)}
             {showCurrentWeekOnly && (
-              <Chip 
+              <Chip
                 label="Current Week"
                 color="success"
                 size="small"
                 sx={{ ml: 2 }}
               />
             )}
-            {(fromDate && toDate) && (
-              <Chip 
+            {fromDate && toDate && (
+              <Chip
                 label="Custom Date Range"
                 color="secondary"
                 size="small"
@@ -431,8 +465,10 @@ const AdminWeeklyReports = () => {
               />
             )}
             {filterByEmployee && selectedEmployee && (
-              <Chip 
-                label={`Filtered by: ${employees.find(e => e._id === selectedEmployee)?.username}`}
+              <Chip
+                label={`Filtered by: ${
+                  employees.find((e) => e._id === selectedEmployee)?.username
+                }`}
                 onDelete={clearFilters}
                 color="primary"
                 size="small"
@@ -441,8 +477,11 @@ const AdminWeeklyReports = () => {
             )}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => navigateWeek('prev')} title="Previous Week">
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <IconButton
+            onClick={() => navigateWeek("prev")}
+            title="Previous Week"
+          >
             <ArrowBack />
           </IconButton>
           <Button
@@ -452,7 +491,7 @@ const AdminWeeklyReports = () => {
           >
             This Week
           </Button>
-          <IconButton onClick={() => navigateWeek('next')} title="Next Week">
+          <IconButton onClick={() => navigateWeek("next")} title="Next Week">
             <ArrowForward />
           </IconButton>
         </Box>
@@ -510,7 +549,9 @@ const AdminWeeklyReports = () => {
               <Autocomplete
                 options={employees}
                 getOptionLabel={(option) => option.username}
-                value={employees.find(e => e._id === selectedEmployee) || null}
+                value={
+                  employees.find((e) => e._id === selectedEmployee) || null
+                }
                 onChange={handleEmployeeFilterChange}
                 renderInput={(params) => (
                   <TextField
@@ -536,7 +577,12 @@ const AdminWeeklyReports = () => {
                 variant="outlined"
                 onClick={clearFilters}
                 startIcon={<FilterList />}
-                disabled={!filterByEmployee && !selectedProjectId && !fromDate && !toDate}
+                disabled={
+                  !filterByEmployee &&
+                  !selectedProjectId &&
+                  !fromDate &&
+                  !toDate
+                }
               >
                 Clear Filters
               </Button>
@@ -554,35 +600,44 @@ const AdminWeeklyReports = () => {
           <Grid container spacing={2}>
             {[-2, -1, 0, 1, 2].map((weekOffset) => {
               const weekDate = new Date(currentWeek);
-              weekDate.setDate(currentWeek.getDate() + (weekOffset * 7));
+              weekDate.setDate(currentWeek.getDate() + weekOffset * 7);
               const weekStart = getWeekStart(weekDate);
               const weekEnd = getWeekEnd(weekDate);
               const isCurrentWeek = weekOffset === 0;
-              
+
               return (
                 <Grid item xs={12} sm={6} md={2.4} key={weekOffset}>
-                  <Card 
+                  <Card
                     variant={isCurrentWeek ? "elevation" : "outlined"}
-                    sx={{ 
-                      cursor: 'pointer',
+                    sx={{
+                      cursor: "pointer",
                       border: isCurrentWeek ? 2 : 1,
-                      borderColor: isCurrentWeek ? 'primary.main' : 'divider',
-                      '&:hover': {
-                        borderColor: 'primary.main',
-                        backgroundColor: 'action.hover'
-                      }
+                      borderColor: isCurrentWeek ? "primary.main" : "divider",
+                      "&:hover": {
+                        borderColor: "primary.main",
+                        backgroundColor: "action.hover",
+                      },
                     }}
                     onClick={() => setCurrentWeek(weekDate)}
                   >
-                    <CardContent sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="subtitle2" fontWeight={isCurrentWeek ? 'bold' : 'normal'}>
-                        {weekOffset === 0 ? 'Current' : 
-                         weekOffset === -1 ? 'Last Week' :
-                         weekOffset === 1 ? 'Next Week' :
-                         `${weekOffset > 0 ? '+' : ''}${weekOffset} Week${Math.abs(weekOffset) > 1 ? 's' : ''}`}
+                    <CardContent sx={{ p: 2, textAlign: "center" }}>
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight={isCurrentWeek ? "bold" : "normal"}
+                      >
+                        {weekOffset === 0
+                          ? "Current"
+                          : weekOffset === -1
+                          ? "Last Week"
+                          : weekOffset === 1
+                          ? "Next Week"
+                          : `${weekOffset > 0 ? "+" : ""}${weekOffset} Week${
+                              Math.abs(weekOffset) > 1 ? "s" : ""
+                            }`}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {formatDate(weekStart.toISOString())} - {formatDate(weekEnd.toISOString())}
+                        {formatDate(weekStart.toISOString())} -{" "}
+                        {formatDate(weekEnd.toISOString())}
                       </Typography>
                     </CardContent>
                   </Card>
@@ -593,10 +648,9 @@ const AdminWeeklyReports = () => {
         </CardContent>
       </Card>
 
-
       {/* Tabs */}
       <Card>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={selectedTab} onChange={handleTabChange}>
             <Tab label="Daily Breakdown" />
             <Tab label="Project Summary" />
@@ -613,35 +667,54 @@ const AdminWeeklyReports = () => {
                 Daily Work Summary
               </Typography>
               <Grid container spacing={2}>
-                {Object.entries(weeklyData.dailyBreakdown).map(([date, dayData]) => (
-                  <Grid item xs={12} sm={6} md={4} key={date}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                          <Typography variant="subtitle1" fontWeight="bold">
-                            {dayData.dayName}
+                {Object.entries(weeklyData.dailyBreakdown).map(
+                  ([date, dayData]) => (
+                    <Grid item xs={12} sm={6} md={4} key={date}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              mb: 2,
+                            }}
+                          >
+                            <Typography variant="subtitle1" fontWeight="bold">
+                              {dayData.dayName}
+                            </Typography>
+                            <Chip
+                              label={`${dayData.hours}h`}
+                              color={getDayColor(dayData.hours)}
+                              size="small"
+                            />
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            gutterBottom
+                          >
+                            {formatDate(dayData.date)}
                           </Typography>
-                          <Chip
-                            label={`${dayData.hours}h`}
-                            color={getDayColor(dayData.hours)}
-                            size="small"
-                          />
-                        </Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          {formatDate(dayData.date)}
-                        </Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                          <Typography variant="caption">
-                            {dayData.reports} reports
-                          </Typography>
-                          <Typography variant="caption">
-                            {dayData.projects.length} projects
-                          </Typography>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              mt: 1,
+                            }}
+                          >
+                            <Typography variant="caption">
+                              {dayData.reports} reports
+                            </Typography>
+                            <Typography variant="caption">
+                              {dayData.projects.length} projects
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  )
+                )}
               </Grid>
             </Box>
           )}
@@ -664,39 +737,44 @@ const AdminWeeklyReports = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.entries(weeklyData.projectBreakdown).map(([projectId, projectData]) => (
-                      <TableRow key={projectId}>
-                        <TableCell>
-                          <Box>
-                            <Typography variant="subtitle2">
-                              {projectData.project.name}
+                    {Object.entries(weeklyData.projectBreakdown).map(
+                      ([projectId, projectData]) => (
+                        <TableRow key={projectId}>
+                          <TableCell>
+                            <Box>
+                              <Typography variant="subtitle2">
+                                {projectData.project.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {projectData.project.description}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography variant="body2" fontWeight="bold">
+                              {projectData.hours}h
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {projectData.project.description}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" fontWeight="bold">
-                            {projectData.hours}h
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          {projectData.reports}
-                        </TableCell>
-                        <TableCell align="right">
-                          {projectData.employees.length}
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleViewProject(projectId)}
-                          >
-                            <Visibility />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell align="right">
+                            {projectData.reports}
+                          </TableCell>
+                          <TableCell align="right">
+                            {projectData.employees.length}
+                          </TableCell>
+                          <TableCell align="center">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleViewProject(projectId)}
+                            >
+                              <Visibility />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -710,46 +788,76 @@ const AdminWeeklyReports = () => {
                 Team Overview
               </Typography>
               <Grid container spacing={2}>
-                {Object.entries(weeklyData.employeeBreakdown).map(([employeeId, employeeData]) => (
-                  <Grid item xs={12} sm={6} md={4} key={employeeId}>
-                    <Card>
-                      <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
-                            {employeeData.employee.username.charAt(0).toUpperCase()}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="subtitle1" fontWeight="bold">
-                              {employeeData.employee.username}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              Employee
+                {Object.entries(weeklyData.employeeBreakdown).map(
+                  ([employeeId, employeeData]) => (
+                    <Grid item xs={12} sm={6} md={4} key={employeeId}>
+                      <Card>
+                        <CardContent>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mb: 2,
+                            }}
+                          >
+                            <Avatar sx={{ mr: 2, bgcolor: "primary.main" }}>
+                              {employeeData.employee.username
+                                .charAt(0)
+                                .toUpperCase()}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="subtitle1" fontWeight="bold">
+                                {employeeData.employee.username}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Employee
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Divider sx={{ my: 2 }} />
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              mb: 1,
+                            }}
+                          >
+                            <Typography variant="body2">Hours:</Typography>
+                            <Typography variant="body2" fontWeight="bold">
+                              {employeeData.hours}h
                             </Typography>
                           </Box>
-                        </Box>
-                        <Divider sx={{ my: 2 }} />
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2">Hours:</Typography>
-                          <Typography variant="body2" fontWeight="bold">
-                            {employeeData.hours}h
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2">Reports:</Typography>
-                          <Typography variant="body2" fontWeight="bold">
-                            {employeeData.reports}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography variant="body2">Projects:</Typography>
-                          <Typography variant="body2" fontWeight="bold">
-                            {employeeData.projects.length}
-                          </Typography>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              mb: 1,
+                            }}
+                          >
+                            <Typography variant="body2">Reports:</Typography>
+                            <Typography variant="body2" fontWeight="bold">
+                              {employeeData.reports}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <Typography variant="body2">Projects:</Typography>
+                            <Typography variant="body2" fontWeight="bold">
+                              {employeeData.projects.length}
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  )
+                )}
               </Grid>
             </Box>
           )}
@@ -774,22 +882,38 @@ const AdminWeeklyReports = () => {
                   </TableHead>
                   <TableBody>
                     {Object.entries(weeklyData.employeeBreakdown)
-                      .sort(([,a], [,b]) => b.hours - a.hours)
+                      .sort(([, a], [, b]) => b.hours - a.hours)
                       .map(([employeeId, employeeData]) => {
-                        const avgHoursPerDay = (employeeData.hours / 7).toFixed(1);
-                        const performance = employeeData.hours >= 40 ? 'Excellent' : 
-                                          employeeData.hours >= 30 ? 'Good' : 
-                                          employeeData.hours >= 20 ? 'Average' : 'Below Average';
-                        const performanceColor = employeeData.hours >= 40 ? 'success' : 
-                                                employeeData.hours >= 30 ? 'primary' : 
-                                                employeeData.hours >= 20 ? 'warning' : 'error';
-                        
+                        const avgHoursPerDay = (employeeData.hours / 7).toFixed(
+                          1
+                        );
+                        const performance =
+                          employeeData.hours >= 40
+                            ? "Excellent"
+                            : employeeData.hours >= 30
+                            ? "Good"
+                            : employeeData.hours >= 20
+                            ? "Average"
+                            : "Below Average";
+                        const performanceColor =
+                          employeeData.hours >= 40
+                            ? "success"
+                            : employeeData.hours >= 30
+                            ? "primary"
+                            : employeeData.hours >= 20
+                            ? "warning"
+                            : "error";
+
                         return (
                           <TableRow key={employeeId}>
                             <TableCell>
-                              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                              <Box
+                                sx={{ display: "flex", alignItems: "center" }}
+                              >
                                 <Avatar sx={{ mr: 2, width: 32, height: 32 }}>
-                                  {employeeData.employee.username.charAt(0).toUpperCase()}
+                                  {employeeData.employee.username
+                                    .charAt(0)
+                                    .toUpperCase()}
                                 </Avatar>
                                 <Typography variant="subtitle2">
                                   {employeeData.employee.username}
@@ -811,8 +935,8 @@ const AdminWeeklyReports = () => {
                               {avgHoursPerDay}h
                             </TableCell>
                             <TableCell align="center">
-                              <Chip 
-                                label={performance} 
+                              <Chip
+                                label={performance}
                                 color={performanceColor}
                                 size="small"
                               />
@@ -835,9 +959,7 @@ const AdminWeeklyReports = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>
-          Project Details
-        </DialogTitle>
+        <DialogTitle>Project Details</DialogTitle>
         <DialogContent>
           {selectedProject && (
             <Box>
@@ -866,11 +988,16 @@ const AdminWeeklyReports = () => {
                   </Typography>
                 </Grid>
                 <Grid item xs={12}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
                     Team Members
                   </Typography>
                   <Typography variant="body2">
-                    {selectedProject.employees.length} member(s) working on this project
+                    {selectedProject.employees.length} member(s) working on this
+                    project
                   </Typography>
                 </Grid>
               </Grid>

@@ -1,4 +1,4 @@
-import React from 'react';
+ import React from 'react';
 
 import { useState } from 'react';
 import { useSelector } from '@/store/hooks';
@@ -92,7 +92,7 @@ export default  function NavCollapse ({
     color:
       open && level < 2
         ? 'white'
-        : `inherit` && level > 1 && open
+        : level > 1 && open
         ? theme.palette.secondary.main
         : theme.palette.text.secondary,
     borderRadius: `${customizer.borderRadius}px`,
@@ -120,7 +120,7 @@ export default  function NavCollapse ({
           level={level + 1}
           pathDirect={pathDirect}
           hideMenu={hideMenu}
-          onClick={lgDown ? onClick : isNull}
+          onClick={lgDown ? onClick : ((event: React.MouseEvent<HTMLElement>) => {})}
         />
       );
     }

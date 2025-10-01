@@ -1,8 +1,9 @@
-import { useTheme } from '@mui/material/styles';
-import { Card, CardContent, Typography, Box, Stack } from '@mui/material';
-import { useSelector } from '@/store/hooks';
-import { AppState } from '@/store/store';
-import { IconGridDots } from '@tabler/icons-react';
+import { useTheme } from "@mui/material/styles";
+import { Card, CardContent, Typography, Box, Stack } from "@mui/material";
+import { useSelector } from "@/store/hooks";
+import { AppState } from "@/store/store";
+import { IconGridDots } from "@tabler/icons-react";
+import React from "react";
 
 type Props = {
   title: string;
@@ -11,10 +12,10 @@ type Props = {
   dataItem1: string;
   dataLabel2: string;
   dataItem2: string;
-  children: JSX.Element;
+  children: React.ReactNode;
 };
 
-const DashboardWidgetCard = ({
+const DashboardWidgetCard: React.FC<Props> = ({
   title,
   subtitle,
   children,
@@ -22,7 +23,7 @@ const DashboardWidgetCard = ({
   dataItem1,
   dataLabel2,
   dataItem2,
-}: Props) => {
+}) => {
   const customizer = useSelector((state: AppState) => state.customizer);
 
   const theme = useTheme();
@@ -30,28 +31,33 @@ const DashboardWidgetCard = ({
 
   return (
     <Card
-      sx={{ padding: 0, border: !customizer.isCardShadow ? `1px solid ${borderColor}` : 'none' }}
+      sx={{
+        padding: 0,
+        border: !customizer.isCardShadow ? `1px solid ${borderColor}` : "none",
+      }}
       elevation={customizer.isCardShadow ? 9 : 0}
-      variant={!customizer.isCardShadow ? 'outlined' : undefined}
+      variant={!customizer.isCardShadow ? "outlined" : undefined}
     >
-      <CardContent sx={{ p: '30px' }}>
+      <CardContent sx={{ p: "30px" }}>
         {title ? (
           <Box>
-            {title ? <Typography variant="h5">{title}</Typography> : ''}
-
+            <Typography variant="h5">{title}</Typography>
             {subtitle ? (
               <Typography variant="subtitle2" color="textSecondary">
                 {subtitle}
               </Typography>
-            ) : (
-              ''
-            )}
+            ) : null}
           </Box>
         ) : null}
 
         {children}
 
-        <Stack direction="row" spacing={2} justifyContent="space-between" mt={2}>
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="space-between"
+          mt={2}
+        >
           <Stack direction="row" spacing={2} alignItems="center">
             <Box
               width={38}

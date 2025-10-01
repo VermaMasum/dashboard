@@ -14,14 +14,17 @@ import {
   Divider,
   Button,
 } from "@mui/material";
-import { IconMail } from "@tabler/icons-react";
+import { IconMail, IconMenu2 } from "@tabler/icons-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDispatch } from "@/store/hooks";
+import { toggleMobileSidebar } from "@/store/customizer/CustomizerSlice";
 
 const Header = () => {
   const lgDown = useMediaQuery((theme: any) => theme.breakpoints.down("lg"));
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
   const [anchorEl2, setAnchorEl2] = useState(null);
   const { user, logout } = useAuth();
+  const dispatch = useDispatch();
 
   const handleClick2 = (event: any) => {
     console.log("Profile icon clicked, opening dropdown");
@@ -68,13 +71,29 @@ const Header = () => {
   return (
     <AppBarStyled position="static" color="default">
       <ToolbarStyled>
+        {/* Mobile Menu Button - Only visible on mobile */}
+        {lgDown && (
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            onClick={() => dispatch(toggleMobileSidebar())}
+            edge="start"
+            sx={{
+              mr: 2,
+              color: "white",
+            }}
+          >
+            <IconMenu2 size="20" />
+          </IconButton>
+        )}
+
         {/* Employee Portal Title */}
         <Typography
           variant="h6"
           sx={{
             fontWeight: "bold",
             color: "white",
-            fontSize: "1.25rem",
+            fontSize: { xs: "1rem", sm: "1.25rem" },
             marginRight: 1,
           }}
         >

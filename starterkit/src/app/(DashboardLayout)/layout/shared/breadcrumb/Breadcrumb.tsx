@@ -1,5 +1,6 @@
 import React from "react";
 import { Grid, Typography, Box, Breadcrumbs, Theme } from "@mui/material";
+import { JSX } from "react";
 import NextLink from "next/link";
 
 import breadcrumbImg from "public/images/breadcrumb/ChatBc.png";
@@ -14,19 +15,18 @@ interface BreadCrumbType {
   subtitle?: string;
   items?: any[];
   title: string;
-  children?: JSX.Element;
+  children?: React.ReactElement;
 }
 
 const Breadcrumb = ({ subtitle, items, title, children }: BreadCrumbType) => (
-  <Grid
-    container
+  <Box
     sx={{
       my: "24px",
       position: "relative",
       overflow: "hidden",
     }}
   >
-    <Grid item xs={12} sm={6} lg={8} mb={1}>
+    <Box sx={{ mb: 1 }}>
       <Typography variant="h3">{title}</Typography>
       <Typography
         color="textSecondary"
@@ -56,8 +56,8 @@ const Breadcrumb = ({ subtitle, items, title, children }: BreadCrumbType) => (
             ))
           : ""}
       </Breadcrumbs>
-    </Grid>
-  </Grid>
+    </Box>
+  </Box>
 );
 
 export default Breadcrumb;

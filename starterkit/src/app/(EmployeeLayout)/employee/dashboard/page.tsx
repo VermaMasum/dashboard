@@ -48,6 +48,7 @@ import {
   Visibility,
   People,
   AccessTime,
+  CalendarToday,
 } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboard } from "@/contexts/DashboardContext";
@@ -110,6 +111,12 @@ const EmployeeDashboard = () => {
   const [recentReports, setRecentReports] = useState<RecentReport[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Date picker dialog state
+  const [datePickerDialogOpen, setDatePickerDialogOpen] = useState(false);
+  const [tempSelectedDate, setTempSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
   // Projects data
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectReports, setProjectReports] = useState<Report[]>([]);
@@ -140,19 +147,10 @@ const EmployeeDashboard = () => {
     Report[]
   >([]);
 
-  useEffect(() => {
-    console.log("🔍 Dashboard useEffect - user changed:", user);
-    if (user) {
-      console.log("🔍 User is available, fetching dashboard data...");
-      fetchDashboardData();
-    } else {
-      console.log("🔍 No user available, not fetching data");
-    }
-  }, [user]);
-
   // No need for URL parameter handling since we're using context
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = React.useCallback(async () => {
+    // ...existing code...
     try {
       setLoading(true);
       console.log(
@@ -251,7 +249,14 @@ const EmployeeDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Fetch dashboard data when user changes
+  useEffect(() => {
+    if (user) {
+      fetchDashboardData();
+    }
+  }, [user, fetchDashboardData]);
 
   // Tab change handler
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -308,7 +313,7 @@ const EmployeeDashboard = () => {
   };
 
   // Filter reports
-  const filterReports = () => {
+  const filterReports = React.useCallback(() => {
     let filtered = reports;
 
     if (selectedProject) {
@@ -325,7 +330,7 @@ const EmployeeDashboard = () => {
     }
 
     setFilteredReports(filtered);
-  };
+  }, [reports, selectedProject, selectedDate]);
 
   // Project details handlers
   const handleViewProjectDetails = async (project: Project) => {
@@ -359,7 +364,7 @@ const EmployeeDashboard = () => {
 
   useEffect(() => {
     filterReports();
-  }, [selectedProject, selectedDate, reports]);
+  }, [selectedProject, selectedDate, reports, filterReports]);
 
   if (loading) {
     return (
@@ -377,17 +382,37 @@ const EmployeeDashboard = () => {
   return (
     <Box>
       {/* Breadcrumbs */}
-      <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
-        <Link
-          underline="hover"
-          color="inherit"
-          href="/employee/dashboard"
-          sx={{ display: "flex", alignItems: "center" }}
+      <Breadcrumbs
+        aria-label="breadcrumb"
+        sx={{
+          mb: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Link
+            underline="hover"
+            color="inherit"
+            href="/employee/dashboard"
+            sx={{ display: "flex", alignItems: "center" }}
+          >
+            <Home sx={{ mr: 0.5 }} fontSize="inherit" />
+            Dashboard
+          </Link>
+          <Typography color="text.primary" sx={{ ml: 1 }}>
+            Employee Dashboard
+          </Typography>
+        </Box>
+        <IconButton
+          onClick={() => setDatePickerDialogOpen(true)}
+          size="small"
+          sx={{ backgroundColor: "#f5f5f5" }}
+          title="Select Date"
         >
-          <Home sx={{ mr: 0.5 }} fontSize="inherit" />
-          Dashboard
-        </Link>
-        <Typography color="text.primary">Employee Dashboard</Typography>
+          <CalendarToday />
+        </IconButton>
       </Breadcrumbs>
 
       {/* Welcome Section - Simplified */}
@@ -423,7 +448,7 @@ const EmployeeDashboard = () => {
                     gutterBottom
                     fontWeight="500"
                   >
-                    Today's Reports
+                    Today&apos;s Reports
                   </Typography>
                   <Typography
                     variant="h3"
@@ -621,56 +646,6 @@ const EmployeeDashboard = () => {
           {/* Overview Tab */}
           {activeTab === 0 && (
             <Box>
-              {/* Quick Actions */}
-              <Box mb={4}>
-                <Typography variant="h6" gutterBottom fontWeight="600">
-                  Quick Actions
-                </Typography>
-                <Box display="flex" gap={3} flexWrap="wrap">
-                  <Button
-                    variant="contained"
-                    startIcon={<Add />}
-                    onClick={() => handleOpenReportDialog()}
-                    sx={{
-                      px: 3,
-                      py: 1.5,
-                      borderRadius: 2,
-                      textTransform: "none",
-                      fontWeight: 600,
-                      boxShadow: 2,
-                      "&:hover": {
-                        boxShadow: 4,
-                        transform: "translateY(-1px)",
-                      },
-                      transition: "all 0.2s ease-in-out",
-                    }}
-                  >
-                    Create Daily Report
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Assignment />}
-                    onClick={() => setActiveTab(1)}
-                    sx={{
-                      px: 3,
-                      py: 1.5,
-                      borderRadius: 2,
-                      textTransform: "none",
-                      fontWeight: 600,
-                      borderWidth: 2,
-                      "&:hover": {
-                        borderWidth: 2,
-                        transform: "translateY(-1px)",
-                        boxShadow: 2,
-                      },
-                      transition: "all 0.2s ease-in-out",
-                    }}
-                  >
-                    View Projects
-                  </Button>
-                </Box>
-              </Box>
-
               {/* Recent Reports */}
               <Box display="flex" flexWrap="wrap" gap={3}>
                 <Box flex="2" minWidth="400px">
@@ -1233,6 +1208,41 @@ const EmployeeDashboard = () => {
           <Button onClick={handleCloseReportDialog}>Cancel</Button>
           <Button onClick={handleSaveReport} variant="contained">
             {editingReport ? "Update" : "Create"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Date Picker Dialog */}
+      <Dialog
+        open={datePickerDialogOpen}
+        onClose={() => setDatePickerDialogOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Select Date</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3, mt: 1 }}>
+            <TextField
+              fullWidth
+              label="Select Date"
+              type="date"
+              value={tempSelectedDate}
+              onChange={(e) => setTempSelectedDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              helperText={`This will filter reports to the selected date`}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDatePickerDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              setSelectedDate(tempSelectedDate);
+              setDatePickerDialogOpen(false);
+            }}
+            variant="contained"
+          >
+            Apply
           </Button>
         </DialogActions>
       </Dialog>

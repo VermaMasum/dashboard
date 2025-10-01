@@ -51,6 +51,7 @@ interface Project {
   _id: string;
   name: string;
   description: string;
+  employees?: Employee[];
 }
 
 interface Employee {
@@ -118,7 +119,7 @@ const DailyReports = () => {
       console.log("📊 Employees data:", employeesRes.data);
 
       // Debug: Check report dates
-      reportsRes.data.forEach((report, index) => {
+      reportsRes.data.forEach((report: Report, index: number) => {
         console.log(`📊 Report ${index + 1}:`, {
           id: report._id,
           date: report.date,
@@ -221,18 +222,12 @@ const DailyReports = () => {
     // Handle date filtering more robustly
     let reportDate;
 
-    // Handle different date formats
-    if (typeof report.date === "string") {
-      reportDate = new Date(report.date);
-    } else if (report.date instanceof Date) {
-      reportDate = report.date;
-    } else {
-      reportDate = new Date(report.date);
-    }
+    // Handle date parsing
+    reportDate = new Date(report.date);
 
     // Single date filtering logic
     const filterDate = new Date(selectedDate);
-    
+
     // Compare dates by setting time to start of day
     const reportDateOnly = new Date(
       reportDate.getFullYear(),
@@ -244,7 +239,7 @@ const DailyReports = () => {
       filterDate.getMonth(),
       filterDate.getDate()
     );
-    
+
     const dateMatch = reportDateOnly.getTime() === filterDateOnly.getTime();
 
     const projectMatch =
@@ -290,8 +285,8 @@ const DailyReports = () => {
         alignItems="center"
         mb={3}
       >
-        {/* <Typography variant="h4" component="h1">
-          Daily Reports
+        {/* <Typography variant="h4" sx={ fontWeight: "bold", color: "#1976D2"}>
+          Project Details
         </Typography> */}
         <Button
           variant="contained"
@@ -323,7 +318,7 @@ const DailyReports = () => {
                 <Assessment color="primary" sx={{ mr: 2 }} />
                 <Box>
                   <Typography color="textSecondary" gutterBottom>
-                    Today's Reports
+                    Today&apos;s Reports
                   </Typography>
                   <Typography variant="h4">{todayReports.length}</Typography>
                 </Box>
@@ -606,7 +601,7 @@ const DailyReports = () => {
                     );
                   }
 
-                  return assignedEmployees.map((employee) => {
+                  return assignedEmployees.map((employee: Employee) => {
                     // employee is already populated with username and _id
                     return (
                       <MenuItem key={employee._id} value={employee._id}>

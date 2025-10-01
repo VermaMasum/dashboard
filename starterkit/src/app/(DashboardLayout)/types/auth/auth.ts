@@ -1,13 +1,13 @@
 export interface registerType {
   title?: string;
-  subtitle?: JSX.Element | JSX.Element[];
-  subtext?: JSX.Element | JSX.Element[];
+  subtitle?: React.ReactElement | React.ReactElement[];
+  subtext?: React.ReactElement | React.ReactElement[];
 }
 
 export interface loginType {
   title?: string;
-  subtitle?: JSX.Element | JSX.Element[];
-  subtext?: JSX.Element | JSX.Element[];
+  subtitle?: React.ReactElement | React.ReactElement[];
+  subtext?: React.ReactElement | React.ReactElement[];
 }
 
 export interface signInType {

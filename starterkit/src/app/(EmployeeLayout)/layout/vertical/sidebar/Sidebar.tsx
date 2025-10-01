@@ -1,20 +1,21 @@
 "use client";
-import React, { useState } from "react";
-import { useMediaQuery, Box, Drawer, useTheme, Typography } from "@mui/material";
-import { useSelector } from "@/store/hooks";
+import React from "react";
+import { useMediaQuery, Box, Drawer, useTheme } from "@mui/material";
+import { useSelector, useDispatch } from "@/store/hooks";
 import { AppState } from "@/store/store";
+import { toggleMobileSidebar } from "@/store/customizer/CustomizerSlice";
 import SidebarItems from "./SidebarItems";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Sidebar = () => {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const lgUp = useMediaQuery((theme: any) => theme.breakpoints.up("lg"));
   const theme = useTheme();
   const customizer = useSelector((state: AppState) => state.customizer);
+  const dispatch = useDispatch();
   const { user } = useAuth();
 
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    dispatch(toggleMobileSidebar());
   };
 
   if (lgUp) {
@@ -62,11 +63,11 @@ const Sidebar = () => {
   return (
     <Drawer
       anchor="left"
-      open={mobileOpen}
+      open={customizer.isMobileSidebar}
       onClose={handleDrawerToggle}
       variant="temporary"
       sx={{
-        zIndex: 1001,
+        zIndex: 1300,
         display: { xs: "block", lg: "none" },
         "& .MuiDrawer-paper": {
           width: 240,
@@ -77,7 +78,9 @@ const Sidebar = () => {
         },
       }}
     >
-      <SidebarItems />
+      <Box sx={{ p: 2 }}>
+        <SidebarItems />
+      </Box>
     </Drawer>
   );
 };

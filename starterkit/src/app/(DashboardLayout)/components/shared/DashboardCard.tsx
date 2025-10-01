@@ -1,3 +1,4 @@
+import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Card, CardContent, Typography, Stack, Box } from '@mui/material';
 import { useSelector } from '@/store/hooks';
@@ -6,13 +7,13 @@ import { AppState } from '@/store/store';
 type Props = {
   title?: string;
   subtitle?: string;
-  action?: JSX.Element | any;
-  footer?: JSX.Element;
-  cardheading?: string | JSX.Element;
-  headtitle?: string | JSX.Element;
-  headsubtitle?: string | JSX.Element;
-  children?: JSX.Element;
-  middlecontent?: string | JSX.Element;
+  action?: React.ReactElement | any;
+  footer?: React.ReactElement;
+  cardheading?: string | React.ReactElement;
+  headtitle?: string | React.ReactElement;
+  headsubtitle?: string | React.ReactElement;
+  children?: React.ReactElement;
+  middlecontent?: string | React.ReactElement;
 };
 
 const DashboardCard = ({

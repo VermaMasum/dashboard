@@ -6,7 +6,6 @@ import {
   Card,
   CardContent,
   Avatar,
-  Grid,
   List,
   ListItem,
   ListItemText,
@@ -156,9 +155,9 @@ const EmployeeProfile = () => {
         Manage your profile information and view your work statistics.
       </Typography>
 
-      <Grid container spacing={3}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
         {/* Profile Information */}
-        <Grid item xs={12} md={4}>
+        <Box sx={{ flex: "1 1 calc(33.333% - 16px)", minWidth: "300px" }}>
           <Card>
             <CardContent>
               <Box display="flex" flexDirection="column" alignItems="center" textAlign="center">
@@ -169,9 +168,9 @@ const EmployeeProfile = () => {
                 <Typography variant="h5" gutterBottom>
                   {profile?.username}
                 </Typography>
-                <Chip 
-                  label={profile?.role || 'Employee'} 
-                  color="primary" 
+                <Chip
+                  label={profile?.role || 'Employee'}
+                  color="primary"
                   sx={{ mb: 2 }}
                 />
                 <Button
@@ -185,10 +184,10 @@ const EmployeeProfile = () => {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
         {/* Profile Details */}
-        <Grid item xs={12} md={8}>
+        <Box sx={{ flex: "1 1 calc(66.666% - 16px)", minWidth: "400px" }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
@@ -234,61 +233,53 @@ const EmployeeProfile = () => {
               </List>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
         {/* Work Statistics */}
-        <Grid item xs={12}>
+        <Box sx={{ flex: "1 1 100%", minWidth: "300px" }}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Work Statistics
               </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box textAlign="center">
-                    <Typography variant="h4" color="primary" gutterBottom>
-                      {stats.totalReports}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Reports
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box textAlign="center">
-                    <Typography variant="h4" color="success.main" gutterBottom>
-                      {stats.totalHours}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Hours
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box textAlign="center">
-                    <Typography variant="h4" color="warning.main" gutterBottom>
-                      {stats.totalProjects}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Projects Worked
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <Box textAlign="center">
-                    <Typography variant="h4" color="info.main" gutterBottom>
-                      {stats.averageHoursPerDay}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Avg Hours/Day
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Grid>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                <Box sx={{ flex: "1 1 calc(25% - 12px)", minWidth: "200px", textAlign: "center" }}>
+                  <Typography variant="h4" color="primary" gutterBottom>
+                    {stats.totalReports}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Reports
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: "1 1 calc(25% - 12px)", minWidth: "200px", textAlign: "center" }}>
+                  <Typography variant="h4" color="success.main" gutterBottom>
+                    {stats.totalHours}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Hours
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: "1 1 calc(25% - 12px)", minWidth: "200px", textAlign: "center" }}>
+                  <Typography variant="h4" color="warning.main" gutterBottom>
+                    {stats.totalProjects}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Projects Worked
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: "1 1 calc(25% - 12px)", minWidth: "200px", textAlign: "center" }}>
+                  <Typography variant="h4" color="info.main" gutterBottom>
+                    {stats.averageHoursPerDay}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Avg Hours/Day
+                  </Typography>
+                </Box>
+              </Box>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Edit Profile Dialog */}
       <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="sm" fullWidth>

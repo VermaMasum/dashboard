@@ -19,7 +19,6 @@ import {
 import { useSelector } from '@/store/hooks';
 import { useTranslation } from 'react-i18next';
 import { AppState } from '@/store/store';
-import { useContent } from '@/contexts/ContentContext';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 
 type NavGroup = {
@@ -49,7 +48,6 @@ interface ItemType {
 
 export default function NavItemWithDropdown({ item, level, pathDirect, hideMenu, onClick }: ItemType) {
   const lgDown = useMediaQuery((theme: Theme) => theme.breakpoints.down("lg"));
-  const { setCurrentContent } = useContent();
   const [open, setOpen] = useState(false);
 
   const customizer = useSelector((state: AppState) => state.customizer);
@@ -63,47 +61,17 @@ export default function NavItemWithDropdown({ item, level, pathDirect, hideMenu,
     if (item.children && item.children.length > 0) {
       setOpen(!open);
     } else {
-      // Map href to content type
-      const contentMap: { [key: string]: string } = {
-        '/': 'dashboard',
-        '/admin/project-details': 'project-details',
-        '/admin/daily-reports': 'daily-reports',
-        '/admin/weekly-reports': 'weekly-reports',
-        '/admin/monthly-reports': 'monthly-reports',
-        '/admin/employees': 'employees',
-        '/admin/employee-list': 'employee-list',
-      };
-      
-      const contentType = contentMap[item.href];
-      if (contentType) {
-        setCurrentContent(contentType as any);
-      }
-      
+      // Use Next.js router for navigation instead of content context
       if (onClick) {
-        onClick();
+        onClick({} as React.MouseEvent<HTMLElement>);
       }
     }
   };
 
   const handleChildClick = (childItem: NavGroup) => {
-    // Map href to content type
-    const contentMap: { [key: string]: string } = {
-      '/': 'dashboard',
-      '/admin/project-details': 'project-details',
-      '/admin/daily-reports': 'daily-reports',
-      '/admin/weekly-reports': 'weekly-reports',
-      '/admin/monthly-reports': 'monthly-reports',
-      '/admin/employees': 'employees',
-      '/admin/employee-list': 'employee-list',
-    };
-    
-    const contentType = contentMap[childItem.href];
-    if (contentType) {
-      setCurrentContent(contentType as any);
-    }
-    
+    // Use Next.js router for navigation instead of content context
     if (onClick) {
-      onClick();
+      onClick({} as React.MouseEvent<HTMLElement>);
     }
   };
 
@@ -219,7 +187,7 @@ export default function NavItemWithDropdown({ item, level, pathDirect, hideMenu,
       {hasChildren && (
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
-            {item.children.map((child) => {
+            {item.children?.map((child) => {
               const ChildIcon = child?.icon;
               const childIcon = <ChildIcon stroke={1.5} size="1rem" />;
               

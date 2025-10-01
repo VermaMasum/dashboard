@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Grid,
   Button,
   Table,
   TableBody,
@@ -28,7 +27,7 @@ import {
   Avatar,
   Stack,
   Divider,
-} from '@mui/material';
+} from "@mui/material";
 import {
   CalendarToday,
   TrendingUp,
@@ -42,9 +41,9 @@ import {
   Visibility,
   Person,
   DateRange,
-} from '@mui/icons-material';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from '@/utils/axios';
+} from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "@/utils/axios";
 
 interface MonthlyData {
   monthStart: string;
@@ -101,73 +100,76 @@ const EmployeeMonthlyReports = () => {
   const { user } = useAuth();
   const [monthlyData, setMonthlyData] = useState<MonthlyData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedTab, setSelectedTab] = useState(0);
   const [viewDialog, setViewDialog] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
-  useEffect(() => {
-    fetchMonthlyData();
-  }, [currentMonth]);
-
-  const fetchMonthlyData = async () => {
+  const fetchMonthlyData = React.useCallback(async () => {
     try {
       setLoading(true);
-      setError('');
-      
+      setError("");
       const month = currentMonth.getMonth() + 1;
       const year = currentMonth.getFullYear();
-      
-      const response = await axios.get('/reports/monthly', {
+      const response = await axios.get("/reports/monthly", {
         params: {
           month: month,
           year: year,
-        }
+        },
       });
       setMonthlyData(response.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch monthly data');
+      setError(err.response?.data?.message || "Failed to fetch monthly data");
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentMonth]);
 
-  const navigateMonth = (direction: 'prev' | 'next') => {
+  useEffect(() => {
+    fetchMonthlyData();
+  }, [currentMonth, fetchMonthlyData]);
+
+  const navigateMonth = (direction: "prev" | "next") => {
     const newMonth = new Date(currentMonth);
-    newMonth.setMonth(currentMonth.getMonth() + (direction === 'next' ? 1 : -1));
+    newMonth.setMonth(
+      currentMonth.getMonth() + (direction === "next" ? 1 : -1)
+    );
     setCurrentMonth(newMonth);
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
     });
   };
 
   const formatMonthRange = (start: string, end: string) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
-    return `${startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+    return `${startDate.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    })}`;
   };
 
   const getDayColor = (hours: number) => {
-    if (hours >= 8) return 'success';
-    if (hours >= 4) return 'warning';
-    return 'error';
+    if (hours >= 8) return "success";
+    if (hours >= 4) return "warning";
+    return "error";
   };
 
   const getWeekColor = (hours: number) => {
-    if (hours >= 40) return 'success';
-    if (hours >= 30) return 'primary';
-    if (hours >= 20) return 'warning';
-    return 'error';
+    if (hours >= 40) return "success";
+    if (hours >= 30) return "primary";
+    if (hours >= 20) return "warning";
+    return "error";
   };
 
   const handleViewProject = (projectId: string) => {
     const project = Object.values(monthlyData?.projectBreakdown || {}).find(
-      p => p.project._id === projectId
+      (p) => p.project._id === projectId
     );
     setSelectedProject(project);
     setViewDialog(true);
@@ -207,7 +209,14 @@ const EmployeeMonthlyReports = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
         <Box>
           <Typography variant="h4" gutterBottom>
             My Monthly Reports
@@ -216,8 +225,11 @@ const EmployeeMonthlyReports = () => {
             {formatMonthRange(monthlyData.monthStart, monthlyData.monthEnd)}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => navigateMonth('prev')} title="Previous Month">
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <IconButton
+            onClick={() => navigateMonth("prev")}
+            title="Previous Month"
+          >
             <ArrowBack />
           </IconButton>
           <Button
@@ -227,18 +239,18 @@ const EmployeeMonthlyReports = () => {
           >
             This Month
           </Button>
-          <IconButton onClick={() => navigateMonth('next')} title="Next Month">
+          <IconButton onClick={() => navigateMonth("next")} title="Next Month">
             <ArrowForward />
           </IconButton>
         </Box>
       </Box>
 
       {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 3 }}>
+        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <AccessTime color="primary" sx={{ mr: 1 }} />
                 <Typography variant="h6">Total Hours</Typography>
               </Box>
@@ -250,11 +262,11 @@ const EmployeeMonthlyReports = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Assessment color="secondary" sx={{ mr: 1 }} />
                 <Typography variant="h6">Reports</Typography>
               </Box>
@@ -266,11 +278,11 @@ const EmployeeMonthlyReports = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <Work color="success" sx={{ mr: 1 }} />
                 <Typography variant="h6">Projects</Typography>
               </Box>
@@ -282,11 +294,11 @@ const EmployeeMonthlyReports = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        </Box>
+        <Box sx={{ flex: "1 1 250px", minWidth: "250px" }}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <TrendingUp color="warning" sx={{ mr: 1 }} />
                 <Typography variant="h6">Avg/Day</Typography>
               </Box>
@@ -298,12 +310,12 @@ const EmployeeMonthlyReports = () => {
               </Typography>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Tabs */}
       <Card>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={selectedTab} onChange={handleTabChange}>
             <Tab label="Weekly Breakdown" />
             <Tab label="Daily Calendar" />
@@ -319,37 +331,60 @@ const EmployeeMonthlyReports = () => {
               <Typography variant="h6" gutterBottom>
                 Weekly Breakdown
               </Typography>
-              <Grid container spacing={2}>
-                {Object.entries(monthlyData.weeklyBreakdown).map(([weekKey, weekData]) => (
-                  <Grid item xs={12} sm={6} md={4} key={weekKey}>
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                          <Typography variant="subtitle1" fontWeight="bold">
-                            Week {weekData.weekNumber}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                {Object.entries(monthlyData.weeklyBreakdown).map(
+                  ([weekKey, weekData]) => (
+                    <Box
+                      key={weekKey}
+                      sx={{ flex: "1 1 300px", minWidth: "300px" }}
+                    >
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              mb: 2,
+                            }}
+                          >
+                            <Typography variant="subtitle1" fontWeight="bold">
+                              Week {weekData.weekNumber}
+                            </Typography>
+                            <Chip
+                              label={`${weekData.hours}h`}
+                              color={getWeekColor(weekData.hours)}
+                              size="small"
+                            />
+                          </Box>
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            gutterBottom
+                          >
+                            {formatDate(weekData.weekStart)} -{" "}
+                            {formatDate(weekData.weekEnd)}
                           </Typography>
-                          <Chip
-                            label={`${weekData.hours}h`}
-                            color={getWeekColor(weekData.hours)}
-                            size="small"
-                          />
-                        </Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          {formatDate(weekData.weekStart)} - {formatDate(weekData.weekEnd)}
-                        </Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                          <Typography variant="caption">
-                            {weekData.reports} reports
-                          </Typography>
-                          <Typography variant="caption">
-                            {weekData.projects.length} projects
-                          </Typography>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              mt: 1,
+                            }}
+                          >
+                            <Typography variant="caption">
+                              {weekData.reports} reports
+                            </Typography>
+                            <Typography variant="caption">
+                              {weekData.projects.length} projects
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Box>
+                  )
+                )}
+              </Box>
             </Box>
           )}
 
@@ -359,37 +394,59 @@ const EmployeeMonthlyReports = () => {
               <Typography variant="h6" gutterBottom>
                 Daily Calendar View
               </Typography>
-              <Grid container spacing={1}>
-                {Object.entries(monthlyData.dailyBreakdown).map(([date, dayData]) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={date}>
-                    <Card variant="outlined" sx={{ minHeight: 120 }}>
-                      <CardContent sx={{ p: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                          <Typography variant="subtitle2" fontWeight="bold">
-                            {dayData.dayNumber}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {Object.entries(monthlyData.dailyBreakdown).map(
+                  ([date, dayData]) => (
+                    <Box
+                      key={date}
+                      sx={{ flex: "1 1 200px", minWidth: "200px" }}
+                    >
+                      <Card variant="outlined" sx={{ minHeight: 120 }}>
+                        <CardContent sx={{ p: 2 }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "center",
+                              mb: 1,
+                            }}
+                          >
+                            <Typography variant="subtitle2" fontWeight="bold">
+                              {dayData.dayNumber}
+                            </Typography>
+                            <Chip
+                              label={`${dayData.hours}h`}
+                              color={getDayColor(dayData.hours)}
+                              size="small"
+                            />
+                          </Box>
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            gutterBottom
+                          >
+                            {dayData.dayName}
                           </Typography>
-                          <Chip
-                            label={`${dayData.hours}h`}
-                            color={getDayColor(dayData.hours)}
-                            size="small"
-                          />
-                        </Box>
-                        <Typography variant="caption" color="text.secondary" gutterBottom>
-                          {dayData.dayName}
-                        </Typography>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                          <Typography variant="caption">
-                            {dayData.reports} reports
-                          </Typography>
-                          <Typography variant="caption">
-                            {dayData.projects.length} projects
-                          </Typography>
-                        </Box>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              mt: 1,
+                            }}
+                          >
+                            <Typography variant="caption">
+                              {dayData.reports} reports
+                            </Typography>
+                            <Typography variant="caption">
+                              {dayData.projects.length} projects
+                            </Typography>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    </Box>
+                  )
+                )}
+              </Box>
             </Box>
           )}
 
@@ -410,36 +467,41 @@ const EmployeeMonthlyReports = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.entries(monthlyData.projectBreakdown).map(([projectId, projectData]) => (
-                      <TableRow key={projectId}>
-                        <TableCell>
-                          <Box>
-                            <Typography variant="subtitle2">
-                              {projectData.project.name}
+                    {Object.entries(monthlyData.projectBreakdown).map(
+                      ([projectId, projectData]) => (
+                        <TableRow key={projectId}>
+                          <TableCell>
+                            <Box>
+                              <Typography variant="subtitle2">
+                                {projectData.project.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                {projectData.project.description}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell align="right">
+                            <Typography variant="body2" fontWeight="bold">
+                              {projectData.hours}h
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {projectData.project.description}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" fontWeight="bold">
-                            {projectData.hours}h
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          {projectData.reports}
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleViewProject(projectId)}
-                          >
-                            <Visibility />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell align="right">
+                            {projectData.reports}
+                          </TableCell>
+                          <TableCell align="center">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleViewProject(projectId)}
+                            >
+                              <Visibility />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -452,64 +514,103 @@ const EmployeeMonthlyReports = () => {
               <Typography variant="h6" gutterBottom>
                 Your Performance This Month
               </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                <Box sx={{ flex: "1 1 400px", minWidth: "400px" }}>
                   <Card variant="outlined">
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
                         Work Pattern
                       </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 2,
+                        }}
+                      >
                         <Typography variant="body2">Total Hours:</Typography>
                         <Typography variant="body2" fontWeight="bold">
                           {monthlyData.totalHours}h
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 2,
+                        }}
+                      >
                         <Typography variant="body2">Daily Average:</Typography>
                         <Typography variant="body2" fontWeight="bold">
                           {(monthlyData.totalHours / 30).toFixed(1)}h
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                        <Typography variant="body2">Reports Submitted:</Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 2,
+                        }}
+                      >
+                        <Typography variant="body2">
+                          Reports Submitted:
+                        </Typography>
                         <Typography variant="body2" fontWeight="bold">
                           {monthlyData.totalReports}
                         </Typography>
                       </Box>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <Typography variant="body2">Active Projects:</Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Typography variant="body2">
+                          Active Projects:
+                        </Typography>
                         <Typography variant="body2" fontWeight="bold">
                           {Object.keys(monthlyData.projectBreakdown).length}
                         </Typography>
                       </Box>
                     </CardContent>
                   </Card>
-                </Grid>
-                <Grid item xs={12} md={6}>
+                </Box>
+                <Box sx={{ flex: "1 1 400px", minWidth: "400px" }}>
                   <Card variant="outlined">
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
                         Performance Rating
                       </Typography>
-                      <Box sx={{ textAlign: 'center', py: 2 }}>
+                      <Box sx={{ textAlign: "center", py: 2 }}>
                         {monthlyData.totalHours >= 160 ? (
-                          <Chip label="Excellent" color="success" size="large" />
+                          <Chip
+                            label="Excellent"
+                            color="success"
+                            size="medium"
+                          />
                         ) : monthlyData.totalHours >= 120 ? (
-                          <Chip label="Good" color="primary" size="large" />
+                          <Chip label="Good" color="primary" size="medium" />
                         ) : monthlyData.totalHours >= 80 ? (
-                          <Chip label="Average" color="warning" size="large" />
+                          <Chip label="Average" color="warning" size="medium" />
                         ) : (
-                          <Chip label="Below Average" color="error" size="large" />
+                          <Chip
+                            label="Below Average"
+                            color="error"
+                            size="medium"
+                          />
                         )}
                       </Box>
-                      <Typography variant="body2" color="text.secondary" textAlign="center">
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        textAlign="center"
+                      >
                         Based on monthly hours worked
                       </Typography>
                     </CardContent>
                   </Card>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </Box>
           )}
         </CardContent>
@@ -522,9 +623,7 @@ const EmployeeMonthlyReports = () => {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>
-          Project Details
-        </DialogTitle>
+        <DialogTitle>Project Details</DialogTitle>
         <DialogContent>
           {selectedProject && (
             <Box>
@@ -535,24 +634,24 @@ const EmployeeMonthlyReports = () => {
                 {selectedProject.project.description}
               </Typography>
               <Divider sx={{ my: 2 }} />
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
+              <Box sx={{ display: "flex", gap: 4 }}>
+                <Box>
                   <Typography variant="subtitle2" color="text.secondary">
                     Total Hours
                   </Typography>
                   <Typography variant="h6" color="primary">
                     {selectedProject.hours}h
                   </Typography>
-                </Grid>
-                <Grid item xs={6}>
+                </Box>
+                <Box>
                   <Typography variant="subtitle2" color="text.secondary">
                     Reports Submitted
                   </Typography>
                   <Typography variant="h6" color="secondary">
                     {selectedProject.reports}
                   </Typography>
-                </Grid>
-              </Grid>
+                </Box>
+              </Box>
             </Box>
           )}
         </DialogContent>

@@ -5,7 +5,7 @@ import {useSelector} from '@/store/hooks';
 
 type Props = {
   className?: string;
-  children: JSX.Element | JSX.Element[];
+  children: React.ReactNode;
   sx?: any;
 };
 

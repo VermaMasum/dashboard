@@ -44,7 +44,7 @@ router.post("/", protect, async (req, res) => {
     return res.status(401).json({ message: "Not authorized" });
   }
   console.log("Request body:", req.body);
-  const { name, description, date, employees } = req.body;
+  const { name, description, date, employees, status } = req.body;
   if (!name || name.trim() === "") {
     return res.status(400).json({ message: "Project name is required" });
   }
@@ -65,6 +65,7 @@ router.post("/", protect, async (req, res) => {
     description,
     date,
     employees: employeeIds,
+    status: status || 'not started',
   });
   const createdProject = await project.save();
   await createdProject.populate("employees", "username");
@@ -85,12 +86,13 @@ router.put("/:id", protect, async (req, res) => {
       "with body:",
       req.body
     );
-    const { name, description, employees } = req.body;
+    const { name, description, employees, status } = req.body;
     const project = await Project.findById(req.params.id);
     if (project) {
       if (name !== undefined) project.name = name;
       if (description !== undefined) project.description = description;
       if (employees !== undefined) project.employees = employees;
+      if (status !== undefined) project.status = status;
       const updatedProject = await project.save();
       await updatedProject.populate("employees", "username");
       console.log("Updated project:", updatedProject);

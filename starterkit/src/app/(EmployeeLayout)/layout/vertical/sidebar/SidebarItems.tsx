@@ -5,10 +5,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDashboard } from "@/contexts/DashboardContext";
 import Menuitems from "./MenuItems";
+import { toggleMobileSidebar } from "@/store/customizer/CustomizerSlice";
+import { useDispatch } from "@/store/hooks";
+import { useMediaQuery } from "@mui/material";
 
 const SidebarItems = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useDispatch();
+  const lgDown = useMediaQuery((theme: any) => theme.breakpoints.down("lg"));
   const { user } = useAuth();
   const { setActiveTab } = useDashboard();
 
@@ -54,6 +59,10 @@ const SidebarItems = () => {
                     } else {
                       // For other pages, use normal navigation
                       router.push(item.href || '/');
+                    }
+                    // Close mobile drawer after navigation
+                    if (lgDown) {
+                      dispatch(toggleMobileSidebar());
                     }
                   }}
                   sx={{

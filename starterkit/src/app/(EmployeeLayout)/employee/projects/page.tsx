@@ -5,8 +5,6 @@ import {
   Typography,
   Card,
   CardContent,
-  Breadcrumbs,
-  Link,
   Table,
   TableBody,
   TableCell,
@@ -22,7 +20,7 @@ import {
   Button,
   Chip,
 } from '@mui/material';
-import { Home, Visibility, People, AccessTime } from '@mui/icons-material';
+import { Visibility, People, AccessTime } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from '@/utils/axios';
 
@@ -36,6 +34,7 @@ interface Project {
     username: string;
   }>;
   createdAt: string;
+  status: "not started" | "in progress" | "completed";
 }
 
 interface Report {
@@ -129,22 +128,12 @@ const EmployeeProjects = () => {
     <Box sx={{ p: 3 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Breadcrumbs sx={{ mb: 2 }}>
-          <Link href="/employee/overview" color="inherit" sx={{ display: 'flex', alignItems: 'center' }}>
-            <Home sx={{ mr: 0.5, fontSize: 20 }} />
-            Employee Portal
-          </Link>
-          <Typography color="text.primary">Projects</Typography>
-        </Breadcrumbs>
-        
-        {/* <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
-            My Projects
-          </Typography>
-          <Typography variant="h6" color="text.secondary">
-            Manage and view all your assigned projects
-          </Typography>
-        </Box> */}
+        <Typography variant="h4" fontWeight="bold" gutterBottom>
+          Projects
+        </Typography>
+        <Typography variant="h6" color="text.secondary">
+          Manage and view all your assigned projects
+        </Typography>
       </Box>
 
       {/* Projects Table */}
@@ -165,58 +154,80 @@ const EmployeeProjects = () => {
                   <TableRow>
                     <TableCell><strong>Project Name</strong></TableCell>
                     <TableCell><strong>Description</strong></TableCell>
-                    <TableCell><strong>Created Date</strong></TableCell>
-                    <TableCell><strong>Team Members</strong></TableCell>
-                    <TableCell><strong>Total Hours</strong></TableCell>
-                    <TableCell><strong>Actions</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {projects.map((project) => (
-                    <TableRow key={project._id} hover>
-                      <TableCell>
-                        <Typography variant="subtitle2" fontWeight="medium">
-                          {project.name}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 200 }}>
-                          {project.description || 'No description'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
+                  <TableCell><strong>Created Date</strong></TableCell>
+                  <TableCell><strong>Team Members</strong></TableCell>
+                  <TableCell><strong>Status</strong></TableCell>
+                  <TableCell><strong>Total Hours</strong></TableCell>
+                  <TableCell><strong>Actions</strong></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {projects.map((project) => (
+                  <TableRow key={project._id} hover>
+                    <TableCell>
+                      <Typography variant="subtitle2" fontWeight="medium">
+                        {project.name}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 200 }}>
+                        {project.description || 'No description'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">
+                        {project.date ? new Date(project.date).toLocaleDateString() : 'N/A'}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <People fontSize="small" color="action" />
                         <Typography variant="body2">
-                          {project.date ? new Date(project.date).toLocaleDateString() : 'N/A'}
+                          {project.employees ? project.employees.length : 0} member(s)
                         </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <People fontSize="small" color="action" />
-                          <Typography variant="body2">
-                            {project.employees ? project.employees.length : 0} member(s)
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <AccessTime fontSize="small" color="action" />
-                          <Typography variant="body2" fontWeight="medium">
-                            {calculateProjectTotalHours(project._id)}h
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <IconButton
-                          color="primary"
-                          onClick={() => handleViewProjectDetails(project)}
-                          title="View Details"
-                        >
-                          <Visibility />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={project.status ? project.status.toUpperCase() : "UNKNOWN"}
+                        size="small"
+                        sx={{
+                          backgroundColor: project.status === "completed" ? "#4caf50" :
+                            project.status === "in progress" ? "#ff9800" :
+                            project.status === "not started" ? "#f44336" : "#9e9e9e",
+                          color: "white",
+                          fontWeight: "bold",
+                          textTransform: "uppercase",
+                          fontSize: "0.75rem",
+                          px: 1.5,
+                          py: 0.5,
+                          borderRadius: 1,
+                          display: "inline-block",
+                          minWidth: 80,
+                          textAlign: "center",
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <AccessTime fontSize="small" color="action" />
+                        <Typography variant="body2" fontWeight="medium">
+                          {calculateProjectTotalHours(project._id)}h
+                        </Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleViewProjectDetails(project)}
+                        title="View Details"
+                      >
+                        <Visibility />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
               </Table>
             </TableContainer>
           </CardContent>

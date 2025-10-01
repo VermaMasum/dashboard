@@ -1,5 +1,5 @@
 "use client";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 interface CalendarProps {
   currentDate: Date;
@@ -20,27 +20,23 @@ export default function Calendar({ currentDate, onSelectDate }: CalendarProps) {
   }
 
   return (
-    <Grid container spacing={1}>
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
       {days.map((day) => (
-        <Grid
-          item
-          xs={12 / 7}
+        <Box
           key={day.toISOString()}
           onClick={() => onSelectDate(day)}
+          sx={{
+            flex: "0 0 calc(100% / 7 - 8px)",
+            border: "1px solid #ccc",
+            p: 1,
+            textAlign: "center",
+            cursor: "pointer",
+            "&:hover": { background: "#e0f7fa" },
+          }}
         >
-          <Box
-            sx={{
-              border: "1px solid #ccc",
-              p: 1,
-              textAlign: "center",
-              cursor: "pointer",
-              "&:hover": { background: "#e0f7fa" },
-            }}
-          >
-            <Typography>{day.getDate()}</Typography>
-          </Box>
-        </Grid>
+          <Typography>{day.getDate()}</Typography>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   );
 }

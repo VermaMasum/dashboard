@@ -56,8 +56,8 @@ interface TimeEntry {
     name: string;
   };
   category: string;
-  description: string;
-  duration: number; // in minutes
+  details: string;
+  hoursWorked: number; // in minutes
   date: string;
   startTime?: string;
   endTime?: string;
@@ -73,18 +73,12 @@ interface projects {
 interface Report {
   _id: string;
   date: string;
-  projects: string;
+  projects: {
+    _id: string;
+    name: string;
+  };
   employee: string;
-  details: string;
-  hoursWorked: Number;
-}
-
-// Interfaces
-interface Report {
-  _id: string;
-  date: string;
-  project: string; // projectId
-  employee: string; // employeeId
+  category: string;
   details: string;
   hoursWorked: number;
 }
@@ -99,190 +93,16 @@ interface Employee {
   name: string;
 }
 
-export default function TimeTrackerPage() {
-  const [reports, setReports] = useState<Report[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [currentDate, setCurrentDate] = useState<Date>(new Date());
-
-  // Fetch reports + projects + employees
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [reportsRes, projectsRes, employeesRes] = await Promise.all([
-          fetch("/api/reports"),
-          fetch("/api/projects"),
-          fetch("/api/employees"),
-        ]);
-
-        const [reportsData, projectsData, employeesData] = await Promise.all([
-          reportsRes.json(),
-          projectsRes.json(),
-          employeesRes.json(),
-        ]);
-
-        setReports(reportsData);
-        setProjects(projectsData);
-        setEmployees(employeesData);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Helpers
-  const getProjectName = (id: string) =>
-    projects.find((p) => p._id === id)?.name || "Unknown Project";
-
-  const getEmployeeName = (id: string) =>
-    employees.find((e) => e._id === id)?.name || "Unknown Employee";
-
-  // Filter reports for current day
-  const filteredReports = reports.filter(
-    (report) =>
-      new Date(report.date).toDateString() === currentDate.toDateString()
-  );
-
-  return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h5" sx={{ mb: 3 }}>
-        Time Tracker – {currentDate.toDateString()}
-      </Typography>
-
-      {/* Example: Date navigation buttons */}
-      <Box sx={{ mb: 2 }}>
-        <Button
-          variant="outlined"
-          onClick={() =>
-            setCurrentDate(
-              new Date(currentDate.setDate(currentDate.getDate() - 1))
-            )
-          }
-          sx={{ mr: 1 }}
-        >
-          Previous Day
-        </Button>
-        <Button
-          variant="outlined"
-          onClick={() => setCurrentDate(new Date())}
-          sx={{ mr: 1 }}
-        >
-          Today
-        </Button>
-        <Button
-          variant="outlined"
-          onClick={() =>
-            setCurrentDate(
-              new Date(currentDate.setDate(currentDate.getDate() + 1))
-            )
-          }
-        >
-          Next Day
-        </Button>
-      </Box>
-
-      {filteredReports.length === 0 ? (
-        <Box sx={{ textAlign: "center", py: 8 }}>
-          <Typography variant="h6" color="text.secondary">
-            No reports for this day
-          </Typography>
-        </Box>
-      ) : (
-        filteredReports.map((report) => (
-          <Box
-            key={report._id}
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              mb: 2,
-              backgroundColor: "#e0f7fa",
-            }}
-          >
-            <Typography sx={{ fontWeight: "bold" }}>
-              Project: {getProjectName(report.project)}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              Employee: {getEmployeeName(report.employee)}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              {report.details || "No details provided"}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              Hours Worked: {report.hoursWorked}
-            </Typography>
-          </Box>
-        ))
-      )}
-    </Box>
-  );
-}
-
-const [reports, setReports] = useState<Report[]>([]);
-
-useEffect(() => {
-  const fetchReports = async () => {
-    try {
-      const res = await fetch("/api/reports");
-      if (!res.ok) throw new Error("failed to fetch reports");
-
-      const data = await res.json();
-      setReports(data);
-    } catch (err) {
-      console.error("Error fetching reports:", err);
-    }
-  };
-  fetchReports();
-}, []);
-
-const filteredReports = reports.filter(
-  (report) =>
-    new Date(report.date).toDateString() === currentDate.toDateString() &&
-    report.employee === currentEmployeeId
-);
-
-{
-  filteredReports.length === 0 ? (
-    <Box sx={{ textAlign: "center", py: 8 }}>
-      <Typography variant="h6" color="text.secondary">
-        No reports for this day
-      </Typography>
-      <Typography variant="h6" color="text.secondary" sx={{ mt: 1 }}>
-        Click to Add reports
-      </Typography>
-    </Box>
-  ) : (
-    filteredReports.map((report) => (
-      <Box
-        key={report._id}
-        sx={{ p: 2, borderRadius: 2, mb: 2, backgroundColor: "#e0f7fa" }}
-      >
-        <Typography sx={{ fontWeight: "bold" }}>
-          Project: {report.projects}
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          {report.details || "No description provided."}
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Hours Worked: {report.hoursWorked}
-        </Typography>
-      </Box>
-    ))
-  );
-}
-
-const EmployeeTimeTracker = () => {
+export default function EmployeeTimeTracker() {
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("day");
   const [currentDate, setCurrentDate] = useState(new Date());
   // const [projects, setprojects] = useState<TimeEntry[]>([]);
-  const [projects, setprojects] = useState<projects[]>([]);
-  // const [projects,setprojects] =  useState<projects[]>([])
+  const [timeEntries, setTimeEntries] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Move handleUpdateprojects inside component to access setprojects
+  // Move handleUpdateReport inside component to access setTimeEntries
   const handleUpdateReport = async (
     id: string,
     updatedData: Partial<Report>
@@ -299,8 +119,8 @@ const EmployeeTimeTracker = () => {
       if (res.ok) {
         const updatedReport = await res.json();
 
-        // Update local projects state
-        setReports((prev) =>
+        // Update local timeEntries state
+        setTimeEntries((prev) =>
           prev.map((r) => (r._id === id ? updatedReport : r))
         );
       } else {
@@ -311,23 +131,13 @@ const EmployeeTimeTracker = () => {
     }
   };
 
-  //   // Update projects that use this projects
-  //   setprojects((prev) =>
-  //     prev.map((entry) =>
-  //       entry.projects._id === id
-  //         ? { ...entry, projects: updatedprojects }
-  //         : entry
-  //     )
-  //   );
-  // }
-
   // Dialog states
   const [addEntryDialog, setAddEntryDialog] = useState(false);
   const [editEntryDialog, setEditEntryDialog] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState<TimeEntry | null>(null);
 
   // Form states
-  const [selectedprojects, setSelectedprojects] = useState("");
+  const [selectedProject, setSelectedProject] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("");
@@ -336,12 +146,12 @@ const EmployeeTimeTracker = () => {
   );
 
   // Filter states
-  const [filterprojects, setFilterprojects] = useState("");
+  const [filterProject, setFilterProject] = useState("");
   const [filterEmployee, setFilterEmployee] = useState(user?.id || "");
 
   useEffect(() => {
     fetchData();
-  }, [currentDate, viewMode, filterprojects]);
+  }, [currentDate, viewMode, filterProject]);
 
   const fetchData = async () => {
     try {
@@ -350,7 +160,8 @@ const EmployeeTimeTracker = () => {
 
       // Always fetch projects to get latest updates
       const projectsRes = await axios.get("/projects");
-      setprojects(projectsRes.data);
+      // Assuming projects are stored separately, keep a separate state for projects
+      // setProjects(projectsRes.data);
 
       // Calculate date range based on current view mode
       const { startDate, endDate } = getDateRange(currentDate, viewMode);
@@ -366,14 +177,14 @@ const EmployeeTimeTracker = () => {
 
       let allReports = reportsRes.data;
 
-      // Apply projects filter if selected
-      if (filterprojects) {
+      // Apply project filter if selected
+      if (filterProject) {
         allReports = allReports.filter(
-          (report: any) => report.projects._id === filterprojects
+          (report: any) => report.projects._id === filterProject
         );
       }
 
-      setprojects(allReports);
+      setTimeEntries(allReports);
     } catch (err: any) {
       console.error("Error fetching time tracker data:", err);
       setError(
@@ -523,7 +334,7 @@ const EmployeeTimeTracker = () => {
 
   const handleAddEntry = () => {
     setSelectedEntry(null);
-    setSelectedprojects("");
+    setSelectedProject("");
     setCategory("");
     setDescription("");
     setDuration("");
@@ -533,12 +344,12 @@ const EmployeeTimeTracker = () => {
 
   const handleEditEntry = (entry: TimeEntry) => {
     setSelectedEntry(entry);
-    setSelectedprojects(entry.projects._id);
+    setSelectedProject(entry.projects._id);
     setCategory(entry.category || "");
-    setDescription(entry.description);
-    // Ensure duration is a valid number before formatting
+    setDescription(entry.details);
+    // Ensure hoursWorked is a valid number before formatting
     const validDuration =
-      entry.duration && !isNaN(entry.duration) ? entry.duration : 0;
+      entry.hoursWorked && !isNaN(entry.hoursWorked) ? entry.hoursWorked : 0;
     setDuration(formatDuration(validDuration));
     setSelectedDate(entry.date);
     setEditEntryDialog(true);
@@ -554,9 +365,9 @@ const EmployeeTimeTracker = () => {
   const handleSaveEntry = async () => {
     try {
       const entryData = {
-        projects: selectedprojects,
+        projects: selectedProject,
         category: category,
-        description: description,
+        details: description,
         duration:
           parseInt(duration.split(":")[0]) * 60 +
           parseInt(duration.split(":")[1]),
@@ -565,20 +376,8 @@ const EmployeeTimeTracker = () => {
       };
 
       if (selectedEntry) {
-        // Check if editing a projects or a time entry
-        if (
-          selectedEntry.projects &&
-          selectedEntry.projects._id === selectedprojects
-        ) {
-          // Editing a time entry (report)
-          await axios.put(`/reports/${selectedEntry._id}`, entryData);
-        } else {
-          // Editing a projects
-          await handleUpdateprojects(selectedprojects, {
-            name: projects.find((p) => p._id === selectedprojects)?.name || "",
-            description: description,
-          });
-        }
+        // Editing a time entry (report)
+        await axios.put(`/reports/${selectedEntry._id}`, entryData);
       } else {
         // Create new entry
         await axios.post("/reports", entryData);
@@ -719,16 +518,17 @@ const EmployeeTimeTracker = () => {
                 <FormControl size="small" sx={{ minWidth: 150 }}>
                   <InputLabel>projects</InputLabel>
                   <Select
-                    value={filterprojects}
-                    onChange={(e) => setFilterprojects(e.target.value)}
+                    value={filterProject}
+                    onChange={(e) => setFilterProject(e.target.value)}
                     label="projects"
                   >
                     <MenuItem value="">All projects</MenuItem>
-                    {projects.map((projects) => (
-                      <MenuItem key={projects._id} value={projects._id}>
-                        {projects.name}
+                    {/* Assuming projects state is managed separately */}
+                    {/* {projects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.name}
                       </MenuItem>
-                    ))}
+                    ))} */}
                   </Select>
                 </FormControl>
               </Box>
@@ -805,7 +605,7 @@ const EmployeeTimeTracker = () => {
 
               {/* Day Entries - Simple List View */}
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {projects
+                {timeEntries
                   .filter(
                     (entry) =>
                       new Date(entry.date).toDateString() ===
@@ -825,7 +625,7 @@ const EmployeeTimeTracker = () => {
                     return (
                       <Box
                         key={entry._id}
-                        onClick={() => handleUpdateprojects(entry)}
+                        onClick={() => handleEditEntry(entry)}
                         sx={{
                           backgroundColor: color,
                           color: "white",
@@ -852,7 +652,7 @@ const EmployeeTimeTracker = () => {
                               variant="h6"
                               sx={{ fontWeight: "bold", mb: 0.5 }}
                             >
-                              {entry.name}
+                              {entry.projects.name}
                             </Typography>
                             <Typography
                               variant="body2"
@@ -898,7 +698,7 @@ const EmployeeTimeTracker = () => {
                     );
                   })}
 
-                {projects.filter(
+                {timeEntries.filter(
                   (entry) =>
                     new Date(entry.date).toDateString() ===
                     currentDate.toDateString()
@@ -912,10 +712,7 @@ const EmployeeTimeTracker = () => {
                       color="text.secondary"
                       sx={{ mt: 1 }}
                     >
-                      {/* {entry.description
-                        ? entry.description
-                        : "no description provided."} */}
-                      Click "Add Event" to create a new time entry
+                      Click &quot;Add Event&quot; to create a new time entry
                     </Typography>
                   </Box>
                 )}
@@ -1177,15 +974,15 @@ const EmployeeTimeTracker = () => {
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
             <FormControl>
-              <InputLabel>projects</InputLabel>
+              <InputLabel>Project</InputLabel>
               <Select
-                value={selectedprojects}
-                onChange={(e) => setSelectedprojects(e.target.value)}
-                label="projects"
+                value={selectedProject}
+                onChange={(e) => setSelectedProject(e.target.value)}
+                label="Project"
               >
-                {projects.map((projects) => (
-                  <MenuItem key={projects._id} value={projects._id}>
-                    {projects.name}
+                {projects.map((project) => (
+                  <MenuItem key={project._id} value={project._id}>
+                    {project.name}
                   </MenuItem>
                 ))}
               </Select>
@@ -1258,6 +1055,6 @@ const EmployeeTimeTracker = () => {
       </Fab>
     </Box>
   );
-};
+}
 
 export default EmployeeTimeTracker;

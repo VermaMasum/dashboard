@@ -211,9 +211,9 @@ const Customizer: FC = () => {
             <Typography variant="h6" gutterBottom>
               Theme Colors
             </Typography>
-            <Grid container spacing={2}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
               {thColors.map((thcolor) => (
-                <Grid item xs={4} key={thcolor.id}>
+                <Box key={thcolor.id} sx={{ flex: "0 0 calc(33.333% - 16px)" }}>
                   <StyledBox onClick={() => dispatch(setTheme(thcolor.disp))}>
                     <Tooltip title={`${thcolor.disp}`} placement="top">
                       <Box
@@ -237,9 +237,9 @@ const Customizer: FC = () => {
                       </Box>
                     </Tooltip>
                   </StyledBox>
-                </Grid>
+                </Box>
               ))}
-            </Grid>
+            </Box>
             <Box pt={4} />
             {/* ------------------------------------------- */}
             {/* ------------ Layout Horizontal / Vertical ------------- */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -36,6 +36,10 @@ import {
   CalendarToday,
   ArrowBack,
   ArrowForward,
+  Refresh,
+  ExpandMore,
+  ExpandLess,
+  Visibility,
 } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from "@/utils/axios";
@@ -47,6 +51,8 @@ interface TimeEntry {
   project: {
     _id: string;
     name: string;
+    status?: "not started" | "in progress" | "completed";
+    description?: string;
   };
   employee: {
     _id: string;
@@ -59,39 +65,27 @@ interface TimeEntry {
   startTime?: string;
   endTime?: string;
   isRunning?: boolean;
+  status?: "not started" | "in progress" | "completed"; // Task status
+  // Additional properties for project summary functionality
+  isProjectSummary?: boolean;
+  entries?: TimeEntry[];
 }
 
 interface Project {
   _id: string;
   name: string;
   description: string;
+  status: "not started" | "in progress" | "completed";
 }
 
 const EmployeeTimeTracker = () => {
-  const { user } = useAuth();
-
-  // Access control
-  if (!user || user.role !== "employee") {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "50vh",
-        }}
-      >
-        <Typography variant="h4" color="error">
-          Access Denied
-        </Typography>
-      </Box>
-    );
-  }
+  const { user, loading: authLoading } = useAuth();
 
   const [viewMode, setViewMode] = useState<"day" | "week" | "month">("month");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -109,80 +103,29 @@ const EmployeeTimeTracker = () => {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [status, setStatus] = useState<
+    "not started" | "in progress" | "completed"
+  >("not started");
 
   // Filter states
   const [filterProject, setFilterProject] = useState("");
+  const [filterEmployee, setFilterEmployee] = useState("");
 
   // Expand/collapse states
-  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(
+    new Set()
+  );
 
-  useEffect(() => {
-    fetchData();
-  }, [currentDate, viewMode, filterProject]);
+  // Day details dialog state
+  const [dayDetailsDialog, setDayDetailsDialog] = useState(false);
+  const [selectedDayForDetails, setSelectedDayForDetails] =
+    useState<Date | null>(null);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-      // Fetch projects (only once, not dependent on date)
-      if (projects.length === 0) {
-        const projectsRes = await axios.get(`/projects/${user.id}/assign`);
-        setProjects(projectsRes.data);
-      }
-
-      // Calculate date range based on current view mode
-      const { startDate, endDate } = getDateRange(currentDate, viewMode);
-
-      // Fetch reports with date range parameters
-      const reportsRes = await axios.get("/reports", {
-        params: {
-          startDate: startDate.toISOString().split("T")[0],
-          endDate: endDate.toISOString().split("T")[0],
-          employee: user.id,
-        },
-      });
-
-      let allReports = reportsRes.data;
-      
-      // Debug: Log the raw data
-      console.log("Employee - Raw reports data:", allReports);
-      
-      // Ensure duration and description are properly set for each report
-      allReports = allReports.map((report: any) => {
-        // Debug: Log each report
-        console.log("Employee - Processing report:", report);
-        
-        return {
-          ...report,
-          duration: report.duration || (report.hoursWorked ? report.hoursWorked * 60 : 0) || 0,
-          description: report.description || report.details || report.title || "No description provided",
-          category: report.category || "General",
-          // Ensure project object is properly set
-          project: report.project || { _id: 'unknown', name: 'General Work' },
-        };
-      });
-
-      console.log("Employee - Processed reports:", allReports);
-
-      // Apply project filter if selected
-      if (filterProject) {
-        allReports = allReports.filter(
-          (report: any) => report.project._id === filterProject
-        );
-      }
-
-      console.log("Employee - Final time entries set:", allReports);
-      setTimeEntries(allReports);
-    } catch (err: any) {
-      console.error("Error fetching time tracker data:", err);
-      setError(
-        err.response?.data?.message || err.message || "Failed to fetch data"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Daily summary dialog state
+  const [dailySummaryOpen, setDailySummaryOpen] = useState(false);
+  const [selectedDayForSummary, setSelectedDayForSummary] =
+    useState<Date | null>(null);
+  const [selectedDayEntries, setSelectedDayEntries] = useState<TimeEntry[]>([]);
 
   const getDateRange = (date: Date, mode: string) => {
     const targetDate = new Date(date);
@@ -230,6 +173,141 @@ const EmployeeTimeTracker = () => {
         };
     }
   };
+
+  const fetchData = useCallback(async () => {
+    if (!user) {
+      setError("User not authenticated");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      // Fetch projects (only once, not dependent on date)
+      if (projects.length === 0) {
+        const projectsRes = await axios.get(`/projects/${user.id}/assign`);
+        const allProjects = projectsRes.data;
+        setProjects(allProjects);
+        // Filter out projects with "not started" status for time entry
+        const activeProjects = allProjects.filter(
+          (project: Project) => project.status !== "not started"
+        );
+        setFilteredProjects(activeProjects);
+      }
+
+      // Calculate date range based on current view mode
+      const { startDate, endDate } = getDateRange(currentDate, viewMode);
+
+      // Fetch reports with date range parameters
+      const reportsRes = await axios.get("/reports", {
+        params: {
+          startDate: startDate.toISOString().split("T")[0],
+          endDate: endDate.toISOString().split("T")[0],
+          employee: user.id,
+        },
+      });
+
+      let allReports = reportsRes.data;
+
+      // Debug: Log the raw data
+      console.log("Employee - Raw reports data:", allReports);
+
+      // Ensure duration and description are properly set for each report
+      allReports = allReports.map((report: any) => {
+        // Debug: Log each report
+        console.log("Employee - Processing report:", report);
+
+        return {
+          ...report,
+          duration:
+            report.duration ||
+            (report.hoursWorked ? report.hoursWorked * 60 : 0) ||
+            0,
+          // Fix: Only use fallback if description is null/undefined, not if it's an empty string
+          // Handle both 'description' and 'details' fields from backend
+          description:
+            report.description !== null && report.description !== undefined
+              ? report.description
+              : report.details !== null && report.details !== undefined
+              ? report.details
+              : report.title || "No description provided",
+          category: report.category || "General",
+          // Ensure project object is properly set
+          project: report.project || { _id: "unknown", name: "General Work" },
+        };
+      });
+
+      console.log("Employee - Processed reports:", allReports);
+
+      // Apply project filter if selected
+      if (filterProject) {
+        allReports = allReports.filter(
+          (report: any) => report.project._id === filterProject
+        );
+      }
+
+      console.log("Employee - Final time entries set:", allReports);
+      setTimeEntries(allReports);
+    } catch (err: any) {
+      console.error("Error fetching time tracker data:", err);
+      setError(
+        err.response?.data?.message || err.message || "Failed to fetch data"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [currentDate, viewMode, filterProject, user, projects.length]);
+
+  useEffect(() => {
+    if (user) {
+      setFilterEmployee(user.id);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    console.log("Employee - useEffect triggered:", {
+      currentDate,
+      viewMode,
+      filterProject,
+    });
+    fetchData();
+  }, [fetchData]);
+
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "50vh",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Access control
+  if (!user || user.role !== "employee") {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "50vh",
+        }}
+      >
+        <Typography variant="h4" color="error">
+          Access Denied
+        </Typography>
+      </Box>
+    );
+  }
 
   const formatDuration = (minutes: number) => {
     if (!minutes || isNaN(minutes) || minutes < 0) {
@@ -323,7 +401,13 @@ const EmployeeTimeTracker = () => {
     setDescription("");
     setDuration("");
     setSelectedDate(new Date().toISOString().split("T")[0]);
+    setStatus("not started");
     setAddEntryDialog(true);
+  };
+
+  const getSelectedProjectStatus = () => {
+    const project = projects.find((p) => p._id === selectedProject);
+    return project?.status || "Not Set";
   };
 
   const handleEditEntry = (entry: TimeEntry) => {
@@ -336,6 +420,7 @@ const EmployeeTimeTracker = () => {
       entry.duration && !isNaN(entry.duration) ? entry.duration : 0;
     setDuration(formatDuration(validDuration));
     setSelectedDate(entry.date);
+    setStatus(entry.status || "not started");
     setEditEntryDialog(true);
   };
 
@@ -359,24 +444,64 @@ const EmployeeTimeTracker = () => {
       const entryData = {
         project: selectedProject,
         category: category,
-        description: description,
+        details: description, // Backend expects 'details' field, not 'description'
+        description: description, // Keep description for frontend compatibility
         duration: durationInMinutes,
         hoursWorked: durationInMinutes / 60, // Also set hoursWorked for compatibility
         date: selectedDate,
         employee: user?.id,
+        status: status, // Add status field
       };
 
       if (selectedEntry) {
+        // Check if this is a project summary entry (not a real database entry)
+        if (
+          selectedEntry.isProjectSummary ||
+          selectedEntry._id.startsWith("project-summary-")
+        ) {
+          console.log(
+            "Employee - Cannot update project summary entry, this is a read-only view"
+          );
+          setError(
+            "Cannot update project summary. Please edit individual entries instead."
+          );
+          return;
+        }
+
         // Update existing entry
-        await axios.put(`/reports/${selectedEntry._id}`, entryData);
+        console.log(
+          "Employee - Updating entry:",
+          selectedEntry._id,
+          "with data:",
+          entryData
+        );
+        const response = await axios.put(
+          `/reports/${selectedEntry._id}`,
+          entryData
+        );
+        console.log("Employee - Update response:", response.data);
       } else {
         // Create new entry
-        await axios.post("/reports", entryData);
+        console.log("Employee - Creating new entry with data:", entryData);
+        const response = await axios.post("/reports", entryData);
+        console.log("Employee - Create response:", response.data);
       }
 
       setAddEntryDialog(false);
       setEditEntryDialog(false);
-      fetchData();
+
+      // Clear form state
+      setSelectedEntry(null);
+      setSelectedProject("");
+      setCategory("");
+      setDescription("");
+      setDuration("");
+      setSelectedDate(new Date().toISOString().split("T")[0]);
+      setStatus("not started");
+
+      // Force refresh data after update
+      console.log("Employee - Refreshing data after save...");
+      await fetchData();
     } catch (err: any) {
       console.error("Error saving time entry:", err);
       setError(
@@ -387,8 +512,13 @@ const EmployeeTimeTracker = () => {
 
   const handleDeleteEntry = async (entryId: string) => {
     try {
-      await axios.delete(`/reports/${entryId}`);
-      fetchData();
+      console.log("Employee - Deleting entry:", entryId);
+      const response = await axios.delete(`/reports/${entryId}`);
+      console.log("Employee - Delete response:", response.data);
+
+      // Force refresh data after delete
+      console.log("Employee - Refreshing data after delete...");
+      await fetchData();
     } catch (err: any) {
       console.error("Error deleting time entry:", err);
       setError(
@@ -402,8 +532,19 @@ const EmployeeTimeTracker = () => {
     setViewMode("day");
   };
 
+  const handleDaySummaryClick = (date: Date) => {
+    const dayEntries = timeEntries.filter((entry) => {
+      const entryDate = new Date(entry.date);
+      return entryDate.toDateString() === date.toDateString();
+    });
+
+    setSelectedDayForSummary(date);
+    setSelectedDayEntries(dayEntries);
+    setDailySummaryOpen(true);
+  };
+
   const toggleExpanded = (entryId: string) => {
-    setExpandedEntries(prev => {
+    setExpandedEntries((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(entryId)) {
         newSet.delete(entryId);
@@ -413,6 +554,50 @@ const EmployeeTimeTracker = () => {
       return newSet;
     });
   };
+
+  const handleDayDetailsClick = (date: Date) => {
+    setSelectedDayForDetails(date);
+    setDayDetailsDialog(true);
+  };
+
+  const handleRefreshData = async () => {
+    console.log("Employee - Manual refresh triggered");
+    // Clear projects cache to force refetch
+    setProjects([]);
+    setFilteredProjects([]);
+    await fetchData();
+  };
+
+  // Note: Project status updates are handled by admin only
+  // Employees can only view project status, not change it
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "not started":
+        return "#f44336"; // Red
+      case "in progress":
+        return "#ff9800"; // Orange
+      case "completed":
+        return "#4caf50"; // Green
+      default:
+        return "#9e9e9e"; // Gray
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "not started":
+        return "⏸️";
+      case "in progress":
+        return "▶️";
+      case "completed":
+        return "✅";
+      default:
+        return "❓";
+    }
+  };
+
+
 
   if (loading) {
     return (
@@ -445,38 +630,145 @@ const EmployeeTimeTracker = () => {
 
       {/* Header */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" fontWeight="bold" sx={{ mb: 2 }}>
-          Employee Time Tracker
+        <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}>
+          Time Tracker
         </Typography>
 
-        {/* Header with Navigation, Filters and View Toggle */}
-        <Card sx={{ mb: 3 }}>
+        {/* Main Navigation Bar */}
+        <Card sx={{ mb: 2 }}>
           <CardContent sx={{ py: 2 }}>
             <Box
               sx={{
-                display: "flex",
+                display: "grid",
+                gridTemplateColumns: "1fr 2fr 1fr",
                 alignItems: "center",
-                justifyContent: "space-between",
-                flexWrap: "wrap",
                 gap: 2,
               }}
             >
-              {/* Left Side - Navigation Arrows and Add Event */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {/* Left Side - Navigation Arrows */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  justifyContent: "flex-start",
+                }}
+              >
                 <IconButton
                   onClick={() => handleDateChange("prev")}
                   size="small"
-                  sx={{ backgroundColor: "#f5f5f5" }}
+                  // sx={{
+                  //   backgroundColor: "#f5f5f5",
+                  //   "&:hover": { backgroundColor: "#e0e0e0" },
+                  // }}
                 >
                   <ArrowBack />
                 </IconButton>
                 <IconButton
                   onClick={() => handleDateChange("next")}
                   size="small"
-                  sx={{ backgroundColor: "#f5f5f5" }}
+                  // sx={{
+                  //   backgroundColor: "#f5f5f5",
+                  //   "&:hover": { backgroundColor: "#e0e0e0" },
+                  // }}
                 >
                   <ArrowForward />
                 </IconButton>
+              </Box>
+
+              {/* Center - Date Display */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="h6" fontWeight="bold" color="primary">
+                  {currentDate.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </Typography>
+              </Box>
+
+              {/* Right Side - View Toggle */}
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  onChange={(event, newViewMode) => {
+                    if (newViewMode !== null) {
+                      setViewMode(newViewMode);
+                    }
+                  }}
+                  sx={{
+                    "& .MuiToggleButton-root": {
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 2,
+                      px: 3,
+                      py: 1,
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      "&.Mui-selected": {
+                        backgroundColor: "#1976D2",
+                        color: "white",
+                        "&:hover": {
+                          backgroundColor: "#1565C0",
+                        },
+                      },
+                      "&:not(.Mui-selected)": {
+                        backgroundColor: "#f5f5f5",
+                        color: "#666",
+                        "&:hover": {
+                          backgroundColor: "#e0e0e0",
+                        },
+                      },
+                    },
+                  }}
+                >
+                  <ToggleButton value="month">Month</ToggleButton>
+                  <ToggleButton value="week">Week</ToggleButton>
+                  <ToggleButton value="day">Day</ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Controls Section */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent sx={{ py: 1.5 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 2,
+                flexWrap: "wrap",
+              }}
+            >
+              {/* Left Side - Action Buttons */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <IconButton
+                  onClick={handleRefreshData}
+                  size="small"
+                  // sx={{
+                  //   backgroundColor: "#f5f5f5",
+                  //   "&:hover": { backgroundColor: "#e0e0e0" },
+                  // }}
+                  title="Refresh Data"
+                >
+                  <Refresh />
+                </IconButton>
+
                 <Button
                   variant="contained"
                   startIcon={<Add />}
@@ -498,97 +790,48 @@ const EmployeeTimeTracker = () => {
                 </Button>
               </Box>
 
-              {/* Center - Date Display, Total Hours, and Project Filter */}
+              {/* Center - Total Hours Display */}
               <Box
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                  flex: 1,
-                  justifyContent: "center",
+                  backgroundColor: "#e3f2fd",
+                  px: 2.5,
+                  py: 1,
+                  borderRadius: 2,
+                  border: "1px solid #2196f3",
+                  minWidth: 180,
+                  textAlign: "center",
+                  ml: "auto",
                 }}
               >
-                <Typography variant="h6" fontWeight="bold">
-                  {currentDate.toLocaleDateString("en-US", {
-                    weekday: "long",
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: "0.75rem", mb: 0.25 }}
+                >
+                  Total {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
+                  Hours
                 </Typography>
-
-                {/* Total Hours Display */}
-                <Box sx={{ 
-                  backgroundColor: "#e3f2fd", 
-                  px: 2, 
-                  py: 1, 
-                  borderRadius: 2,
-                  border: "1px solid #2196f3"
-                }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
-                    Total {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} Hours
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold" color="primary">
-                    {calculateTotalHours()}
-                  </Typography>
-                </Box>
-
-                {/* Project Filter */}
-                <FormControl size="small" sx={{ minWidth: 150 }}>
-                  <InputLabel>Project</InputLabel>
-                  <Select
-                    value={filterProject}
-                    onChange={(e) => setFilterProject(e.target.value)}
-                    label="Project"
-                  >
-                    <MenuItem value="">All Projects</MenuItem>
-                    {projects.map((project) => (
-                      <MenuItem key={project._id} value={project._id}>
-                        {project.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Typography variant="h6" fontWeight="bold" color="primary">
+                  {calculateTotalHours()}
+                </Typography>
               </Box>
 
-              {/* Right Side - View Toggle */}
-              <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={(event, newViewMode) => {
-                  if (newViewMode !== null) {
-                    setViewMode(newViewMode);
-                  }
-                }}
-                sx={{
-                  "& .MuiToggleButton-root": {
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 2,
-                    px: 3,
-                    py: 1,
-                    textTransform: "none",
-                    fontWeight: "bold",
-                    "&.Mui-selected": {
-                      backgroundColor: "#1976D2",
-                      color: "white",
-                      "&:hover": {
-                        backgroundColor: "#1565C0",
-                      },
-                    },
-                    "&:not(.Mui-selected)": {
-                      backgroundColor: "#f5f5f5",
-                      color: "#666",
-                      "&:hover": {
-                        backgroundColor: "#e0e0e0",
-                      },
-                    },
-                  },
-                }}
-              >
-                <ToggleButton value="month">Month</ToggleButton>
-                <ToggleButton value="week">Week</ToggleButton>
-                <ToggleButton value="day">Day</ToggleButton>
-              </ToggleButtonGroup>
+              {/* Right Side - Project Filter */}
+              <FormControl size="small" sx={{ minWidth: 180 }}>
+                <InputLabel>Filter by Project</InputLabel>
+                <Select
+                  value={filterProject}
+                  onChange={(e) => setFilterProject(e.target.value)}
+                  label="Filter by Project"
+                >
+                  <MenuItem value="">All Projects</MenuItem>
+                  {filteredProjects.map((project) => (
+                    <MenuItem key={project._id} value={project._id}>
+                      {project.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </Box>
           </CardContent>
         </Card>
@@ -653,25 +896,31 @@ const EmployeeTimeTracker = () => {
               const firstDay = new Date(year, month, 1);
               const startDate = new Date(firstDay);
               startDate.setDate(startDate.getDate() - firstDay.getDay());
-              
+
               const days = [];
               for (let i = 0; i < 42; i++) {
                 const dayDate = new Date(startDate);
                 dayDate.setDate(startDate.getDate() + i);
                 const isCurrentMonth = dayDate.getMonth() === month;
-                const isToday = dayDate.toDateString() === new Date().toDateString();
-                
+                const isToday =
+                  dayDate.toDateString() === new Date().toDateString();
+
                 // Get entries for this day
                 const dayEntries = timeEntries.filter((entry) => {
                   const entryDate = new Date(entry.date);
                   return entryDate.toDateString() === dayDate.toDateString();
                 });
-                
+
                 // Debug: Log entries for days that have data
                 if (dayEntries.length > 0) {
-                  console.log("Employee - Month day entries for", dayDate.toDateString(), ":", dayEntries);
+                  console.log(
+                    "Employee - Month day entries for",
+                    dayDate.toDateString(),
+                    ":",
+                    dayEntries
+                  );
                 }
-                
+
                 days.push(
                   <Box
                     key={i}
@@ -685,118 +934,86 @@ const EmployeeTimeTracker = () => {
                         backgroundColor: "#f8f9fa",
                       },
                     }}
-                    onClick={() => handleDayClick(dayDate)}
+                    onClick={() =>
+                      dayEntries.length > 0
+                        ? handleDaySummaryClick(dayDate)
+                        : handleDayClick(dayDate)
+                    }
                   >
                     <Typography
                       variant="body2"
                       sx={{
                         fontWeight: "bold",
-                        color: isCurrentMonth 
-                          ? (isToday ? "primary.main" : "text.primary")
+                        color: isCurrentMonth
+                          ? isToday
+                            ? "primary.main"
+                            : "text.primary"
                           : "text.disabled",
                         mb: 1,
                       }}
                     >
                       {dayDate.getDate()}
                     </Typography>
-                    
-                    {/* Show entry blocks */}
-                    {dayEntries.slice(0, 3).map((entry, index) => {
-                      const colors = ["#2196f3", "#e91e63", "#4caf50", "#ff9800", "#9c27b0"];
-                      const color = colors[index % colors.length];
-                      const isExpanded = expandedEntries.has(entry._id);
-                      
-                      return (
-                        <Box
-                          key={entry._id}
-                          sx={{
-                            backgroundColor: color,
-                            color: "white",
-                            borderRadius: 1,
-                            p: 0.5,
-                            mb: 0.5,
-                            cursor: "pointer",
-                            fontSize: 10,
-                            fontWeight: "bold",
-                            position: "relative",
-                            "&:hover": {
-                              opacity: 0.8,
-                            },
-                          }}
-                        >
-                          <Box
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewDetails(entry);
-                            }}
-                            sx={{ flex: 1 }}
-                          >
-                            <Typography variant="caption" sx={{ fontWeight: "bold" }}>
-                              {entry.project?.name || 'General Work'}
-                            </Typography>
-                            {isExpanded && (
-                              <Typography variant="caption" sx={{ 
-                                display: "block", 
-                                opacity: 0.9, 
-                                fontSize: "8px",
-                                mt: 0.5,
-                                overflow: "hidden",
-                                textOverflow: "ellipsis"
-                              }}>
-                                {entry.description ? entry.description.substring(0, 20) + (entry.description.length > 20 ? '...' : '') : 'No description'}
-                              </Typography>
-                            )}
-                            <Typography variant="caption" sx={{ 
-                              display: "block", 
-                              opacity: 0.9, 
-                              fontSize: "9px",
-                              mt: 0.5
-                            }}>
-                              {formatDurationAsHours(entry.duration || 0)}h
-                            </Typography>
-                          </Box>
-                          <Box
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleExpanded(entry._id);
-                            }}
-                            sx={{
-                              position: "absolute",
-                              top: 2,
-                              right: 2,
-                              width: 12,
-                              height: 12,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "rgba(255,255,255,0.2)",
-                              borderRadius: "50%",
-                              cursor: "pointer",
-                              "&:hover": {
-                                backgroundColor: "rgba(255,255,255,0.3)",
-                              }
-                            }}
-                          >
-                            <Typography variant="caption" sx={{ fontSize: "8px", fontWeight: "bold" }}>
-                              {isExpanded ? "−" : "+"}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      );
-                    })}
-                    
-                    {dayEntries.length > 3 && (
-                      <Typography
-                        variant="caption"
-                        sx={{ 
-                          color: "text.secondary", 
-                          fontSize: "9px",
+
+                    {/* Show total hours and projects for the day */}
+                    {dayEntries.length > 0 && (
+                      <Box
+                        sx={{
+                          backgroundColor: "#2196f3",
+                          color: "white",
+                          borderRadius: 1,
+                          p: 0.5,
+                          mb: 0.5,
+                          cursor: "pointer",
+                          fontSize: 10,
+                          fontWeight: "bold",
                           textAlign: "center",
-                          mt: 0.5
+                          "&:hover": {
+                            opacity: 0.8,
+                          },
                         }}
                       >
-                        +{dayEntries.length - 3} more
-                      </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ fontWeight: "bold" }}
+                        >
+                          Total:{" "}
+                          {formatDurationAsHours(
+                            dayEntries.reduce(
+                              (sum, entry) => sum + (entry.duration || 0),
+                              0
+                            )
+                          )}
+                          h
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            display: "block",
+                            opacity: 0.9,
+                            fontSize: "9px",
+                            mt: 0.5,
+                          }}
+                        >
+                          {
+                            new Set(
+                              dayEntries.map(
+                                (entry) => entry.project?._id || "general"
+                              )
+                            ).size
+                          }{" "}
+                          project
+                          {new Set(
+                            dayEntries.map(
+                              (entry) => entry.project?._id || "general"
+                            )
+                          ).size !== 1
+                            ? "s"
+                            : ""}{" "}
+                          • {dayEntries.length} task
+                          {dayEntries.length !== 1 ? "s" : ""}
+                        </Typography>
+                      </Box>
                     )}
                   </Box>
                 );
@@ -825,14 +1042,14 @@ const EmployeeTimeTracker = () => {
                 weekday: "long",
                 month: "long",
                 day: "numeric",
-                year: "numeric"
+                year: "numeric",
               })}
             </Typography>
-          {/* Total Hours for Day */}
-          {/* Removed duplicate Total Day Hours box to avoid duplication */}
+            {/* Total Hours for Day */}
+            {/* Removed duplicate Total Day Hours box to avoid duplication */}
           </Box>
 
-          {/* Day Entries - Enhanced Grid Layout */}
+          {/* Day Summary Block */}
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {(() => {
               const dayEntries = timeEntries.filter(
@@ -840,124 +1057,115 @@ const EmployeeTimeTracker = () => {
                   new Date(entry.date).toDateString() ===
                   currentDate.toDateString()
               );
-              
-              console.log("Employee - Day entries for", currentDate.toDateString(), ":", dayEntries);
-              
-              return dayEntries.map((entry, entryIndex) => {
-              const colors = ["#2196f3", "#e91e63", "#4caf50", "#ff9800", "#9c27b0"];
-              const color = colors[entryIndex % colors.length];
-              const isExpanded = expandedEntries.has(entry._id);
-              
+
+              console.log(
+                "Employee - Day entries for",
+                currentDate.toDateString(),
+                ":",
+                dayEntries
+              );
+
+              if (dayEntries.length === 0) {
+                return (
+                  <Box sx={{ textAlign: "center", py: 4 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      No work entries found for this day.
+                    </Typography>
+                  </Box>
+                );
+              }
+
               return (
                 <Card
-                  key={entry._id}
                   sx={{
-                    background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+                    background:
+                      "linear-gradient(135deg, #2196f3 0%, #21CBF3 100%)",
                     color: "white",
                     borderRadius: 2,
-                    p: 2,
+                    p: 3,
                     cursor: "pointer",
-                    position: "relative",
                     "&:hover": {
                       transform: "translateY(-2px)",
                       boxShadow: 4,
-                      opacity: 0.9
+                      opacity: 0.9,
                     },
-                    transition: "all 0.3s ease"
+                    transition: "all 0.3s ease",
                   }}
-                  onClick={() => handleViewDetails(entry)}
+                  onClick={() => handleDayDetailsClick(currentDate)}
                 >
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: "bold", mb: 0.5 }}>
-                        {entry.project?.name || 'General Work'}
-                      </Typography>
-                      {isExpanded && (
-                        <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
-                          {entry.description || "No description provided."}
+                  <Box sx={{ textAlign: "center" }}>
+                    <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>
+                      Daily Summary
+                    </Typography>
+                    <Typography variant="h6" sx={{ mb: 2, opacity: 0.9 }}>
+                      {currentDate.toLocaleDateString("en-US", {
+                        weekday: "long",
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: 4,
+                        mt: 2,
+                      }}
+                    >
+                      <Box sx={{ textAlign: "center" }}>
+                        <Typography variant="h3" fontWeight="bold">
+                          {formatDurationAsHours(
+                            dayEntries.reduce(
+                              (sum, entry) => sum + (entry.duration || 0),
+                              0
+                            )
+                          )}
+                          h
                         </Typography>
-                      )}
-                      <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                        <Chip
-                          label={entry.category || "General"}
-                          size="small"
-                          sx={{ 
-                            backgroundColor: "rgba(255,255,255,0.2)", 
-                            color: "white",
-                            fontWeight: "bold"
-                          }}
-                        />
+                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                          Total Hours
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: "center" }}>
+                        <Typography variant="h3" fontWeight="bold">
+                          {
+                            new Set(
+                              dayEntries.map(
+                                (entry) => entry.project?._id || "general"
+                              )
+                            ).size
+                          }
+                        </Typography>
+                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                          Project
+                          {new Set(
+                            dayEntries.map(
+                              (entry) => entry.project?._id || "general"
+                            )
+                          ).size !== 1
+                            ? "s"
+                            : ""}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: "center" }}>
+                        <Typography variant="h3" fontWeight="bold">
+                          {dayEntries.length}
+                        </Typography>
+                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                          Task{dayEntries.length !== 1 ? "s" : ""}
+                        </Typography>
                       </Box>
                     </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Typography variant="h5" fontWeight="bold">
-                        {formatDurationAsHours(entry.duration || 0)}h
-                      </Typography>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditEntry(entry);
-                        }}
-                        sx={{ 
-                          color: "white", 
-                          borderColor: "white",
-                          "&:hover": {
-                            backgroundColor: "rgba(255,255,255,0.1)",
-                            borderColor: "white"
-                          }
-                        }}
-                      >
-                        Edit
-                      </Button>
-                    </Box>
-                  </Box>
-                  
-                  {/* Expand/Collapse Button */}
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleExpanded(entry._id);
-                    }}
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      minWidth: 24,
-                      width: 24,
-                      height: 24,
-                      borderRadius: "50%",
-                      backgroundColor: "rgba(255,255,255,0.2)",
-                      color: "white",
-                      "&:hover": {
-                        backgroundColor: "rgba(255,255,255,0.3)",
-                      }
-                    }}
-                  >
-                    <Typography variant="caption" sx={{ fontSize: "12px", fontWeight: "bold" }}>
-                      {isExpanded ? "−" : "+"}
+
+                    <Typography variant="body2" sx={{ mt: 2, opacity: 0.8 }}>
+                      Click to view detailed breakdown
                     </Typography>
-                  </Button>
+                  </Box>
                 </Card>
               );
-            });
             })()}
-            
-            {timeEntries.filter(
-              (entry) =>
-                new Date(entry.date).toDateString() ===
-                currentDate.toDateString()
-            ).length === 0 && (
-              <Box sx={{ textAlign: "center", py: 8 }}>
-                <Typography variant="h6" color="text.secondary">
-                  No time entries for this day
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Click "Add Entry" to create a new time entry
-                </Typography>
-              </Box>
-            )}
           </Box>
         </Box>
       )}
@@ -976,13 +1184,16 @@ const EmployeeTimeTracker = () => {
             }}
           >
             <Typography variant="h6" fontWeight="bold">
-              Week of {getWeekDays()[0].toLocaleDateString("en-US", { 
-                month: "short", 
-                day: "numeric" 
-              })} - {getWeekDays()[6].toLocaleDateString("en-US", { 
-                month: "short", 
+              Week of{" "}
+              {getWeekDays()[0].toLocaleDateString("en-US", {
+                month: "short",
                 day: "numeric",
-                year: "numeric"
+              })}{" "}
+              -{" "}
+              {getWeekDays()[6].toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
               })}
             </Typography>
           </Box>
@@ -1006,14 +1217,19 @@ const EmployeeTimeTracker = () => {
                 sx={{
                   textAlign: "center",
                   p: 1,
-                  backgroundColor: day.toDateString() === currentDate.toDateString()
-                    ? "#f0f8ff"
-                    : "white",
+                  backgroundColor:
+                    day.toDateString() === currentDate.toDateString()
+                      ? "#f0f8ff"
+                      : "white",
                   borderRadius: 1,
                   border: "1px solid #e0e0e0",
                 }}
               >
-                <Typography variant="body2" fontWeight="bold" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  fontWeight="bold"
+                  color="text.secondary"
+                >
                   {day.toLocaleDateString("en-US", { weekday: "short" })}
                 </Typography>
                 <Typography variant="h6" color="primary" fontWeight="bold">
@@ -1029,7 +1245,12 @@ const EmployeeTimeTracker = () => {
                 return entryDate.toDateString() === day.toDateString();
               });
 
-              console.log("Employee - Week day entries for", day.toDateString(), ":", dayEntries);
+              console.log(
+                "Employee - Week day entries for",
+                day.toDateString(),
+                ":",
+                dayEntries
+              );
 
               return (
                 <Box
@@ -1044,104 +1265,61 @@ const EmployeeTimeTracker = () => {
                   }}
                 >
                   {dayEntries.length > 0 && (
-                    dayEntries.map((entry, entryIndex) => {
-                      const colors = ["#2196f3", "#e91e63", "#4caf50", "#ff9800", "#9c27b0"];
-                      const color = colors[entryIndex % colors.length];
-                      const isExpanded = expandedEntries.has(entry._id);
-
-                      return (
-                        <Box
-                          key={entry._id}
-                          sx={{
-                            backgroundColor: color,
-                            color: "white",
-                            borderRadius: 1,
-                            p: 1,
-                            mb: 0.5,
-                            cursor: "pointer",
-                            fontSize: "0.75rem",
-                            fontWeight: "bold",
-                            position: "relative",
-                            "&:hover": {
-                              opacity: 0.8,
-                            },
-                          }}
-                        >
-                          <Box
-                            onClick={() => handleViewDetails(entry)}
-                            sx={{ flex: 1 }}
-                          >
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                display: "block",
-                                fontWeight: "bold",
-                                mb: 0.5,
-                              }}
-                            >
-                              {entry.project?.name || 'General Work'}
-                            </Typography>
-                            {isExpanded && (
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  fontSize: "0.7rem",
-                                  opacity: 0.9,
-                                  display: "block",
-                                  mb: 0.5,
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {entry.description ? entry.description.substring(0, 15) + (entry.description.length > 15 ? '...' : '') : 'No description'}
-                              </Typography>
-                            )}
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                fontSize: "0.75rem",
-                                opacity: 0.9,
-                                display: "block",
-                              }}
-                            >
-                              {formatDurationAsHours(entry.duration || 0)}h
-                            </Typography>
-                          </Box>
-                          
-                          {/* Expand/Collapse Button */}
-                          <Box
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleExpanded(entry._id);
-                            }}
-                            sx={{
-                              position: "absolute",
-                              top: 2,
-                              right: 2,
-                              width: 16,
-                              height: 16,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              backgroundColor: "rgba(255,255,255,0.2)",
-                              borderRadius: "50%",
-                              cursor: "pointer",
-                              "&:hover": {
-                                backgroundColor: "rgba(255,255,255,0.3)",
-                              }
-                            }}
-                          >
-                            <Typography variant="caption" sx={{ fontSize: "10px", fontWeight: "bold" }}>
-                              {isExpanded ? "−" : "+"}
-                            </Typography>
-                          </Box>
-                        </Box>
-                      );
-                    })
+                    <Box
+                      sx={{
+                        backgroundColor: "#2196f3",
+                        color: "white",
+                        borderRadius: 1,
+                        p: 0.5,
+                        mb: 0.5,
+                        cursor: "pointer",
+                        fontSize: 10,
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        "&:hover": {
+                          opacity: 0.8,
+                        },
+                      }}
+                      onClick={() => handleDaySummaryClick(day)}
+                    >
+                      <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                        Total:{" "}
+                        {formatDurationAsHours(
+                          dayEntries.reduce(
+                            (sum, entry) => sum + (entry.duration || 0),
+                            0
+                          )
+                        )}
+                        h
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          opacity: 0.9,
+                          fontSize: "9px",
+                          mt: 0.5,
+                        }}
+                      >
+                        {
+                          new Set(
+                            dayEntries.map(
+                              (entry) => entry.project?._id || "general"
+                            )
+                          ).size
+                        }{" "}
+                        project
+                        {new Set(
+                          dayEntries.map(
+                            (entry) => entry.project?._id || "general"
+                          )
+                        ).size !== 1
+                          ? "s"
+                          : ""}{" "}
+                        • {dayEntries.length} task
+                        {dayEntries.length !== 1 ? "s" : ""}
+                      </Typography>
+                    </Box>
                   )}
                 </Box>
               );
@@ -1172,7 +1350,7 @@ const EmployeeTimeTracker = () => {
                 onChange={(e) => setSelectedProject(e.target.value)}
                 label="Project"
               >
-                {projects.map((project) => (
+                {filteredProjects.map((project) => (
                   <MenuItem key={project._id} value={project._id}>
                     {project.name}
                   </MenuItem>
@@ -1214,6 +1392,10 @@ const EmployeeTimeTracker = () => {
               onChange={(e) => setSelectedDate(e.target.value)}
               InputLabelProps={{ shrink: true }}
             />
+
+            <Typography variant="body2" color="text.secondary">
+              Project Status: {getSelectedProjectStatus()}
+            </Typography>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -1241,65 +1423,767 @@ const EmployeeTimeTracker = () => {
         <DialogTitle>Time Entry Details</DialogTitle>
         <DialogContent>
           {selectedEntry && (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Project
-                </Typography>
-                <Typography variant="body1">
-                  {selectedEntry.project?.name || 'General Work'}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Category
-                </Typography>
-                <Typography variant="body1">
-                  {selectedEntry.category || "General"}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Description
-                </Typography>
-                <Typography variant="body1">
-                  {selectedEntry.description || "No description provided."}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Duration
-                </Typography>
-                <Typography variant="body1">
-                  {formatDurationAsHours(selectedEntry.duration || 0)}h
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary">
-                  Date
-                </Typography>
-                <Typography variant="body1">
-                  {new Date(selectedEntry.date).toLocaleDateString()}
-                </Typography>
-              </Box>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
+            >
+              {selectedEntry.isProjectSummary ? (
+                // Show project summary with individual entries
+                <>
+                  <Box>
+                    <Typography variant="h6" fontWeight="bold">
+                      {selectedEntry.project?.name || "Project Summary"}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Total:{" "}
+                      {formatDurationAsHours(selectedEntry.duration || 0)}h •{" "}
+                      {selectedEntry.entries?.length || 0} entries
+                    </Typography>
+                  </Box>
+
+                  {selectedEntry.entries &&
+                    selectedEntry.entries.length > 0 && (
+                      <Box>
+                        <Typography
+                          variant="subtitle1"
+                          fontWeight="bold"
+                          sx={{ mb: 2 }}
+                        >
+                          Individual Entries:
+                        </Typography>
+                        {selectedEntry.entries.map(
+                          (entry: any, index: number) => (
+                            <Box
+                              key={entry._id || index}
+                              sx={{
+                                border: "1px solid #e0e0e0",
+                                borderRadius: 1,
+                                p: 2,
+                                mb: 2,
+                                backgroundColor: "#f9f9f9",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "flex-start",
+                                }}
+                              >
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    Entry {index + 1}
+                                  </Typography>
+                                  <Typography variant="body1" fontWeight="bold">
+                                    {entry.description || "No description"}
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    Category: {entry.category || "General"} •
+                                    Duration:{" "}
+                                    {formatDurationAsHours(entry.duration || 0)}
+                                    h
+                                  </Typography>
+                                  {entry.status && (
+                                    <Chip
+                                      label={entry.status.toUpperCase()}
+                                      size="small"
+                                      sx={{
+                                        backgroundColor: getStatusColor(
+                                          entry.status
+                                        ),
+                                        color: "white",
+                                        fontWeight: "bold",
+                                        mt: 1,
+                                      }}
+                                    />
+                                  )}
+                                </Box>
+                                <Box sx={{ display: "flex", gap: 1 }}>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    onClick={() => {
+                                      setDetailsDialog(false);
+                                      handleEditEntry(entry);
+                                    }}
+                                  >
+                                    Edit
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="error"
+                                    onClick={() => {
+                                      if (
+                                        window.confirm(
+                                          "Are you sure you want to delete this entry?"
+                                        )
+                                      ) {
+                                        handleDeleteEntry(entry._id);
+                                        setDetailsDialog(false);
+                                      }
+                                    }}
+                                  >
+                                    Delete
+                                  </Button>
+                                </Box>
+                              </Box>
+                            </Box>
+                          )
+                        )}
+                      </Box>
+                    )}
+                </>
+              ) : (
+                // Show individual entry details
+                <>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Project
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedEntry.project?.name || "General Work"}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Category
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedEntry.category || "General"}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Description
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedEntry.description || "No description provided."}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Duration
+                    </Typography>
+                    <Typography variant="body1">
+                      {formatDurationAsHours(selectedEntry.duration || 0)}h
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Date
+                    </Typography>
+                    <Typography variant="body1">
+                      {new Date(selectedEntry.date).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Status
+                    </Typography>
+                    <Chip
+                      label={
+                        selectedEntry.status?.toUpperCase() || "NOT STARTED"
+                      }
+                      sx={{
+                        backgroundColor: getStatusColor(
+                          selectedEntry.status || "not started"
+                        ),
+                        color: "white",
+                        fontWeight: "bold",
+                      }}
+                    />
+                  </Box>
+                </>
+              )}
             </Box>
           )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDetailsDialog(false)}>Close</Button>
-          <Button 
-            onClick={() => {
-              setDetailsDialog(false);
-              handleEditEntry(selectedEntry!);
-            }} 
-            variant="contained"
-          >
-            Edit
-          </Button>
+          {selectedEntry && !selectedEntry.isProjectSummary && (
+            <Button
+              onClick={() => {
+                setDetailsDialog(false);
+                handleEditEntry(selectedEntry!);
+              }}
+              variant="contained"
+            >
+              Edit
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 
       {/* Floating Action Button */}
+      {/* Day Details Dialog */}
+      <Dialog
+        open={dayDetailsDialog}
+        onClose={() => setDayDetailsDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          Work Details for{" "}
+          {selectedDayForDetails?.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </DialogTitle>
+        <DialogContent>
+          {selectedDayForDetails && (
+            <Box sx={{ mt: 1 }}>
+              {(() => {
+                const dayEntries = timeEntries.filter((entry) => {
+                  const entryDate = new Date(entry.date);
+                  return (
+                    entryDate.toDateString() ===
+                    selectedDayForDetails.toDateString()
+                  );
+                });
+
+                const totalHours = dayEntries.reduce(
+                  (sum, entry) => sum + (entry.duration || 0),
+                  0
+                );
+                const uniqueProjects = new Set(
+                  dayEntries.map((entry) => entry.project?._id || "general")
+                ).size;
+
+                return (
+                  <>
+                    {/* Summary */}
+                    <Box
+                      sx={{
+                        mb: 3,
+                        p: 2,
+                        backgroundColor: "#f5f5f5",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+                        Daily Summary
+                      </Typography>
+                      <Box sx={{ display: "flex", gap: 3 }}>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Total Hours
+                          </Typography>
+                          <Typography
+                            variant="h5"
+                            fontWeight="bold"
+                            color="primary"
+                          >
+                            {formatDurationAsHours(totalHours)}h
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Projects Worked
+                          </Typography>
+                          <Typography variant="h5" fontWeight="bold">
+                            {uniqueProjects}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="body2" color="text.secondary">
+                            Total Tasks
+                          </Typography>
+                          <Typography variant="h5" fontWeight="bold">
+                            {dayEntries.length}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+
+                    {/* Task Details */}
+                    {dayEntries.length === 0 ? (
+                      <Box sx={{ textAlign: "center", py: 4 }}>
+                        <Typography variant="body1" color="text.secondary">
+                          No work entries found for this day.
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                        }}
+                      >
+                        {dayEntries.map((entry, index) => {
+                          const colors = [
+                            "#2196f3",
+                            "#e91e63",
+                            "#4caf50",
+                            "#ff9800",
+                            "#9c27b0",
+                          ];
+                          const color = colors[index % colors.length];
+
+                          return (
+                            <Card
+                              key={entry._id}
+                              sx={{
+                                background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
+                                color: "white",
+                                borderRadius: 2,
+                                p: 2,
+                                "&:hover": {
+                                  transform: "translateY(-2px)",
+                                  boxShadow: 4,
+                                  opacity: 0.9,
+                                },
+                                transition: "all 0.3s ease",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                }}
+                              >
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography
+                                    variant="h6"
+                                    fontWeight="bold"
+                                    sx={{ mb: 1 }}
+                                  >
+                                    {entry.project?.name || "General Work"}
+                                  </Typography>
+                                  <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+                                    <Chip
+                                      label={entry.category || "General"}
+                                      size="small"
+                                      sx={{
+                                        backgroundColor:
+                                          "rgba(255,255,255,0.2)",
+                                        color: "white",
+                                        fontWeight: "bold",
+                                      }}
+                                    />
+                                  </Box>
+                                  <Typography
+                                    variant="body2"
+                                    sx={{ mt: 1, opacity: 0.9 }}
+                                  >
+                                    {entry.description ||
+                                      "No work description available."}
+                                  </Typography>
+                                </Box>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Typography variant="h5" fontWeight="bold">
+                                    {formatDurationAsHours(entry.duration || 0)}
+                                    h
+                                  </Typography>
+                                  <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => {
+                                      setDayDetailsDialog(false);
+                                      handleEditEntry(entry);
+                                    }}
+                                    sx={{
+                                      color: "white",
+                                      borderColor: "white",
+                                      "&:hover": {
+                                        backgroundColor:
+                                          "rgba(255,255,255,0.1)",
+                                        borderColor: "white",
+                                      },
+                                    }}
+                                  >
+                                    Edit
+                                  </Button>
+                                </Box>
+                              </Box>
+                            </Card>
+                          );
+                        })}
+                      </Box>
+                    )}
+                  </>
+                );
+              })()}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDayDetailsDialog(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Daily Summary Dialog */}
+      <Dialog
+        open={dailySummaryOpen}
+        onClose={() => setDailySummaryOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            maxHeight: "80vh",
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h5" fontWeight="bold">
+            Work Details for{" "}
+            {selectedDayForSummary?.toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0, overflow: "hidden" }}>
+          <Box sx={{ height: "100%", overflow: "auto", p: 2 }}>
+            {selectedDayEntries.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 4 }}>
+                <Typography variant="body1" color="text.secondary">
+                  No work entries found for this day.
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {/* Daily Summary */}
+                <Box
+                  sx={{
+                    backgroundColor: "#f5f5f5",
+                    borderRadius: 2,
+                    p: 2,
+                    mb: 2,
+                  }}
+                >
+                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+                    Daily Summary
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Hours
+                      </Typography>
+                      <Typography
+                        variant="h5"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        {(() => {
+                          const totalMinutes = selectedDayEntries.reduce(
+                            (sum, entry) => sum + (entry.duration || 0),
+                            0
+                          );
+                          const hours = Math.floor(totalMinutes / 60);
+                          const minutes = totalMinutes % 60;
+                          return `${hours}:${minutes
+                            .toString()
+                            .padStart(2, "0")}`;
+                        })()}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Active Projects
+                      </Typography>
+                      <Typography variant="h5" fontWeight="bold">
+                        {
+                          new Set(
+                            selectedDayEntries.map(
+                              (entry) => entry.project?._id
+                            )
+                          ).size
+                        }
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Tasks
+                      </Typography>
+                      <Typography variant="h5" fontWeight="bold">
+                        {selectedDayEntries.length}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+
+                {/* Project-wise Summary */}
+                {(() => {
+                  // Group entries by project
+                  const projectGroups = selectedDayEntries.reduce(
+                    (acc, entry) => {
+                      const projId = entry.project?._id || "unknown";
+                      if (!acc[projId]) {
+                        acc[projId] = {
+                          project: entry.project,
+                          entries: [],
+                          totalMinutes: 0,
+                        };
+                      }
+                      acc[projId].entries.push(entry);
+                      acc[projId].totalMinutes += entry.duration || 0;
+                      return acc;
+                    },
+                    {} as any
+                  );
+
+                  return (
+                    <Box>
+                      <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+                        Project-wise Summary
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                        }}
+                      >
+                        {Object.values(projectGroups).map(
+                          (group: any, index) => {
+                            const colors = [
+                              "#2196f3",
+                              "#e91e63",
+                              "#4caf50",
+                              "#ff9800",
+                              "#9c27b0",
+                            ];
+                            const color = colors[index % colors.length];
+                            const totalHours = Math.floor(
+                              group.totalMinutes / 60
+                            );
+                            const totalMins = group.totalMinutes % 60;
+                            const formattedTime = `${totalHours}:${totalMins
+                              .toString()
+                              .padStart(2, "0")}`;
+
+                            return (
+                              <Box
+                                key={group.project?._id || "unknown"}
+                                sx={{
+                                  backgroundColor: color,
+                                  color: "white",
+                                  borderRadius: 2,
+                                  p: 2,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                }}
+                              >
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 2,
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      width: 40,
+                                      height: 40,
+                                      borderRadius: 1,
+                                      backgroundColor: "rgba(255,255,255,0.2)",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "white",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    {group.project?.name
+                                      ?.charAt(0)
+                                      ?.toUpperCase() || "P"}
+                                  </Box>
+                                  <Box>
+                                    <Typography variant="h6" fontWeight="bold">
+                                      {group.project?.name || "Unknown Project"}
+                                    </Typography>
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ opacity: 0.9 }}
+                                    >
+                                      {group.entries.length} task
+                                      {group.entries.length !== 1
+                                        ? "s"
+                                        : ""} • {formattedTime} total
+                                    </Typography>
+                                    {group.entries.length > 0 && (
+                                      <Typography
+                                        variant="body2"
+                                        sx={{
+                                          opacity: 0.8,
+                                          fontSize: "0.75rem",
+                                        }}
+                                      >
+                                        Employee:{" "}
+                                        {group.entries[0].employee?.username ||
+                                          "Unknown"}
+                                      </Typography>
+                                    )}
+                                    {group.project?.description && (
+                                      <Typography
+                                        variant="body2"
+                                        sx={{
+                                          opacity: 0.8,
+                                          fontSize: "0.75rem",
+                                        }}
+                                      >
+                                        {group.project.description}
+                                      </Typography>
+                                    )}
+                                    {group.project?.status && (
+                                      <Chip
+                                        label={`${getStatusIcon(
+                                          group.project.status
+                                        )} ${group.project.status.toUpperCase()}`}
+                                        size="small"
+                                        sx={{
+                                          backgroundColor:
+                                            "rgba(255,255,255,0.2)",
+                                          color: "white",
+                                          fontWeight: "bold",
+                                          mt: 0.5,
+                                        }}
+                                      />
+                                    )}
+                                  </Box>
+                                </Box>
+                                <Box sx={{ display: "flex", gap: 0.5 }}>
+                                  <IconButton
+                                    sx={{ color: "white" }}
+                                    onClick={() => {
+                                      // Show detailed view of all entries for this project
+                                      // Create a special entry that shows all entries for this project
+                                      const projectSummaryEntry = {
+                                        _id: `project-summary-${group.project?._id}`,
+                                        project: group.project,
+                                        employee: group.entries[0]?.employee,
+                                        category: "Project Summary",
+                                        description: `All entries for ${
+                                          group.project?.name || "this project"
+                                        }`,
+                                        duration: group.totalMinutes,
+                                        date:
+                                          selectedDayForSummary
+                                            ?.toISOString()
+                                            .split("T")[0] || "",
+                                        isProjectSummary: true, // Flag to identify this as a project summary
+                                        entries: group.entries, // Store all entries for this project
+                                      } as any;
+
+                                      setSelectedEntry(projectSummaryEntry);
+                                      setDailySummaryOpen(false);
+                                      setDetailsDialog(true);
+                                    }}
+                                    title="View all details for this project"
+                                  >
+                                    <Visibility />
+                                  </IconButton>
+                                  <IconButton
+                                    sx={{ color: "white" }}
+                                    onClick={() => {
+                                      // Add new entry for this project
+                                      setSelectedProject(
+                                        group.project?._id || ""
+                                      );
+                                      setSelectedDate(
+                                        selectedDayForSummary
+                                          ?.toISOString()
+                                          .split("T")[0] || ""
+                                      );
+                                      setDailySummaryOpen(false);
+                                      setAddEntryDialog(true);
+                                    }}
+                                    title="Add new entry for this project"
+                                  >
+                                    <Add />
+                                  </IconButton>
+                                  {group.entries.length > 0 && (
+                                    <>
+                                      <IconButton
+                                        sx={{ color: "white" }}
+                                        onClick={() => {
+                                          // Show edit options for existing entries
+                                          if (group.entries.length === 1) {
+                                            // If only one entry, edit it directly
+                                            handleEditEntry(group.entries[0]);
+                                            setDailySummaryOpen(false);
+                                          } else {
+                                            // If multiple entries, show the first one for now
+                                            // TODO: Could implement a dropdown to choose which entry to edit
+                                            handleEditEntry(group.entries[0]);
+                                            setDailySummaryOpen(false);
+                                          }
+                                        }}
+                                        title={`Edit existing entries (${
+                                          group.entries.length
+                                        } entry${
+                                          group.entries.length > 1 ? "s" : ""
+                                        })`}
+                                      >
+                                        <Edit />
+                                      </IconButton>
+                                      <IconButton
+                                        sx={{ color: "white" }}
+                                        onClick={() => {
+                                          // Delete the first entry (or could implement selection)
+                                          if (
+                                            window.confirm(
+                                              `Are you sure you want to delete this time entry?`
+                                            )
+                                          ) {
+                                            handleDeleteEntry(
+                                              group.entries[0]._id
+                                            );
+                                            setDailySummaryOpen(false);
+                                          }
+                                        }}
+                                        title={`Delete entry`}
+                                      >
+                                        <Delete />
+                                      </IconButton>
+                                    </>
+                                  )}
+                                </Box>
+                              </Box>
+                            );
+                          }
+                        )}
+                      </Box>
+                    </Box>
+                  );
+                })()}
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            variant="contained"
+            onClick={() => setDailySummaryOpen(false)}
+            sx={{ backgroundColor: "#2196f3" }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
+
       <Fab
         color="primary"
         aria-label="add"

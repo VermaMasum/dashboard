@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type ContentType = 'dashboard' | 'project-details' | 'daily-reports' | 'employees' | 'employee-list';
+type ContentType = 'dashboard' | 'reports' | 'project-details' | 'daily-reports' | 'employees' | 'employee-list';
 
 interface ContentContextType {
   currentContent: ContentType;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTheme } from '@mui/material/styles';
 import { usePathname } from "next/navigation";
@@ -70,7 +71,7 @@ const NavCollapse = ({ menu, level, pathWithoutLastPart, pathDirect, hideMenu }:
     '&:hover > .SubNav': { display: 'block' },
   }));
 
-  const ListSubMenu = styled(Box)(() => ({
+  const ListSubMenu = styled('ul')(() => ({
     display: 'none',
     position: 'absolute',
     top: level > 1 ? `0px` : '35px',
@@ -80,6 +81,9 @@ const NavCollapse = ({ menu, level, pathWithoutLastPart, pathDirect, hideMenu }:
     color: theme.palette.text.primary,
     boxShadow: theme.shadows[8],
     backgroundColor: theme.palette.background.paper,
+    listStyle: 'none',
+    margin: 0,
+    paddingLeft: 0,
   }));
 
   const listItemProps: {
@@ -134,7 +138,7 @@ const NavCollapse = ({ menu, level, pathWithoutLastPart, pathDirect, hideMenu }:
           {menu.title}
         </ListItemText>
         <IconChevronDown size="1rem" />
-        <ListSubMenu component={'ul'} className="SubNav">
+        <ListSubMenu className="SubNav">
           {submenus}
         </ListSubMenu>
       </ListItemStyled>

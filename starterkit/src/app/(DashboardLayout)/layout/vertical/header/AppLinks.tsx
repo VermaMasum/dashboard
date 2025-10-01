@@ -5,9 +5,9 @@ import React from 'react';
 
 const AppLinks = () => {
   return (
-    <Grid container spacing={3} mb={4}>
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 4 }}>
       {dropdownData.appsLink.map((links, index) => (
-        <Grid item lg={6} key={index}>
+        <Box key={index} sx={{ flex: "0 0 calc(50% - 12px)" }}>
           <Link href={links.href} className="hover-text-primary">
             <Stack direction="row" spacing={2}>
               <Box
@@ -55,9 +55,9 @@ const AppLinks = () => {
               </Box>
             </Stack>
           </Link>
-        </Grid>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   );
 };
 
