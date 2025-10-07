@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
 dotenv.config({ path: __dirname + '/../.env' });
@@ -25,10 +24,10 @@ const createUsers = async () => {
     console.log('Cleared existing users');
 
     // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 10);
+    // Note: Password will be automatically hashed by the User model's pre-save hook
     const admin = new User({
       username: 'admin',
-      password: adminPassword,
+      password: 'admin123',
       role: 'admin',
       email: 'admin@company.com',
       phone: '123-456-7890',
@@ -38,10 +37,9 @@ const createUsers = async () => {
     console.log('Admin user created:', { username: admin.username, role: admin.role });
 
     // Create super admin user
-    const superAdminPassword = await bcrypt.hash('superadmin123', 10);
     const superAdmin = new User({
       username: 'superadmin',
-      password: superAdminPassword,
+      password: 'superadmin123',
       role: 'superAdmin',
       email: 'superadmin@company.com',
       phone: '123-456-7891',
@@ -58,10 +56,9 @@ const createUsers = async () => {
     ];
 
     for (const emp of employees) {
-      const hashedPassword = await bcrypt.hash(emp.password, 10);
       const employee = new User({
         username: emp.username,
-        password: hashedPassword,
+        password: emp.password,
         role: emp.role,
         email: `${emp.username}@company.com`,
         phone: '123-456-7890',

@@ -18,6 +18,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || PRODUCTION_API_URL;
 const axiosServices = axios.create({
   baseURL: API_URL,
   timeout: 10000, // 10 seconds
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 // Always log the API URL for debugging
