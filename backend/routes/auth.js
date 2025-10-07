@@ -114,6 +114,126 @@ router.get("/all-users", protect, async (req, res) => {
   }
 });
 
+// Get users (with optional role filter) - admin/superAdmin only
+router.get("/", protect, async (req, res) => {
+  try {
+    if (!["admin", "superAdmin"].includes(req.user.role))
+      return res.status(403).json({ message: "Access denied" });
+
+    const { role } = req.query;
+    console.log("🔍 Fetching users with role filter:", role);
+
+    let query = {};
+    if (role) {
+      query.role = role;
+    }
+
+    const users = await User.find(query)
+      .select("-password")
+      .sort({ role: 1, username: 1 });
+    console.log("👥 Total users found:", users.length);
+    res.json(users);
+  } catch (error) {
+    console.error("Fetch users error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Create new user - admin/superAdmin only
+router.post("/", protect, async (req, res) => {
+  try {
+    if (!["admin", "superAdmin"].includes(req.user.role))
+      return res.status(403).json({ message: "Access denied" });
+
+    const { username, password, role, email, phone, department } = req.body;
+
+    if (!username || !password)
+      return res.status(400).json({ message: "Username and password are required" });
+
+    const userExists = await User.findOne({ username });
+    if (userExists)
+      return res.status(400).json({ message: "User already exists" });
+
+    const user = await User.create({
+      username,
+      password,
+      role: role || "employee",
+      email: email || "",
+      phone: phone || "",
+      department: department || "",
+    });
+
+    console.log("✅ User created successfully:", username);
+    res.status(201).json({
+      _id: user._id,
+      username: user.username,
+      role: user.role,
+      email: user.email,
+      phone: user.phone,
+      department: user.department,
+    });
+  } catch (error) {
+    console.error("Create user error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update user - admin/superAdmin only
+router.put("/:id", protect, async (req, res) => {
+  try {
+    if (!["admin", "superAdmin"].includes(req.user.role))
+      return res.status(403).json({ message: "Access denied" });
+
+    const { username, password, role, email, phone, department } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    // Update fields
+    if (username) user.username = username;
+    if (password) user.password = password; // Will be hashed by pre-save hook
+    if (role) user.role = role;
+    if (email !== undefined) user.email = email;
+    if (phone !== undefined) user.phone = phone;
+    if (department !== undefined) user.department = department;
+
+    await user.save();
+
+    console.log("✅ User updated successfully:", user.username);
+    res.json({
+      _id: user._id,
+      username: user.username,
+      role: user.role,
+      email: user.email,
+      phone: user.phone,
+      department: user.department,
+    });
+  } catch (error) {
+    console.error("Update user error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Delete user - admin/superAdmin only
+router.delete("/:id", protect, async (req, res) => {
+  try {
+    if (!["admin", "superAdmin"].includes(req.user.role))
+      return res.status(403).json({ message: "Access denied" });
+
+    const user = await User.findById(req.params.id);
+    if (!user)
+      return res.status(404).json({ message: "User not found" });
+
+    await User.findByIdAndDelete(req.params.id);
+    console.log("✅ User deleted successfully:", user.username);
+    res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
 
 // // routes/auth.js
