@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Project } from "../types/project";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -11,6 +13,7 @@ export function useProjects() {
     const fetchProjects = async () => {
       try {
         const res = await fetch("/api/projects");
+        // const res = await fetch(`${API_URL}/projects`);
         if (!res.ok) throw new Error("Failed to fetch projects");
         const data = await res.json();
         setProjects(data);

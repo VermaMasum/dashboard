@@ -15,7 +15,7 @@ const app = express();
 // Configure CORS to allow multiple origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:3000', 'http://127.0.0.1:3000'];
+  : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://3.111.194.111:3000'];
 
 // Add wildcard support for development (allows any IP on port 3000)
 const corsOptions = {
