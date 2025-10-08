@@ -124,17 +124,35 @@ const EmployeeManagement = () => {
 
   const handleSubmit = async () => {
     try {
+      setError(""); // Clear previous errors
+      console.log("💾 Submitting employee data:", formData);
+      
+      // Validate required fields
+      if (!formData.username || !formData.password) {
+        setError("Username and password are required");
+        return;
+      }
+      
       if (editingEmployee) {
-        await axios.put(`/users/${editingEmployee._id}`, formData);
+        console.log("📝 Updating employee:", editingEmployee._id);
+        const response = await axios.put(`/users/${editingEmployee._id}`, formData);
+        console.log("✅ Employee updated:", response.data);
         setSuccess("Employee updated successfully");
       } else {
-        await axios.post("/users", { ...formData, role: "employee" });
+        console.log("➕ Creating new employee");
+        const userData = { ...formData, role: "employee" };
+        console.log("📤 Sending data:", userData);
+        const response = await axios.post("/users", userData);
+        console.log("✅ Employee created:", response.data);
         setSuccess("Employee created successfully");
       }
       handleCloseDialog();
       fetchData();
     } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to save employee");
+      console.error("❌ Error saving employee:", err);
+      console.error("❌ Error response:", err.response?.data);
+      console.error("❌ Error status:", err.response?.status);
+      setError(err.response?.data?.message || err.message || "Failed to save employee");
     }
   };
 

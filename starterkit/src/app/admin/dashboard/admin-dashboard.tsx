@@ -62,74 +62,56 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      console.log('📊 Fetching admin dashboard data');
+      setError(''); // Clear previous errors
+      console.log('📊 Fetching admin dashboard data...');
 
-      // Try comprehensive endpoint first
-      try {
-        const response = await axios.get('/users/comprehensive');
-        console.log('📊 Dashboard response:', response.data);
+      // Use fallback approach directly (simpler and more reliable)
+      console.log('📊 Making parallel API calls...');
+      const [usersRes, projectsRes, reportsRes] = await Promise.all([
+        axios.get('/users/all'),
+        axios.get('/projects'),
+        axios.get('/reports')
+      ]);
 
-        const { users, system } = response.data;
+      console.log('📊 API calls completed, processing data...');
+      const allUsers = usersRes.data.all || usersRes.data;
+      const projects = projectsRes.data;
+      const reports = reportsRes.data;
 
-        setStats({
-          totalUsers: users.total,
-          totalEmployees: users.statistics.employee,
-          totalAdmins: users.statistics.admin,
-          totalSuperAdmins: users.statistics.superAdmin,
-          totalProjects: system.totalProjects,
-          totalReports: system.totalReports,
-        });
+      // Calculate statistics
+      const userStats = {
+        total: allUsers.length,
+        employee: allUsers.filter((user: any) => user.role === 'employee').length,
+        admin: allUsers.filter((user: any) => user.role === 'admin').length,
+        superAdmin: allUsers.filter((user: any) => user.role === 'superAdmin').length,
+      };
 
-        setRecentReports(system.recentReports || []);
-        return; // Success, exit early
-      } catch (comprehensiveError) {
-        console.log('⚠️ Comprehensive endpoint failed, falling back to individual endpoints');
-        
-        // Fallback: Fetch data using existing endpoints
-        const [usersRes, projectsRes, reportsRes] = await Promise.all([
-          axios.get('/users/all'),
-          axios.get('/projects'),
-          axios.get('/reports')
-        ]);
+      setStats({
+        totalUsers: userStats.total,
+        totalEmployees: userStats.employee,
+        totalAdmins: userStats.admin,
+        totalSuperAdmins: userStats.superAdmin,
+        totalProjects: projects.length,
+        totalReports: reports.length,
+      });
 
-        const allUsers = usersRes.data.all || usersRes.data;
-        const projects = projectsRes.data;
-        const reports = reportsRes.data;
+      // Get recent reports (last 5)
+      const recentReports = reports
+        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5)
+        .map((report: any) => ({
+          id: report._id,
+          title: report.title || 'Daily Report',
+          employee: report.employee?.username || 'Unknown',
+          date: report.date,
+          hoursWorked: report.hoursWorked || 0,
+        }));
 
-        // Calculate statistics
-        const userStats = {
-          total: allUsers.length,
-          employee: allUsers.filter((user: any) => user.role === 'employee').length,
-          admin: allUsers.filter((user: any) => user.role === 'admin').length,
-          superAdmin: allUsers.filter((user: any) => user.role === 'superAdmin').length,
-        };
-
-        setStats({
-          totalUsers: userStats.total,
-          totalEmployees: userStats.employee,
-          totalAdmins: userStats.admin,
-          totalSuperAdmins: userStats.superAdmin,
-          totalProjects: projects.length,
-          totalReports: reports.length,
-        });
-
-        // Get recent reports (last 5)
-        const recentReports = reports
-          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          .slice(0, 5)
-          .map((report: any) => ({
-            id: report._id,
-            title: report.title || 'Daily Report',
-            employee: report.employee?.username || 'Unknown',
-            date: report.date,
-            hoursWorked: report.hoursWorked || 0,
-          }));
-
-        setRecentReports(recentReports);
-      }
+      setRecentReports(recentReports);
+      console.log('✅ Dashboard data loaded successfully');
     } catch (error: any) {
       console.error('❌ Error fetching dashboard data:', error);
-      setError(error.response?.data?.message || 'Failed to load dashboard data');
+      setError(error.response?.data?.message || error.message || 'Failed to load dashboard data');
     } finally {
       setLoading(false);
     }

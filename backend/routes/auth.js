@@ -117,8 +117,14 @@ router.get("/all-users", protect, async (req, res) => {
 // Get users (with optional role filter) - admin/superAdmin only
 router.get("/", protect, async (req, res) => {
   try {
-    if (!["admin", "superAdmin"].includes(req.user.role))
+    console.log("🔍 GET /users - Fetching users");
+    console.log("🔍 Request query:", req.query);
+    console.log("🔍 User making request:", req.user.username, req.user.role);
+
+    if (!["admin", "superAdmin"].includes(req.user.role)) {
+      console.log("❌ Access denied - user role:", req.user.role);
       return res.status(403).json({ message: "Access denied" });
+    }
 
     const { role } = req.query;
     console.log("🔍 Fetching users with role filter:", role);
@@ -128,13 +134,15 @@ router.get("/", protect, async (req, res) => {
       query.role = role;
     }
 
+    console.log("🔍 Database query:", query);
     const users = await User.find(query)
       .select("-password")
       .sort({ role: 1, username: 1 });
-    console.log("👥 Total users found:", users.length);
+    console.log("👥 Total users found in database:", users.length);
+    console.log("👥 Users:", users.map(u => ({ username: u.username, role: u.role })));
     res.json(users);
   } catch (error) {
-    console.error("Fetch users error:", error);
+    console.error("❌ Fetch users error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -162,18 +170,30 @@ router.get("/all", protect, async (req, res) => {
 // Create new user - admin/superAdmin only
 router.post("/", protect, async (req, res) => {
   try {
-    if (!["admin", "superAdmin"].includes(req.user.role))
+    console.log("🔍 POST /users - Creating new user");
+    console.log("🔍 Request body:", req.body);
+    console.log("🔍 User making request:", req.user.username, req.user.role);
+
+    if (!["admin", "superAdmin"].includes(req.user.role)) {
+      console.log("❌ Access denied - user role:", req.user.role);
       return res.status(403).json({ message: "Access denied" });
+    }
 
     const { username, password, role, email, phone, department } = req.body;
 
-    if (!username || !password)
+    if (!username || !password) {
+      console.log("❌ Missing required fields - username:", !!username, "password:", !!password);
       return res.status(400).json({ message: "Username and password are required" });
+    }
 
+    console.log("🔍 Checking if user exists:", username);
     const userExists = await User.findOne({ username });
-    if (userExists)
+    if (userExists) {
+      console.log("❌ User already exists:", username);
       return res.status(400).json({ message: "User already exists" });
+    }
 
+    console.log("🔍 Creating new user in database...");
     const user = await User.create({
       username,
       password,
@@ -183,7 +203,7 @@ router.post("/", protect, async (req, res) => {
       department: department || "",
     });
 
-    console.log("✅ User created successfully:", username);
+    console.log("✅ User created successfully in database:", username, "ID:", user._id);
     res.status(201).json({
       _id: user._id,
       username: user.username,
@@ -193,7 +213,8 @@ router.post("/", protect, async (req, res) => {
       department: user.department,
     });
   } catch (error) {
-    console.error("Create user error:", error);
+    console.error("❌ Create user error:", error);
+    console.error("❌ Error details:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 });
