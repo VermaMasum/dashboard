@@ -1,5 +1,15 @@
-import AxiosMockAdapter from 'axios-mock-adapter';
-import axios from '@/utils/axios';
+// Mock adapter completely disabled - using real API calls only
+// No mock adapter will be created
 
-const mock = new AxiosMockAdapter(axios, { delayResponse: 0 });
+// Export a dummy mock object to prevent import errors
+const mock = {
+  onGet: () => ({ reply: () => {} }),
+  onPost: () => ({ reply: () => {} }),
+  onPut: () => ({ reply: () => {} }),
+  onDelete: () => ({ reply: () => {} }),
+  onAny: () => ({ passThrough: () => {} }),
+  onPatch: () => ({ reply: () => {} }),
+  reset: () => {},
+  restore: () => {},
+};
 export default mock;

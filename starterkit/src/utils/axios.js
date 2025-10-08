@@ -17,7 +17,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || PRODUCTION_API_URL;
 
 const axiosServices = axios.create({
   baseURL: API_URL,
-  timeout: 10000, // 10 seconds
+  timeout: 30000, // 30 seconds for slower connections
   headers: {
     'Content-Type': 'application/json',
   },
