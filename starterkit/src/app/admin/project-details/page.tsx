@@ -42,6 +42,7 @@ interface Project {
   _id: string;
   name: string;
   description: string;
+  status?: string;
   employees?: (string | { _id: string; username: string })[];
 }
 
@@ -69,6 +70,7 @@ const ProjectDetails = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    status: "not started",
   });
 
   const [assignFormData, setAssignFormData] = useState({
@@ -107,12 +109,14 @@ const ProjectDetails = () => {
       setFormData({
         name: project.name,
         description: project.description,
+        status: project.status || "not started",
       });
     } else {
       setEditingProject(null);
       setFormData({
         name: "",
         description: "",
+        status: "not started",
       });
     }
     setProjectDialog(true);
@@ -124,6 +128,7 @@ const ProjectDetails = () => {
     setFormData({
       name: "",
       description: "",
+      status: "not started",
     });
   };
 
@@ -253,6 +258,7 @@ const ProjectDetails = () => {
               <TableRow>
                 <TableCell>Project Name</TableCell>
                 <TableCell>Description</TableCell>
+                <TableCell>Status</TableCell>
                 <TableCell>Assigned Employees</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
@@ -269,6 +275,19 @@ const ProjectDetails = () => {
                     <Typography variant="body2">
                       {project.description}
                     </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={project.status || "not started"}
+                      color={
+                        project.status === "completed"
+                          ? "success"
+                          : project.status === "in progress"
+                          ? "warning"
+                          : "default"
+                      }
+                      size="small"
+                    />
                   </TableCell>
                   <TableCell>
                     <Box display="flex" gap={1} flexWrap="wrap">
@@ -366,6 +385,21 @@ const ProjectDetails = () => {
               rows={4}
               required
             />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Project Status</InputLabel>
+              <Select
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
+                label="Project Status"
+                required
+              >
+                <MenuItem value="not started">Not Started</MenuItem>
+                <MenuItem value="in progress">In Progress</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+              </Select>
+            </FormControl>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseProjectDialog}>Cancel</Button>

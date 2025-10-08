@@ -139,6 +139,26 @@ router.get("/", protect, async (req, res) => {
   }
 });
 
+// Get all users - admin/superAdmin only (for /users/all endpoint)
+router.get("/all", protect, async (req, res) => {
+  try {
+    console.log("🔍 Fetching all users via /all endpoint");
+    
+    // Check if user is admin or superAdmin
+    if (!["admin", "superAdmin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const users = await User.find({}).select("-password");
+    console.log("👥 Total users found via /all:", users.length);
+    
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching all users:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Create new user - admin/superAdmin only
 router.post("/", protect, async (req, res) => {
   try {
@@ -230,6 +250,86 @@ router.delete("/:id", protect, async (req, res) => {
     res.json({ message: "User deleted successfully" });
   } catch (error) {
     console.error("Delete user error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// @desc    Get comprehensive user data with statistics
+// @route   GET /api/users/comprehensive
+// @access  Private (Admin/SuperAdmin only)
+router.get("/comprehensive", protect, async (req, res) => {
+  try {
+    // Check if user is admin or superAdmin
+    if (!["admin", "superAdmin"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    console.log("🔍 Fetching comprehensive user data");
+
+    // Get all users
+    const allUsers = await User.find({})
+      .select("-password")
+      .sort({ role: 1, username: 1 });
+
+    // Get additional statistics
+    const Report = require("../models/Report");
+    const Project = require("../models/Project");
+
+    // Get report and project statistics
+    const [totalReports, totalProjects, recentReports] = await Promise.all([
+      Report.countDocuments(),
+      Project.countDocuments(),
+      Report.find({})
+        .populate("employee", "username")
+        .sort({ date: -1 })
+        .limit(5),
+    ]);
+
+    // Calculate user statistics
+    const userStats = {
+      total: allUsers.length,
+      superAdmin: allUsers.filter((user) => user.role === "superAdmin").length,
+      admin: allUsers.filter((user) => user.role === "admin").length,
+      employee: allUsers.filter((user) => user.role === "employee").length,
+    };
+
+    // Organize users by role
+    const usersByRole = {
+      superAdmin: allUsers.filter((user) => user.role === "superAdmin"),
+      admin: allUsers.filter((user) => user.role === "admin"),
+      employee: allUsers.filter((user) => user.role === "employee"),
+    };
+
+    const response = {
+      users: {
+        total: userStats.total,
+        byRole: usersByRole,
+        all: allUsers,
+        statistics: userStats,
+      },
+      system: {
+        totalReports,
+        totalProjects,
+        recentReports: recentReports.map((report) => ({
+          id: report._id,
+          title: report.title,
+          employee: report.employee?.username || "Unknown",
+          date: report.date,
+          hoursWorked: report.hoursWorked,
+        })),
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    console.log("👥 Comprehensive users response:", {
+      totalUsers: response.users.total,
+      totalReports: response.system.totalReports,
+      totalProjects: response.system.totalProjects,
+    });
+
+    res.json(response);
+  } catch (error) {
+    console.error("Error fetching comprehensive user data:", error);
     res.status(500).json({ message: "Server error" });
   }
 });

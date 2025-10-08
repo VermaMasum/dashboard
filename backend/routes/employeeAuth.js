@@ -13,7 +13,7 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
     console.log('Employee login attempt for username:', username);
     
-    const user = await User.findOne({ username, role: 'employee' });
+    const user = await User.findOne({ username });
     console.log('Employee found:', user ? 'Yes' : 'No');
     
     if (user) {

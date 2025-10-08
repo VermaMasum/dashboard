@@ -720,17 +720,11 @@ const EmployeeReports = () => {
                 }
                 label="Project"
               >
-                {projects
-                  .filter((project) => {
-                    const status = (projectStatusMap[project._id] || "").trim().toLowerCase();
-                    // Only show projects with status 'in progress' or 'completed'
-                    return status === "in progress" || status === "completed";
-                  })
-                  .map((project) => (
-                    <MenuItem key={project._id} value={project._id}>
-                      {project.name}
-                    </MenuItem>
-                  ))}
+                {projects.map((project) => (
+                  <MenuItem key={project._id} value={project._id}>
+                    {project.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
 
