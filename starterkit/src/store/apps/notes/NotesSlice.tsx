@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { AppDispatch } from '../../store';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
-const API_URL = '/api/data/notes/NotesData';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface StateType {
   notes: any[];
@@ -67,7 +67,7 @@ export const { SearchNotes, getNotes, SelectNote, DeleteNote, UpdateNote, addNot
 
 export const fetchNotes = () => async (dispatch: AppDispatch) => {
   try {
-    const response = await axios.get(`${API_URL}`);
+    const response = await axios.get(`${API_BASE_URL}/notes`);
     dispatch(getNotes(response.data));
   } catch (err: any) {
     throw new Error(err);

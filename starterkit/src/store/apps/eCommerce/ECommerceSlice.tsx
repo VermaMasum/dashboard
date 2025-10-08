@@ -3,7 +3,7 @@ import { filter, map } from 'lodash';
 import { createSlice } from '@reduxjs/toolkit';
 import { AppDispatch } from '../../store';
 
-const API_URL = '/api/data/eCommerce/ProductsData';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface StateType {
   products: any[];
@@ -154,7 +154,7 @@ export const {
 
 export const fetchProducts = () => async (dispatch: AppDispatch) => {
   try {
-    const response = await axios.get(`${API_URL}`);
+    const response = await axios.get(`${API_BASE_URL}/products`);
     dispatch(getProducts(response.data));
   } catch (error) {
     dispatch(hasError(error));

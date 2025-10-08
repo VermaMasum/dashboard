@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { map } from 'lodash';
 import { AppDispatch } from '../../store';
 
-const API_URL = '/api/data/postData';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 interface StateType {
   posts: any[];
@@ -51,25 +51,29 @@ export const UserProfileSlice = createSlice({
 
 export const { getPosts, getFollowers, onToggleFollow, getPhotos } = UserProfileSlice.actions;
 
+
+// Replace with real backend endpoints
 export const fetchPosts = () => async (dispatch: AppDispatch) => {
   try {
-    const response = await axios.get(`${API_URL}`);
+    const response = await axios.get(`${API_BASE_URL}/posts`);
     dispatch(getPosts(response.data));
   } catch (err: any) {
     throw new Error(err);
   }
 };
+
 export const likePosts = (postId: number) => async (dispatch: AppDispatch) => {
   try {
-    const response = await axios.post('/api/data/posts/like', { postId });
+    const response = await axios.post(`${API_BASE_URL}/posts/like`, { postId });
     dispatch(getPosts(response.data.posts));
   } catch (err: any) {
     throw new Error(err);
   }
 };
+
 export const addComment = (postId: number, comment: any[]) => async (dispatch: AppDispatch) => {
   try {
-    const response = await axios.post('/api/data/posts/comments/add', { postId, comment });
+    const response = await axios.post(`${API_BASE_URL}/posts/comments/add`, { postId, comment });
     dispatch(getPosts(response.data.posts));
   } catch (err: any) {
     throw new Error(err);
@@ -79,7 +83,7 @@ export const addComment = (postId: number, comment: any[]) => async (dispatch: A
 export const addReply =
   (postId: number, commentId: any[], reply: any[]) => async (dispatch: AppDispatch) => {
     try {
-      const response = await axios.post('/api/data/posts/replies/add', {
+      const response = await axios.post(`${API_BASE_URL}/posts/replies/add`, {
         postId,
         commentId,
         reply,
@@ -92,7 +96,7 @@ export const addReply =
 
 export const fetchFollwores = () => async (dispatch: AppDispatch) => {
   try {
-    const response = await axios.get(`/api/data/users`);
+    const response = await axios.get(`${API_BASE_URL}/users`);
     dispatch(getFollowers(response.data));
   } catch (err: any) {
     throw new Error(err);
@@ -101,7 +105,7 @@ export const fetchFollwores = () => async (dispatch: AppDispatch) => {
 
 export const fetchPhotos = () => async (dispatch: AppDispatch) => {
   try {
-    const response = await axios.get(`/api/data/gallery`);
+    const response = await axios.get(`${API_BASE_URL}/gallery`);
     dispatch(getPhotos(response.data));
   } catch (err: any) {
     throw new Error(err);
