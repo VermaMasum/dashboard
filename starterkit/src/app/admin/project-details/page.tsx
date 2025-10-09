@@ -565,7 +565,8 @@ const ProjectDetails = () => {
                 PaperProps={{
                   style: {
                     maxHeight: 350,
-                    width: "calc(100% - 64px)",
+                    width: 550,
+                    // width: "calc(100% - 64px)",
                     padding: "10px",
                     borderRadius: "8px",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
