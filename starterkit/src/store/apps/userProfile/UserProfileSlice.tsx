@@ -1,9 +1,9 @@
-import axios from '../../../utils/axios';
-import { createSlice } from '@reduxjs/toolkit';
-import { map } from 'lodash';
-import { AppDispatch } from '../../store';
+import axios from "../../../utils/axios";
+import { createSlice } from "@reduxjs/toolkit";
+import { map } from "lodash";
+import { AppDispatch } from "../../store";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 interface StateType {
   posts: any[];
@@ -18,7 +18,7 @@ const initialState = {
 };
 
 export const UserProfileSlice = createSlice({
-  name: 'UserPost',
+  name: "UserPost",
   initialState,
   reducers: {
     getPosts: (state, action) => {
@@ -49,8 +49,8 @@ export const UserProfileSlice = createSlice({
   },
 });
 
-export const { getPosts, getFollowers, onToggleFollow, getPhotos } = UserProfileSlice.actions;
-
+export const { getPosts, getFollowers, onToggleFollow, getPhotos } =
+  UserProfileSlice.actions;
 
 // Replace with real backend endpoints
 export const fetchPosts = () => async (dispatch: AppDispatch) => {
@@ -71,17 +71,22 @@ export const likePosts = (postId: number) => async (dispatch: AppDispatch) => {
   }
 };
 
-export const addComment = (postId: number, comment: any[]) => async (dispatch: AppDispatch) => {
-  try {
-    const response = await axios.post(`${API_BASE_URL}/posts/comments/add`, { postId, comment });
-    dispatch(getPosts(response.data.posts));
-  } catch (err: any) {
-    throw new Error(err);
-  }
-};
+export const addComment =
+  (postId: number, comment: any[]) => async (dispatch: AppDispatch) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/posts/comments/add`, {
+        postId,
+        comment,
+      });
+      dispatch(getPosts(response.data.posts));
+    } catch (err: any) {
+      throw new Error(err);
+    }
+  };
 
 export const addReply =
-  (postId: number, commentId: any[], reply: any[]) => async (dispatch: AppDispatch) => {
+  (postId: number, commentId: any[], reply: any[]) =>
+  async (dispatch: AppDispatch) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/posts/replies/add`, {
         postId,

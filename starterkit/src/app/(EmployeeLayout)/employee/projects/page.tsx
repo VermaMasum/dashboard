@@ -247,9 +247,25 @@ const EmployeeProjects = () => {
         <DialogContent>
           {selectedProjectDetails && (
             <Box>
-              <Typography variant="body1" paragraph>
-                {selectedProjectDetails.description}
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                Description:
               </Typography>
+              <Box
+                sx={{
+                  maxHeight: 200,
+                  overflowY: "auto",
+                  paddingRight: 1,
+                  backgroundColor: "#f9f9f9",
+                  borderRadius: 1,
+                  border: "1px solid #ddd",
+                  whiteSpace: "pre-wrap",
+                  mb: 2,
+                }}
+              >
+                <Typography sx={{ p: 1 }}>
+                  {selectedProjectDetails.description}
+                </Typography>
+              </Box>
               <Box display="flex" flexWrap="wrap" gap={2} mb={3}>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
@@ -330,7 +346,7 @@ const EmployeeProjects = () => {
                               </TableCell>
                               <TableCell>
                                 <Typography variant="body2" fontWeight="medium">
-                                  {report.hoursWorked}h
+                                  {report.hoursWorked}
                                 </Typography>
                               </TableCell>
                               <TableCell>

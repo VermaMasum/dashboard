@@ -26,6 +26,12 @@ import {
   DialogActions,
   IconButton,
   CircularProgress,
+  Autocomplete,
+  Checkbox,
+  Menu,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import {
   Add,
@@ -33,6 +39,9 @@ import {
   Delete,
   PersonAdd,
   PersonRemove,
+  Visibility,
+  People,
+  ExpandMore,
 } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from "@/utils/axios";
@@ -65,17 +74,26 @@ const ProjectDetails = () => {
   const [assignDialog, setAssignDialog] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [viewDialog, setViewDialog] = useState(false);
+  const [viewProject, setViewProject] = useState<Project | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     status: "not started",
+    assignedEmployees: [] as string[],
   });
 
   const [assignFormData, setAssignFormData] = useState({
     employeeId: "",
   });
+
+  // Popover anchor for employee checkbox list
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // Search term for employee list
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -84,19 +102,13 @@ const ProjectDetails = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log("📋 Fetching projects and employees...");
       const [projectsRes, employeesRes] = await Promise.all([
         axios.get("/projects"),
         axios.get("/users?role=employee"),
       ]);
-
-      console.log("📋 Projects response:", projectsRes.data);
-      console.log("📋 Employees response:", employeesRes.data);
       setProjects(projectsRes.data);
       setEmployees(employeesRes.data);
     } catch (err: any) {
-      console.error("❌ Error fetching data:", err);
-      console.error("❌ Error details:", err.response?.data);
       setError(err.response?.data?.message || "Failed to fetch data");
     } finally {
       setLoading(false);
@@ -106,17 +118,24 @@ const ProjectDetails = () => {
   const handleOpenProjectDialog = (project?: Project) => {
     if (project) {
       setEditingProject(project);
-      setFormData({
+      setFormData((prev) => ({
+        ...prev,
         name: project.name,
         description: project.description,
         status: project.status || "not started",
-      });
+        assignedEmployees: project.employees
+          ? project.employees.map((emp) =>
+              typeof emp === "string" ? emp : emp._id
+            )
+          : [],
+      }));
     } else {
       setEditingProject(null);
       setFormData({
         name: "",
         description: "",
         status: "not started",
+        assignedEmployees: [],
       });
     }
     setProjectDialog(true);
@@ -129,7 +148,10 @@ const ProjectDetails = () => {
       name: "",
       description: "",
       status: "not started",
+      assignedEmployees: [],
     });
+    setAnchorEl(null);
+    setSearchTerm("");
   };
 
   const handleSubmitProject = async () => {
@@ -174,7 +196,6 @@ const ProjectDetails = () => {
 
   const handleAssignEmployee = async () => {
     if (!selectedProject || !assignFormData.employeeId) return;
-
     try {
       await axios.post(`/projects/${selectedProject._id}/assign`, {
         employeeId: assignFormData.employeeId,
@@ -192,14 +213,22 @@ const ProjectDetails = () => {
     employeeId: string
   ) => {
     try {
-      await axios.post(`/projects/${projectId}/unassign`, {
-        employeeId: employeeId,
-      });
+      await axios.post(`/projects/${projectId}/unassign`, { employeeId });
       setSuccess("Employee unassigned successfully");
       fetchData();
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to unassign employee");
     }
+  };
+
+  const handleOpenViewDialog = (project: Project) => {
+    setViewProject(project);
+    setViewDialog(true);
+  };
+
+  const handleCloseViewDialog = () => {
+    setViewDialog(false);
+    setViewProject(null);
   };
 
   if (loading) {
@@ -252,6 +281,7 @@ const ProjectDetails = () => {
           </Alert>
         )}
 
+        {/* Projects Table */}
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
@@ -272,7 +302,19 @@ const ProjectDetails = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">
+                    <Typography
+                      variant="body2"
+                      title={project.description}
+                      sx={{
+                        maxWidth: 350,
+                        display: "-webkit-box",
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "normal",
+                      }}
+                    >
                       {project.description}
                     </Typography>
                   </TableCell>
@@ -290,35 +332,15 @@ const ProjectDetails = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Box display="flex" gap={1} flexWrap="wrap">
-                      {project.employees?.map((employee) => {
-                        const employeeId =
-                          typeof employee === "string"
-                            ? employee
-                            : employee._id;
-                        const employeeName =
-                          typeof employee === "string"
-                            ? employees.find((emp) => emp._id === employee)
-                                ?.username || "Unknown"
-                            : employee.username;
-                        return (
-                          <Chip
-                            key={employeeId}
-                            label={employeeName}
-                            size="small"
-                            color="primary"
-                            onDelete={() =>
-                              handleUnassignEmployee(project._id, employeeId)
-                            }
-                            deleteIcon={<PersonRemove />}
-                          />
-                        );
-                      }) || (
-                        <Typography variant="body2" color="text.secondary">
-                          No employees assigned
-                        </Typography>
-                      )}
-                    </Box>
+                    <Typography
+                      sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+                    >
+                      <People fontSize="small" />
+                      {project.employees?.length || 0} member
+                      {project.employees && project.employees.length > 1
+                        ? "s"
+                        : ""}
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     <IconButton
@@ -329,6 +351,16 @@ const ProjectDetails = () => {
                     >
                       <PersonAdd />
                     </IconButton>
+
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenViewDialog(project)}
+                      color="info"
+                      title="View Project Details"
+                    >
+                      <Visibility />
+                    </IconButton>
+
                     <IconButton
                       size="small"
                       onClick={() => handleOpenProjectDialog(project)}
@@ -351,6 +383,103 @@ const ProjectDetails = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* View Project Details Dialog */}
+        <Dialog
+          open={viewDialog}
+          onClose={handleCloseViewDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Project Details</DialogTitle>
+          <DialogContent dividers>
+            {viewProject ? (
+              <Box>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Name:
+                </Typography>
+                <Typography mb={2}>{viewProject.name}</Typography>
+
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Description:
+                </Typography>
+                <TextField
+                  value={viewProject.description}
+                  multiline
+                  fullWidth
+                  minRows={6}
+                  maxRows={12}
+                  InputProps={{
+                    readOnly: true,
+                  }}
+                  variant="outlined"
+                  sx={{ mb: 2 }}
+                />
+
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Status:
+                </Typography>
+                <Chip
+                  label={viewProject.status || "not started"}
+                  color={
+                    viewProject.status === "completed"
+                      ? "success"
+                      : viewProject.status === "in progress"
+                      ? "warning"
+                      : "default"
+                  }
+                  size="small"
+                  sx={{ mb: 2 }}
+                />
+
+                {/* Assigned Employees Count with View button */}
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Assigned Employees:
+                </Typography>
+                <Box display="flex" flexWrap="wrap" gap={1} mt={1}>
+                  {viewProject.employees && viewProject.employees.length > 0 ? (
+                    viewProject.employees.map((employee, index) => {
+                      const employeeId =
+                        typeof employee === "string" ? employee : employee._id;
+                      const employeeName =
+                        typeof employee === "string"
+                          ? employees.find((e) => e._id === employee)
+                              ?.username || "Unknown"
+                          : employee.username;
+                      return (
+                        <Chip
+                          key={employeeId}
+                          label={employeeName}
+                          size="small"
+                          color="primary"
+                          onDelete={() =>
+                            handleUnassignEmployee(viewProject!._id, employeeId)
+                          }
+                          deleteIcon={<PersonRemove />}
+                        />
+                      );
+                    })
+                  ) : (
+                    <Typography color="text.secondary">
+                      No employees assigned
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+            ) : (
+              <Typography>Loading project details...</Typography>
+            )}
+          </DialogContent>
+          {/* <DialogActions>
+            <Button onClick={() => handleDeleteProject(viewProject!._id)} color="error" variant="contained">
+              Delete Project
+            </Button>
+            <Button onClick={() => { handleCloseViewDialog(); handleOpenProjectDialog(viewProject!); }} color="primary" variant="contained">
+              Edit Project
+            </Button>
+            <Button onClick={handleCloseViewDialog}>Close</Button>
+          </DialogActions> */}
+        </Dialog>
 
         {/* Project Dialog */}
         <Dialog
@@ -399,6 +528,136 @@ const ProjectDetails = () => {
                 <MenuItem value="in progress">In Progress</MenuItem>
                 <MenuItem value="completed">Completed</MenuItem>
               </Select>
+            </FormControl>
+
+            {/* Assigned Employees with button-triggered checkbox list */}
+            <FormControl margin="normal" fullWidth>
+              <Button
+                variant="outlined"
+                onClick={(e) => setAnchorEl(e.currentTarget)}
+                endIcon={<ExpandMore />}
+                aria-haspopup="true"
+                aria-expanded={Boolean(anchorEl) ? "true" : undefined}
+                aria-controls={
+                  Boolean(anchorEl) ? "employee-checkbox-list" : undefined
+                }
+              >
+                {formData.assignedEmployees.length > 0
+                  ? `${formData.assignedEmployees.length} employee(s) selected`
+                  : "Select Employees"}
+              </Button>
+              <Menu
+                id="employee-checkbox-list"
+                open={Boolean(anchorEl)}
+                anchorEl={anchorEl}
+                onClose={() => {
+                  setAnchorEl(null);
+                  setSearchTerm("");
+                }}
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                PaperProps={{
+                  style: {
+                    maxHeight: 350,
+                    width: "calc(100% - 64px)",
+                    padding: "10px",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    boxSizing: "border-box",
+                    overflow: "hidden",
+                  },
+                }}
+              >
+                <Box sx={{ p: 2, pb: 1 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="Search employees..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    sx={{ borderRadius: "8px" }}
+                  />
+                </Box>
+                <List
+                  dense
+                  sx={{
+                    maxHeight: 350,
+                    overflowY: "auto",
+                    paddingX: 0,
+                    maxwidth: 350,
+                  }}
+                >
+                  {employees
+                    .filter((employee) =>
+                      employee.username
+                        .toLowerCase()
+                        .includes(searchTerm.toLowerCase())
+                    )
+                    .map((employee) => {
+                      const isChecked = formData.assignedEmployees.includes(
+                        employee._id
+                      );
+                      return (
+                        <ListItem
+                          key={employee._id}
+                          button
+                          onClick={async () => {
+                            try {
+                              if (isChecked) {
+                                await axios.post(
+                                  `/projects/${editingProject?._id}/unassign`,
+                                  { employeeId: employee._id }
+                                );
+                                setFormData({
+                                  ...formData,
+                                  assignedEmployees:
+                                    formData.assignedEmployees.filter(
+                                      (id) => id !== employee._id
+                                    ),
+                                });
+                              } else {
+                                await axios.post(
+                                  `/projects/${editingProject?._id}/assign`,
+                                  { employeeId: employee._id }
+                                );
+                                setFormData({
+                                  ...formData,
+                                  assignedEmployees: [
+                                    ...formData.assignedEmployees,
+                                    employee._id,
+                                  ],
+                                });
+                              }
+                              setSuccess(
+                                "Employee assignments updated successfully"
+                              );
+                              fetchData();
+                            } catch (err: any) {
+                              setError(
+                                err.response?.data?.message ||
+                                  "Failed to update employee assignments"
+                              );
+                            }
+                          }}
+                        >
+                          <Checkbox
+                            edge="start"
+                            checked={isChecked}
+                            tabIndex={-1}
+                            disableRipple
+                          />
+                          <ListItemText primary={employee.username} />
+                        </ListItem>
+                      );
+                    })}
+                </List>
+              </Menu>
             </FormControl>
           </DialogContent>
           <DialogActions>

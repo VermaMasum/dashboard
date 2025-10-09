@@ -8,7 +8,7 @@ export default function ToastContainerComponent() {
   };
 
   return (
-    <PageContainer title="Register Page" description="This is Sample page">
+    <PageContainer title="Register Page" description="">
       {/* your page content */}
       <button onClick={handleInvalidCredentials}>Test Toast</button>
 

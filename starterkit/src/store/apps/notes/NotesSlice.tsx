@@ -1,9 +1,9 @@
-import axios from '../../../utils/axios';
-import { createSlice } from '@reduxjs/toolkit';
-import { AppDispatch } from '../../store';
-import type { PayloadAction } from '@reduxjs/toolkit';
+import axios from "../../../utils/axios";
+import { createSlice } from "@reduxjs/toolkit";
+import { AppDispatch } from "../../store";
+import type { PayloadAction } from "@reduxjs/toolkit";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 interface StateType {
   notes: any[];
@@ -14,11 +14,11 @@ interface StateType {
 const initialState = {
   notes: [],
   notesContent: 1,
-  noteSearch: '',
+  noteSearch: "",
 };
 
 export const NotesSlice = createSlice({
-  name: 'notes',
+  name: "notes",
   initialState,
   reducers: {
     getNotes: (state, action) => {
@@ -41,7 +41,7 @@ export const NotesSlice = createSlice({
         state.notes = state.notes.map((note) =>
           note.id === action.payload.id
             ? { ...note, [action.payload.field]: action.payload.value }
-            : note,
+            : note
         );
       },
       prepare: (id, field, value) => {
@@ -56,14 +56,28 @@ export const NotesSlice = createSlice({
         state.notes.push(action.payload);
       },
       prepare: (id, title, color) => {
-        return { payload: { id, title, color, datef: new Date().toDateString(), deleted: false } };
+        return {
+          payload: {
+            id,
+            title,
+            color,
+            datef: new Date().toDateString(),
+            deleted: false,
+          },
+        };
       },
     },
   },
 });
 
-export const { SearchNotes, getNotes, SelectNote, DeleteNote, UpdateNote, addNote } =
-  NotesSlice.actions;
+export const {
+  SearchNotes,
+  getNotes,
+  SelectNote,
+  DeleteNote,
+  UpdateNote,
+  addNote,
+} = NotesSlice.actions;
 
 export const fetchNotes = () => async (dispatch: AppDispatch) => {
   try {
