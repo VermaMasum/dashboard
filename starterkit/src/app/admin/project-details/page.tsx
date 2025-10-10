@@ -670,7 +670,7 @@ const ProjectDetails = () => {
         </Dialog>
 
         {/* Assign Employee Dialog */}
-        <Dialog
+        {/* <Dialog
           open={assignDialog}
           onClose={handleCloseAssignDialog}
           maxWidth="sm"
@@ -712,6 +712,112 @@ const ProjectDetails = () => {
             <Button onClick={handleAssignEmployee} variant="contained">
               Assign
             </Button>
+          </DialogActions>
+        </Dialog> */}
+        {/* ✅ Assign Employees Checkbox Dialog */}
+
+        {/* ✅ Assign Employees Checkbox Dialog with Working Search */}
+        <Dialog
+          open={assignDialog}
+          onClose={handleCloseAssignDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Assign Employees to {selectedProject?.name}</DialogTitle>
+          <DialogContent dividers>
+            {/* 🔍 Search Input */}
+            <Box sx={{ p: 2, pb: 1 }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search employees..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{ borderRadius: "8px" }}
+              />
+            </Box>
+
+            {/* ✅ Filtered List */}
+            <List sx={{ maxHeight: 400, overflowY: "auto" }}>
+              {employees
+                .filter((employee) =>
+                  employee.username
+                    ?.toLowerCase()
+                    .includes(searchTerm.toLowerCase())
+                )
+                .map((employee) => {
+                  const isAssigned = selectedProject?.employees?.some((emp) => {
+                    const id = typeof emp === "string" ? emp : emp._id;
+                    return id === employee._id;
+                  });
+
+                  return (
+                    <ListItem
+                      key={employee._id}
+                      button
+                      onClick={async () => {
+                        try {
+                          if (isAssigned) {
+                            await axios.post(
+                              `/projects/${selectedProject?._id}/unassign`,
+                              { employeeId: employee._id }
+                            );
+                          } else {
+                            await axios.post(
+                              `/projects/${selectedProject?._id}/assign`,
+                              { employeeId: employee._id }
+                            );
+                          }
+
+                          // ✅ Update UI instantly
+                          setSelectedProject((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  employees: isAssigned
+                                    ? prev.employees?.filter(
+                                        (emp) =>
+                                          (typeof emp === "string"
+                                            ? emp
+                                            : emp._id) !== employee._id
+                                      )
+                                    : [...(prev.employees || []), employee],
+                                }
+                              : prev
+                          );
+
+                          fetchData();
+                          setSuccess("Employee assignment updated");
+                        } catch (err: any) {
+                          setError(
+                            err.response?.data?.message ||
+                              "Failed to update assignment"
+                          );
+                        }
+                      }}
+                    >
+                      <Checkbox checked={isAssigned} />
+                      <ListItemText primary={employee.username} />
+                    </ListItem>
+                  );
+                })}
+
+              {/* ❌ No results found */}
+              {employees.filter((e) =>
+                e.username.toLowerCase().includes(searchTerm.toLowerCase())
+              ).length === 0 && (
+                <Typography
+                  color="text.secondary"
+                  textAlign="center"
+                  sx={{ p: 2 }}
+                >
+                  No employees found
+                </Typography>
+              )}
+            </List>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseAssignDialog}>Close</Button>
           </DialogActions>
         </Dialog>
       </Box>
