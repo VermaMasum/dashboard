@@ -8,7 +8,9 @@ const connectDB = async () => {
     console.log('✅ MongoDB connected successfully');
   } catch (err) {
     console.error('❌ MongoDB connection error:', err.message);
-    process.exit(1);
+    console.error('⚠️ Continuing without database connection. Some features may not work.');
+    // process.exit(1); // Commented out to allow server to start
   }
 };
 module.exports = connectDB;
+
