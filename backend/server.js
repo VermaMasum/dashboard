@@ -20,6 +20,11 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "http://127.0.0.1:3000",
       "http://3.111.194.111:3000",
       "http://3.111.194.111",
+      "http://3.111.194.111:80",
+      "http://3.111.194.111:443",
+      "https://3.111.194.111",
+      "https://3.111.194.111:80",
+      "https://3.111.194.111:443",
     ];
 
 // Add wildcard support for development (allows any IP on port 3000)
@@ -32,14 +37,15 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     }
-    // In development, allow any localhost or 192.168.x.x IP on port 3000
+    // In development, allow any localhost or common IP ranges
     else if (
       process.env.NODE_ENV !== "production" &&
       (origin.match(/^http:\/\/localhost:\d+$/) ||
         origin.match(/^http:\/\/127\.0\.0\.1:\d+$/) ||
-        origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/) ||
-        origin.match(/^http:\/\/10\.\d+\.\d+\.\d+:\d+$/) ||
-        origin.match(/^http:\/\/3\.\d+\.\d+\.\d+:\d+$/))
+        origin.match(/^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/) ||
+        origin.match(/^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/) ||
+        origin.match(/^http:\/\/3\.\d+\.\d+\.\d+(:\d+)?$/) ||
+        origin.match(/^https:\/\/3\.\d+\.\d+\.\d+(:\d+)?$/))
     ) {
       callback(null, true);
     } else {
