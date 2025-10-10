@@ -2,15 +2,17 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/AdminModule";
-    console.log('🔗 Connecting to MongoDB:', mongoURI);
+    const mongoURI =
+      process.env.MONGO_URI || "mongodb://127.0.0.1:27017/AdminModule";
+    console.log("🔗 Connecting to MongoDB:", mongoURI);
     await mongoose.connect(mongoURI);
-    console.log('✅ MongoDB connected successfully');
+    console.log("✅ MongoDB connected successfully");
   } catch (err) {
-    console.error('❌ MongoDB connection error:', err.message);
-    console.error('⚠️ Continuing without database connection. Some features may not work.');
-    // process.exit(1); // Commented out to allow server to start
+    console.error("❌ MongoDB connection error:", err.message);
+    console.error(
+      "⚠️ Continuing without database connection. Some features may not work."
+    );
+    // process.exit(1);
   }
 };
 module.exports = connectDB;
-
