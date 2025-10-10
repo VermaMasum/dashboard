@@ -48,6 +48,7 @@ export default function Login () {
             <Image
               src={"/images/backgrounds/login-bg.svg"}
               alt="bg" width={500} height={500}
+              priority={true}
               style={{
                 width: '100%',
                 maxWidth: '500px',

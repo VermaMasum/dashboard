@@ -13,44 +13,51 @@ const startserver = async () => {
 const app = express();
 
 // Configure CORS to allow multiple origins
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://3.111.194.111:3000'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://3.111.194.111:3000",
+    ];
 
 // Add wildcard support for development (allows any IP on port 3000)
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-    
+
     // Check if origin is in allowed list
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
-    } 
+    }
     // In development, allow any localhost or 192.168.x.x IP on port 3000
-    else if (process.env.NODE_ENV !== 'production' && 
-             (origin.match(/^http:\/\/localhost:\d+$/) || 
-              origin.match(/^http:\/\/127\.0\.0\.1:\d+$/) ||
-              origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/) ||
-              origin.match(/^http:\/\/10\.\d+\.\d+\.\d+:\d+$/))) {
+    else if (
+      process.env.NODE_ENV !== "production" &&
+      (origin.match(/^http:\/\/localhost:\d+$/) ||
+        origin.match(/^http:\/\/127\.0\.0\.1:\d+$/) ||
+        origin.match(/^http:\/\/192\.168\.\d+\.\d+:\d+$/) ||
+        origin.match(/^http:\/\/10\.\d+\.\d+\.\d+:\d+$/) ||
+        origin.match(/^http:\/\/3\.\d+\.\d+\.\d+:\d+$/))
+    ) {
       callback(null, true);
     } else {
-      console.log('❌ CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+      console.log("❌ CORS blocked origin:", origin);
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 
 app.use(cors(corsOptions));
 app.use(express.json());
 
 // Log CORS configuration
-console.log('🔒 CORS Configuration:');
-console.log('   Allowed Origins:', allowedOrigins);
-console.log('   Development mode: Allowing local network IPs');
+console.log("🔒 CORS Configuration:");
+console.log("   Allowed Origins:", allowedOrigins);
+console.log("   Development mode: Allowing local network IPs");
 
 // Import routes
 const authRoutes = require("./routes/auth");
