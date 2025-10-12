@@ -665,7 +665,7 @@ const ProjectHistory = () => {
           open={!!successMessage}
           autoHideDuration={4000}
           onClose={() => setSuccessMessage("")}
-          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         >
           <Alert
             onClose={() => setSuccessMessage("")}

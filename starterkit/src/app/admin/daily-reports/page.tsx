@@ -27,6 +27,7 @@ import {
   Chip,
   CircularProgress,
   Grid,
+  Snackbar,
 } from "@mui/material";
 import { Add, Edit, Delete, Assessment, FilterList } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
@@ -297,17 +298,39 @@ const DailyReports = () => {
         </Button>
       </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError("")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setError("")}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
           {error}
         </Alert>
-      )}
+      </Snackbar>
 
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess("")}>
+      {/* Success Snackbar */}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess("")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSuccess("")}
+          severity="success"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
           {success}
         </Alert>
-      )}
+      </Snackbar>
 
       {/* Stats Cards */}
       <Grid container spacing={3} mb={3}>

@@ -12,6 +12,7 @@ import {
   ListItem,
   ListItemText,
   Chip,
+  Snackbar,
 } from "@mui/material";
 import {
   People,
@@ -127,11 +128,22 @@ export default function AdminDashboard() {
 
   return (
     <Box>
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError('')}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setError('')}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
           {error}
         </Alert>
-      )}
+      </Snackbar>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

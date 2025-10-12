@@ -26,6 +26,7 @@ import {
   DialogActions,
   IconButton,
   CircularProgress,
+  Snackbar,
 } from "@mui/material";
 import { Add, Edit, Delete, Person } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
@@ -225,21 +226,39 @@ const EmployeeManagement = () => {
           </Button>
         </Box>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError("")}>
+        {/* Error Snackbar */}
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={() => setError("")}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setError("")}
+            severity="error"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
             {error}
           </Alert>
-        )}
+        </Snackbar>
 
-        {success && (
+        {/* Success Snackbar */}
+        <Snackbar
+          open={!!success}
+          autoHideDuration={4000}
+          onClose={() => setSuccess("")}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
           <Alert
-            severity="success"
-            sx={{ mb: 2 }}
             onClose={() => setSuccess("")}
+            severity="success"
+            variant="filled"
+            sx={{ width: "100%" }}
           >
             {success}
           </Alert>
-        )}
+        </Snackbar>
 
         <TableContainer component={Paper}>
           <Table>
