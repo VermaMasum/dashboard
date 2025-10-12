@@ -13,10 +13,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret-key-change-in-
 // @access  Public
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    console.log('Employee login attempt for username:', username);
+    const { email, password } = req.body;
+    console.log('Employee login attempt for email:', email);
     
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
     console.log('Employee found:', user ? 'Yes' : 'No');
     
     if (user) {
@@ -27,7 +27,7 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, {
           expiresIn: '30d',
         });
-        console.log('✅ Employee login successful for user:', username, 'Role:', user.role);
+        console.log('✅ Employee login successful for email:', email, 'Role:', user.role);
         res.json({
           _id: user._id,
           username: user.username,
@@ -35,12 +35,12 @@ router.post('/login', async (req, res) => {
           token,
         });
       } else {
-        console.log('Invalid password for employee:', username);
-        res.status(401).json({ message: 'Invalid username or password' });
+        console.log('Invalid password for employee:', email);
+        res.status(401).json({ message: 'Invalid email or password' });
       }
     } else {
-      console.log('Employee not found:', username);
-      res.status(401).json({ message: 'Invalid username or password' });
+      console.log('Employee not found with email:', email);
+      res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
     console.error('Employee login error:', error);

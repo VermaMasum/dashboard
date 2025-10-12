@@ -12,7 +12,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; message?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   register: (username: string, password: string, role: 'admin' | 'superAdmin' | 'employee') => Promise<{ success: boolean; message?: string }>;
   clearAuth: () => void;
@@ -44,25 +44,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('user');
   };
 
-  const login = async (username: string, password: string): Promise<{ success: boolean; message?: string }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
       setLoading(true);
-      console.log('🔐 Attempting login for user:', username);
+      console.log('🔐 Attempting login for email:', email);
       clearAuth(); // Ensure auth data is cleared before attempt
       
       let response;
       try {
         // Try regular auth first (for admin/superAdmin)
-        console.log('🔄 Trying admin auth for user:', username);
-        response = await axios.post('/auth/login', { username, password });
-        console.log('✅ Admin login successful for user:', username, 'Response:', response.data);
+        console.log('🔄 Trying admin auth for email:', email);
+        response = await axios.post('/auth/login', { email, password });
+        console.log('✅ Admin login successful for email:', email, 'Response:', response.data);
       } catch (adminError: any) {
         console.log('❌ Admin login failed:', adminError.response?.status, adminError.response?.data);
         if (adminError.response?.status === 401) {
           // If admin login fails, try employee auth
-          console.log('🔄 Trying employee auth for user:', username);
-          response = await axios.post('/employee-auth/login', { username, password });
-          console.log('✅ Employee login successful for user:', username, 'Response:', response.data);
+          console.log('🔄 Trying employee auth for email:', email);
+          response = await axios.post('/employee-auth/login', { email, password });
+          console.log('✅ Employee login successful for email:', email, 'Response:', response.data);
         } else {
           console.log('❌ Admin login error (not 401):', adminError.message);
           throw adminError;

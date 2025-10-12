@@ -20,7 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
@@ -38,14 +38,14 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.username || !formData.password) {
+    if (!formData.email || !formData.password) {
       toast.error("Please fill in all fields");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await login(formData.username, formData.password);
+      const result = await login(formData.email, formData.password);
       if (result.success) {
         // Redirect based on user role
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
@@ -58,7 +58,7 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
         }
       } else {
         // Handle login failure
-        toast.error(result.message || "Invalid username or password");
+        toast.error(result.message || "Invalid email or password");
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -80,12 +80,13 @@ const AuthLogin = ({ title, subtitle, subtext }: loginType) => {
 
       <Stack>
         <Box>
-          <CustomFormLabel htmlFor="username">Username</CustomFormLabel>
+          <CustomFormLabel htmlFor="email">Email</CustomFormLabel>
           <CustomTextField 
-            id="username" 
+            id="email" 
+            type="email"
             variant="outlined" 
             fullWidth 
-            value={formData.username}
+            value={formData.email}
             onChange={handleInputChange}
             required
           />

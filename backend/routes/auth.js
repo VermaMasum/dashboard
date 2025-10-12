@@ -55,29 +55,29 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     console.log("🔐 Login attempt received");
-    const { username, password } = req.body;
+    const { email, password } = req.body;
     
-    if (!username || !password) {
-      console.log("❌ Missing username or password");
+    if (!email || !password) {
+      console.log("❌ Missing email or password");
       return res
         .status(400)
-        .json({ message: "Username and password required" });
+        .json({ message: "Email and password required" });
     }
 
-    console.log("🔍 Looking for user:", username);
-    const user = await User.findOne({ username });
+    console.log("🔍 Looking for user with email:", email);
+    const user = await User.findOne({ email });
     
     if (!user) {
-      console.log("❌ User not found:", username);
-      return res.status(401).json({ message: "Invalid username or password" });
+      console.log("❌ User not found with email:", email);
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
     console.log("👤 User found, checking password...");
     const isMatch = await user.matchPassword(password);
     
     if (!isMatch) {
-      console.log("❌ Invalid password for user:", username);
-      return res.status(401).json({ message: "Invalid username or password" });
+      console.log("❌ Invalid password for email:", email);
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
     console.log("🔑 Password correct, generating token...");
@@ -87,7 +87,7 @@ router.post("/login", async (req, res) => {
       { expiresIn: "30d" }
     );
 
-    console.log("✅ User logged in successfully:", username, "Role:", user.role);
+    console.log("✅ User logged in successfully:", email, "Role:", user.role);
     res.json({
       _id: user._id,
       username: user.username,
