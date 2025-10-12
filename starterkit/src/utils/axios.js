@@ -32,9 +32,23 @@ console.log("🔍 PRODUCTION_API_URL:", PRODUCTION_API_URL);
 // Request interceptor to add auth token
 axiosServices.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Check if we're in the browser (client-side)
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem("token");
+      const user = localStorage.getItem("user");
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log("🔑 Token attached to request:", token.substring(0, 20) + "...");
+        
+        if (user) {
+          const userData = JSON.parse(user);
+          console.log("👤 User info:", userData.username, "Role:", userData.role);
+        }
+      } else {
+        console.warn("⚠️ No token found in localStorage for request to:", config.url);
+        console.warn("⚠️ Please login to access this resource");
+      }
     }
     return config;
   },
@@ -64,9 +78,15 @@ axiosServices.interceptors.response.use(
 
     // Handle 401 errors
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      console.log("⚠️ Token expired or invalid");
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        console.log("⚠️ Token expired or invalid - redirecting to login");
+        // Only redirect if we're not already on a login/auth page
+        if (!window.location.pathname.includes('/auth/')) {
+          window.location.href = '/auth/authForms/AuthLogin';
+        }
+      }
     }
 
     // Return the error response or default message

@@ -62,6 +62,9 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Employee = require("../models/Employee");
 
+// Set a default JWT_SECRET if not provided (for development only)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret-key-change-in-production';
+
 const protect = async (req, res, next) => {
   let token;
   if (
@@ -70,12 +73,16 @@ const protect = async (req, res, next) => {
   ) {
     try {
       token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log("🔑 Token received:", token.substring(0, 20) + "...");
+      
+      const decoded = jwt.verify(token, JWT_SECRET);
+      console.log("✅ Token decoded successfully, user ID:", decoded.id);
 
       // Find user in User model (all users including employees are now in User model)
       let user = await User.findById(decoded.id).select("-password");
 
       if (!user) {
+        console.log("❌ User not found in database for ID:", decoded.id);
         return res.status(401).json({ message: "User not found" });
       }
       console.log("🔍 Authenticated user:", {
@@ -87,6 +94,7 @@ const protect = async (req, res, next) => {
       req.user = user;
       next();
     } catch (error) {
+      console.error("❌ Token verification failed:", error.message);
       return res.status(401).json({ message: "Not authorized, token failed" });
     }
   } else {

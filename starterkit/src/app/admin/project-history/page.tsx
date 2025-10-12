@@ -28,6 +28,7 @@ import {
   TableRow,
   Paper,
   TextField,
+  Snackbar,
 } from "@mui/material";
 import {
   Edit,
@@ -75,6 +76,7 @@ const ProjectHistory = () => {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [newStatus, setNewStatus] = useState<string>("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Dropdown filter state
   const [selectedStatus, setSelectedStatus] = useState<string>("in progress");
@@ -196,6 +198,7 @@ const ProjectHistory = () => {
       setStatusEditDialog(false);
       setSelectedProject(null);
       setNewStatus("");
+      setSuccessMessage("Project status updated successfully!");
     } catch (err: any) {
       setError(
         err.response?.data?.message || "Failed to update project status"
@@ -246,6 +249,7 @@ const ProjectHistory = () => {
 
       setEditDialogOpen(false);
       setEditingEntry(null);
+      setSuccessMessage("Time entry updated successfully!");
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to update time entry");
     }
@@ -302,12 +306,6 @@ const ProjectHistory = () => {
         >
           Project History
         </Typography>
-
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
-            {error}
-          </Alert>
-        )}
 
         {/* Dropdown Filters */}
         <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
@@ -644,6 +642,40 @@ const ProjectHistory = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Error Snackbar */}
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={() => setError("")}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setError("")}
+            severity="error"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {error}
+          </Alert>
+        </Snackbar>
+
+        {/* Success Snackbar */}
+        <Snackbar
+          open={!!successMessage}
+          autoHideDuration={4000}
+          onClose={() => setSuccessMessage("")}
+          anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setSuccessMessage("")}
+            severity="success"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {successMessage}
+          </Alert>
+        </Snackbar>
       </Box>
     </PageContainer>
   );

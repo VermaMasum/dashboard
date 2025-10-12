@@ -5,12 +5,17 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const connectDB = require("./db.js");
 
-const startserver = async () => {
-  await connectDB();
-  console.log("database connected successfully");
-};
-
 const app = express();
+
+const startserver = async () => {
+  try {
+    await connectDB();
+    console.log("✅ Database connected successfully");
+  } catch (error) {
+    console.error("❌ Database connection failed:", error.message);
+    console.error("⚠️  Server will continue but authentication will fail");
+  }
+};
 
 // Configure CORS to allow multiple origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS
@@ -27,14 +32,22 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       "https://3.111.194.111:443",
     ];
 
+console.log("🔒 Allowed Origins:", allowedOrigins);
+
 // Add wildcard support for development (allows any IP on port 3000)
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log("🌐 CORS request from origin:", origin);
+    
     // Allow requests with no origin (like mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      console.log("✅ Allowing request with no origin");
+      return callback(null, true);
+    }
 
     // Check if origin is in allowed list
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log("✅ Origin allowed:", origin);
       callback(null, true);
     }
     // In development, allow any localhost or common IP ranges
@@ -47,6 +60,7 @@ const corsOptions = {
         origin.match(/^http:\/\/3\.\d+\.\d+\.\d+(:\d+)?$/) ||
         origin.match(/^https:\/\/3\.\d+\.\d+\.\d+(:\d+)?$/))
     ) {
+      console.log("✅ Origin allowed by regex:", origin);
       callback(null, true);
     } else {
       console.log("❌ CORS blocked origin:", origin);
@@ -87,11 +101,23 @@ app.get("/", (req, res) => {
   res.send("API is running");
 });
 
-const PORT = process.env.PORT || 5000;
-
-// 👇 Listen on all network interfaces
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
+// Test endpoint to verify server is working
+app.post("/api/test", (req, res) => {
+  console.log("🧪 Test endpoint hit!");
+  res.json({ message: "Backend server is working!", timestamp: new Date() });
 });
 
-startserver();
+const PORT = process.env.PORT || 5000;
+
+// Start database connection first, then start server
+startserver().then(() => {
+  // 👇 Listen on all network interfaces
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
+    console.log(`🔗 Backend API: http://0.0.0.0:${PORT}/api`);
+    console.log(`📊 Ready to accept requests`);
+  });
+}).catch((error) => {
+  console.error("❌ Failed to start server:", error.message);
+  process.exit(1);
+});

@@ -5,6 +5,13 @@ const { protect } = require("../middleware/auth");
 
 const router = express.Router();
 
+// Set a default JWT_SECRET if not provided (for development only)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret-key-change-in-production';
+
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️  WARNING: JWT_SECRET not set in environment variables. Using default secret (NOT SECURE FOR PRODUCTION)');
+}
+
 // Register a new user
 router.post("/register", async (req, res) => {
   try {
@@ -30,15 +37,16 @@ router.post("/register", async (req, res) => {
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "30d" }
     );
 
+    console.log("✅ User registered successfully:", username);
     res
       .status(201)
       .json({ _id: user._id, username: user.username, role: user.role, token });
   } catch (error) {
-    console.error("Register error:", error);
+    console.error("❌ Register error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -46,26 +54,40 @@ router.post("/register", async (req, res) => {
 // Login user
 router.post("/login", async (req, res) => {
   try {
+    console.log("🔐 Login attempt received");
     const { username, password } = req.body;
-    if (!username || !password)
+    
+    if (!username || !password) {
+      console.log("❌ Missing username or password");
       return res
         .status(400)
         .json({ message: "Username and password required" });
+    }
 
+    console.log("🔍 Looking for user:", username);
     const user = await User.findOne({ username });
-    if (!user)
+    
+    if (!user) {
+      console.log("❌ User not found:", username);
       return res.status(401).json({ message: "Invalid username or password" });
+    }
 
+    console.log("👤 User found, checking password...");
     const isMatch = await user.matchPassword(password);
-    if (!isMatch)
+    
+    if (!isMatch) {
+      console.log("❌ Invalid password for user:", username);
       return res.status(401).json({ message: "Invalid username or password" });
+    }
 
+    console.log("🔑 Password correct, generating token...");
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "30d" }
     );
 
+    console.log("✅ User logged in successfully:", username, "Role:", user.role);
     res.json({
       _id: user._id,
       username: user.username,
@@ -73,8 +95,19 @@ router.post("/login", async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ Login error:", error);
+    console.error("❌ Error stack:", error.stack);
+    console.error("❌ Error details:", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      syscall: error.syscall
+    });
+    res.status(500).json({ 
+      message: "Server error", 
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined 
+    });
   }
 });
 

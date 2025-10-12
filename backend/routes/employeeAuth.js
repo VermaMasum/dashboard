@@ -5,6 +5,9 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Set a default JWT_SECRET if not provided (for development only)
+const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret-key-change-in-production';
+
 // @desc    Employee login
 // @route   POST /api/employee-auth/login
 // @access  Public
@@ -21,10 +24,10 @@ router.post('/login', async (req, res) => {
       console.log('Password match:', passwordMatch);
       
       if (passwordMatch) {
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+        const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, {
           expiresIn: '30d',
         });
-        console.log('Employee login successful for user:', username);
+        console.log('✅ Employee login successful for user:', username, 'Role:', user.role);
         res.json({
           _id: user._id,
           username: user.username,
