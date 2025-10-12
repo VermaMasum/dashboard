@@ -107,6 +107,13 @@ app.post("/api/test", (req, res) => {
   res.json({ message: "Backend server is working!", timestamp: new Date() });
 });
 
+// Simple login test endpoint
+app.post("/api/test-login", (req, res) => {
+  console.log("🧪 Test login endpoint hit!");
+  console.log("Request body:", req.body);
+  res.json({ message: "Test login endpoint working!", body: req.body });
+});
+
 const PORT = process.env.PORT || 5000;
 
 // Start database connection first, then start server
