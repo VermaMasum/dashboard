@@ -21,6 +21,7 @@ import {
   Avatar,
   Fab,
   Dialog,
+  Snackbar,
 } from "@mui/material";
 import { Add, ArrowBack, ArrowForward, Visibility } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
@@ -251,7 +252,22 @@ const EmployeeTimeTracker = () => {
         <Add />
       </Fab>
 
-      {error && <Alert severity="error">{error}</Alert>}
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError("")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setError("")}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

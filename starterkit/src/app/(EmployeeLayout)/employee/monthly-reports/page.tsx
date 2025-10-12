@@ -27,6 +27,7 @@ import {
   Avatar,
   Stack,
   Divider,
+  Snackbar,
 } from "@mui/material";
 import {
   CalendarToday,
@@ -193,7 +194,21 @@ const EmployeeMonthlyReports = () => {
   if (error) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error}</Alert>
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={() => setError("")}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setError("")}
+            severity="error"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {error}
+          </Alert>
+        </Snackbar>
       </Box>
     );
   }

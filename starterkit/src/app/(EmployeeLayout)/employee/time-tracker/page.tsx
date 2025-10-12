@@ -25,6 +25,7 @@ import {
   CircularProgress,
   Alert,
   Fab,
+  Snackbar,
 } from "@mui/material";
 import {
   Add,
@@ -837,12 +838,22 @@ const EmployeeTimeTracker = () => {
         </Card>
       </Box>
 
-      {/* Error Alert */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={() => setError("")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setError("")}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
           {error}
         </Alert>
-      )}
+      </Snackbar>
 
       {/* Month View */}
       {viewMode === "month" && (
