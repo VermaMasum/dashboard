@@ -25,6 +25,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Alert,
+  Snackbar,
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
@@ -68,6 +70,8 @@ const EmployeeReports = () => {
   >({});
   const [loading, setLoading] = useState(true);
   const [reportView, setReportView] = useState("daily");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Filter states - Set defaults to current date/week/month
   const [selectedProject, setSelectedProject] = useState("");
@@ -306,19 +310,23 @@ const EmployeeReports = () => {
     // Prevent saving for projects not 'in progress' or 'completed'
     const selectedProjectStatus = (projectStatusMap[formData.project] || "").trim().toLowerCase();
     if (!(selectedProjectStatus === "in progress" || selectedProjectStatus === "completed")) {
-      alert("You cannot add a time entry for a project that is not in progress or completed.");
+      setError("You cannot add a time entry for a project that is not in progress or completed.");
       return;
     }
     try {
+      setError(""); // Clear any previous errors
       if (editingReport) {
         await axios.put(`/reports/${editingReport._id}`, formData);
+        setSuccess("Report updated successfully!");
       } else {
         await axios.post("/reports", formData);
+        setSuccess("Report added successfully!");
       }
       await fetchData();
       handleCloseReportDialog();
     } catch (error: any) {
       console.error("Error saving report:", error);
+      setError(error.response?.data?.message || "Failed to save report. Please try again.");
     }
   };
 
@@ -342,6 +350,40 @@ const EmployeeReports = () => {
         <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
           Reports
         </Typography>
+
+        {/* Error Snackbar */}
+        <Snackbar
+          open={!!error}
+          autoHideDuration={6000}
+          onClose={() => setError("")}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setError("")}
+            severity="error"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {error}
+          </Alert>
+        </Snackbar>
+
+        {/* Success Snackbar */}
+        <Snackbar
+          open={!!success}
+          autoHideDuration={4000}
+          onClose={() => setSuccess("")}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        >
+          <Alert
+            onClose={() => setSuccess("")}
+            severity="success"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            {success}
+          </Alert>
+        </Snackbar>
 
         <Box
           sx={{

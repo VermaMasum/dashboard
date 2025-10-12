@@ -89,6 +89,7 @@ const EmployeeTimeTracker = () => {
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Dialog states
   const [addEntryDialog, setAddEntryDialog] = useState(false);
@@ -432,6 +433,7 @@ const EmployeeTimeTracker = () => {
 
   const handleSaveEntry = async () => {
     try {
+      setError(""); // Clear any previous errors
       // Parse duration properly
       let durationInMinutes = 0;
       if (duration && duration.includes(":")) {
@@ -481,11 +483,13 @@ const EmployeeTimeTracker = () => {
           entryData
         );
         console.log("Employee - Update response:", response.data);
+        setSuccess("Time entry updated successfully!");
       } else {
         // Create new entry
         console.log("Employee - Creating new entry with data:", entryData);
         const response = await axios.post("/reports", entryData);
         console.log("Employee - Create response:", response.data);
+        setSuccess("Time entry added successfully!");
       }
 
       setAddEntryDialog(false);
@@ -513,9 +517,11 @@ const EmployeeTimeTracker = () => {
 
   const handleDeleteEntry = async (entryId: string) => {
     try {
+      setError(""); // Clear any previous errors
       console.log("Employee - Deleting entry:", entryId);
       const response = await axios.delete(`/reports/${entryId}`);
       console.log("Employee - Delete response:", response.data);
+      setSuccess("Time entry deleted successfully!");
 
       // Force refresh data after delete
       console.log("Employee - Refreshing data after delete...");
@@ -852,6 +858,23 @@ const EmployeeTimeTracker = () => {
           sx={{ width: "100%" }}
         >
           {error}
+        </Alert>
+      </Snackbar>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess("")}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          onClose={() => setSuccess("")}
+          severity="success"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {success}
         </Alert>
       </Snackbar>
 
