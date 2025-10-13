@@ -205,12 +205,12 @@ const EmployeeManagement = () => {
       title="Employee Management"
       description="Manage employees and their information"
     >
-      <Box>
+      <Box sx={{ pt: 3 }}>
         <Box
           display="flex"
           justifyContent="space-between"
           alignItems="center"
-          mb={5}
+          mb={3}
         >
           <Typography
             variant="h4"
@@ -225,7 +225,7 @@ const EmployeeManagement = () => {
             variant="contained"
             startIcon={<Add />}
             onClick={() => handleOpenDialog()}
-            sx={{ mb: 5 }}
+            // sx={{ mb: 6 }}
           >
             Add Employee
           </Button>
