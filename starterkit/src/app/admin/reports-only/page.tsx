@@ -25,13 +25,7 @@ import {
   DialogActions,
   IconButton,
 } from "@mui/material";
-import {
-  Assessment,
-  Refresh,
-  Search,
-  Person,
-  CalendarMonth,
-} from "@mui/icons-material";
+import { Assessment, Refresh, Search, Person } from "@mui/icons-material";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs, { Dayjs } from "dayjs";
@@ -84,7 +78,6 @@ const ReportsOnly = () => {
 
   // Date picker state
   const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Report details modal
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
@@ -286,41 +279,27 @@ const ReportsOnly = () => {
             <ToggleButton value="employee">By Employee</ToggleButton>
           </ToggleButtonGroup>
 
-          {/* Calendar Icon + Picker */}
+          {/* Calendar Date Picker */}
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <IconButton
-                onClick={() => setShowDatePicker(true)}
-                color={selectedDate ? "primary" : "default"}
+            <DatePicker
+              label="Select Date"
+              value={selectedDate}
+              onChange={(newValue: Dayjs | null) => {
+                setSelectedDate(newValue);
+              }}
+              renderInput={(params) => (
+                <TextField {...params} size="small" sx={{ minWidth: 150 }} />
+              )}
+            />
+            {selectedDate && (
+              <Button
+                size="small"
+                onClick={() => setSelectedDate(null)}
+                sx={{ textTransform: "none", ml: 1 }}
               >
-                <CalendarMonth />
-              </IconButton>
-              {showDatePicker && (
-                <DatePicker
-                  value={selectedDate}
-                  onChange={(newValue: Dayjs | null) => {
-                    setSelectedDate(newValue);
-                    setShowDatePicker(false);
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      size="small"
-                      sx={{ display: "none" }}
-                    />
-                  )}
-                />
-              )}
-              {selectedDate && (
-                <Button
-                  size="small"
-                  onClick={() => setSelectedDate(null)}
-                  sx={{ textTransform: "none", ml: 1 }}
-                >
-                  Clear Date
-                </Button>
-              )}
-            </Box>
+                Clear Date
+              </Button>
+            )}
           </LocalizationProvider>
         </Box>
 
@@ -330,7 +309,7 @@ const ReportsOnly = () => {
             <TableContainer component={Paper} elevation={0}>
               <Table>
                 <TableHead>
-                  <TableRow sx={{ backgroundColor: "grey.50" }}>
+                  <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
                     <TableCell sx={{ fontWeight: "bold" }}>Date</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>Employee</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>Project</TableCell>

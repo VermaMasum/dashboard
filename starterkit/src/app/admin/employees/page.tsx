@@ -264,13 +264,12 @@ const EmployeeManagement = () => {
             {success}
           </Alert>
         </Snackbar>
-
+        {/* <TableCell>Role</TableCell> */}
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow>
+              <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
                 <TableCell>Username</TableCell>
-                <TableCell>Role</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Phone</TableCell>
                 <TableCell>Department</TableCell>
@@ -281,19 +280,12 @@ const EmployeeManagement = () => {
               {employees.map((employee) => (
                 <TableRow key={employee._id}>
                   <TableCell>
-                    <Box display="flex" alignItems="center" gap={1}>
+                    <Box display="flex" alignItems="center" gap={0.5}>
                       <Person />
                       <Typography variant="subtitle1" fontWeight="bold">
                         {employee.username}
                       </Typography>
                     </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={employee.role}
-                      size="small"
-                      color={getRoleColor(employee.role) as any}
-                    />
                   </TableCell>
                   <TableCell>{employee.email || "N/A"}</TableCell>
                   <TableCell>{employee.phone || "N/A"}</TableCell>
@@ -321,7 +313,13 @@ const EmployeeManagement = () => {
             </TableBody>
           </Table>
         </TableContainer>
-
+        {/* <TableCell>
+                    <Chip
+                      label={employee.role}
+                      size="small"
+                      color={getRoleColor(employee.role) as any}
+                    />
+                  </TableCell> */}
         {/* Employee Dialog */}
         <Dialog
           open={employeeDialog}
