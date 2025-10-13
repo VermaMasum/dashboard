@@ -29,12 +29,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
-import {
-  Assessment,
-  Refresh,
-  Search,
-  Person,
-} from "@mui/icons-material";
+import { Assessment, Refresh, Search, Person } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from "@/utils/axios";
 import PageContainer from "@/app/(DashboardLayout)/components/container/PageContainer";
@@ -77,7 +72,9 @@ const ReportsOnly = () => {
 
   // View states - using tabs instead of filters
   const [timePeriod, setTimePeriod] = useState<"day" | "week" | "month">("day");
-  const [viewCategory, setViewCategory] = useState<"project" | "employee" | "all">("all");
+  const [viewCategory, setViewCategory] = useState<
+    "project" | "employee" | "all"
+  >("all");
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -142,7 +139,7 @@ const ReportsOnly = () => {
 
   const handleOpenReportDetails = (report: Report) => {
     console.log("🔍 Selected report before:", selectedReport);
-    alert(`Clicked on report: ${report.title || "Untitled Report"}`);
+    // alert(`Clicked on report: ${report.title || "Untitled Report"}`);
     setSelectedReport(report);
     setReportDialogOpen(true);
     console.log("🔍 Modal should be open now");
@@ -156,13 +153,17 @@ const ReportsOnly = () => {
   // Helper function to get date range based on time period
   const getDateRange = (period: "day" | "week" | "month") => {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
     switch (period) {
       case "day":
         return {
           start: startOfDay,
-          end: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1)
+          end: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1),
         };
       case "week":
         const startOfWeek = new Date(startOfDay);
@@ -171,14 +172,22 @@ const ReportsOnly = () => {
         startOfWeek.setDate(startOfWeek.getDate() + mondayOffset);
         return {
           start: startOfWeek,
-          end: new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000 - 1)
+          end: new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000 - 1),
         };
       case "month":
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        const endOfMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999
+        );
         return {
           start: startOfMonth,
-          end: endOfMonth
+          end: endOfMonth,
         };
       default:
         return { start: null, end: null };
@@ -187,16 +196,20 @@ const ReportsOnly = () => {
 
   // Filter reports based on search, view category, and time period
   const filteredReports = reports.filter((report) => {
-    const matchesSearch = 
+    const matchesSearch =
       report.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       report.details?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      report.employee?.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      report.employee?.username
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       report.project?.name?.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Filter by time period
     const dateRange = getDateRange(timePeriod);
     const reportDate = new Date(report.date);
-    const matchesTimePeriod = !dateRange.start || !dateRange.end || 
+    const matchesTimePeriod =
+      !dateRange.start ||
+      !dateRange.end ||
       (reportDate >= dateRange.start && reportDate <= dateRange.end);
 
     // Filter by view category
@@ -206,7 +219,7 @@ const ReportsOnly = () => {
     } else if (viewCategory === "employee") {
       matchesViewCategory = !!report.employee;
     }
-    
+
     return matchesSearch && matchesTimePeriod && matchesViewCategory;
   });
 
@@ -236,7 +249,7 @@ const ReportsOnly = () => {
               mb: 3,
             }}
           >
-            <Box>
+            {/* <Box>
               <Typography variant="h4" sx={{ fontWeight: "bold", mb: 1 }}>
                 Reports
               </Typography>
@@ -251,7 +264,7 @@ const ReportsOnly = () => {
                   />
                 )}
               </Typography>
-            </Box>
+            </Box> */}
             <Button
               variant="outlined"
               startIcon={<Refresh />}
@@ -269,17 +282,27 @@ const ReportsOnly = () => {
           )}
 
           {/* Filters and Search */}
-          <Box sx={{ mb: 3, display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap" }}>
+          <Box
+            sx={{
+              mb: 3,
+              display: "flex",
+              gap: 2,
+              alignItems: "center",
+              flexWrap: "wrap",
+            }}
+          >
             <TextField
               placeholder="Search reports..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{
-                startAdornment: <Search sx={{ mr: 1, color: "text.secondary" }} />,
+                startAdornment: (
+                  <Search sx={{ mr: 1, color: "text.secondary" }} />
+                ),
               }}
               sx={{ minWidth: 250 }}
             />
-            
+
             <ToggleButtonGroup
               value={timePeriod}
               exclusive
@@ -318,7 +341,7 @@ const ReportsOnly = () => {
           </Box>
 
           {/* Statistics Cards */}
-          <Box sx={{ mb: 3 }}>
+          {/* <Box sx={{ mb: 3 }}>
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
               <Card sx={{ minWidth: 150 }}>
                 <CardContent sx={{ p: 2 }}>
@@ -382,7 +405,7 @@ const ReportsOnly = () => {
                 </CardContent>
               </Card>
             </Box>
-          </Box>
+          </Box> */}
         </Box>
 
         {/* Reports Table */}
@@ -406,7 +429,9 @@ const ReportsOnly = () => {
                     <TableRow>
                       <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                         <Typography color="text.secondary">
-                          {searchQuery ? "No reports found matching your search" : "No reports available"}
+                          {searchQuery
+                            ? "No reports found matching your search"
+                            : "No reports available"}
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -417,8 +442,16 @@ const ReportsOnly = () => {
                           {new Date(report.date).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                            <Person sx={{ fontSize: 16, color: "text.secondary" }} />
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                            }}
+                          >
+                            <Person
+                              sx={{ fontSize: 16, color: "text.secondary" }}
+                            />
                             {report.employee?.username || "Unknown"}
                           </Box>
                         </TableCell>
@@ -476,9 +509,7 @@ const ReportsOnly = () => {
           maxWidth="md"
           fullWidth
         >
-          <DialogTitle>
-            Report Details
-          </DialogTitle>
+          <DialogTitle>Report Details</DialogTitle>
           <DialogContent>
             {selectedReport && (
               <Box sx={{ pt: 1 }}>
@@ -490,9 +521,12 @@ const ReportsOnly = () => {
                     Date: {new Date(selectedReport.date).toLocaleDateString()}
                   </Typography>
                 </Box>
-                
+
                 <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: "bold", mb: 1 }}
+                  >
                     Employee
                   </Typography>
                   <Typography variant="body2">
@@ -501,7 +535,10 @@ const ReportsOnly = () => {
                 </Box>
 
                 <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: "bold", mb: 1 }}
+                  >
                     Project
                   </Typography>
                   <Typography variant="body2">
@@ -510,7 +547,10 @@ const ReportsOnly = () => {
                 </Box>
 
                 <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: "bold", mb: 1 }}
+                  >
                     Hours Worked
                   </Typography>
                   <Typography variant="body2">
@@ -519,7 +559,10 @@ const ReportsOnly = () => {
                 </Box>
 
                 <Box>
-                  <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ fontWeight: "bold", mb: 1 }}
+                  >
                     Details
                   </Typography>
                   <Typography variant="body2">

@@ -71,6 +71,13 @@ const ProjectHistory = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [viewProject, setViewProject] = useState<Project | null>(null);
+  const openViewDialog = (project: Project) => {
+    setViewProject(project);
+    setViewDialogOpen(true);
+  };
+
   // Status editing
   const [statusEditDialog, setStatusEditDialog] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -362,10 +369,10 @@ const ProjectHistory = () => {
             <TableHead>
               <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
                 <TableCell sx={{ fontWeight: "bold" }}>Project Name</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Description</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Total Hours</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Created Date</TableCell>
                 <TableCell sx={{ fontWeight: "bold" }}>Team Size</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
                 {/* <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell> */}
               </TableRow>
             </TableHead>
@@ -389,55 +396,128 @@ const ProjectHistory = () => {
                       )
                     : [];
 
+                  // const isExpanded = expandedProjectId === project._id;
+
                   return (
-                    <TableRow
-                      key={project._id}
-                      sx={{ "&:hover": { backgroundColor: "#e1f5fe" } }}
-                    >
-                      <TableCell>
-                        <Typography variant="body1" fontWeight="bold">
-                          {project.name}
-                        </Typography>
-                      </TableCell>
-                      {/* <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {project.description || "No description provided"}
-                      </Typography>
-                    </TableCell> */}
-                      <TableCell>
-                        <Typography
-                          variant="body1"
-                          fontWeight="bold"
-                          color="primary"
-                        >
-                          {projectStats
-                            ? `${projectStats.totalHours.toFixed(1)}h`
-                            : "0h"}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {new Date(
-                            project.date || project.createdAt
-                          ).toLocaleDateString()}
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2">
-                          {assignedEmployees.length} members
-                        </Typography>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<Edit />}
-                          onClick={() => openStatusEdit(project)}
-                        >
-                          Edit Status
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                    <React.Fragment key={project._id}>
+                      {/* Main Project Row */}
+                      <TableRow
+                        sx={{
+                          "&:hover": { backgroundColor: "#e1f5fe" },
+                          // backgroundColor: isExpanded ? "#f0faff" : "inherit",
+                        }}
+                      >
+                        <TableCell>
+                          <Typography variant="body1" fontWeight="bold">
+                            {project.name}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell>
+                          <Typography
+                            variant="body1"
+                            fontWeight="bold"
+                            color="primary"
+                          >
+                            {projectStats
+                              ? `${projectStats.totalHours.toFixed(1)}h`
+                              : "0h"}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell>
+                          <Typography variant="body2">
+                            {new Date(
+                              project.date || project.createdAt
+                            ).toLocaleDateString()}
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell>
+                          <Typography variant="body2">
+                            {assignedEmployees.length} members
+                          </Typography>
+                        </TableCell>
+
+                        <TableCell>
+                          <Box sx={{ display: "flex", gap: 1 }}>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              startIcon={<Edit />}
+                              onClick={() => openStatusEdit(project)}
+                            >
+                              Edit Status
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => openViewDialog(project)}
+                            >
+                              View
+                            </Button>
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* Expanded Time Entries Row */}
+                      {/* {isExpanded && (
+                        <TableRow>
+                          <TableCell
+                            colSpan={5}
+                            sx={{ backgroundColor: "#f9f9f9" }}
+                          >
+                            <Box sx={{ p: 2 }}>
+                              <Typography
+                                variant="subtitle1"
+                                fontWeight="bold"
+                                sx={{ mb: 2 }}
+                              >
+                                Time Entries
+                              </Typography>
+
+                              <Table size="small">
+                                <TableHead>
+                                  <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                                    <TableCell>Employee</TableCell>
+                                    <TableCell>Date</TableCell>
+                                    <TableCell>Duration (hours)</TableCell>
+                                    <TableCell>Description</TableCell>
+                                    <TableCell>Category</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {allTimeEntries
+                                    .filter(
+                                      (entry) =>
+                                        entry.project._id === project._id
+                                    )
+                                    .map((entry) => (
+                                      <TableRow key={entry._id}>
+                                        <TableCell>
+                                          {entry.employee.username}
+                                        </TableCell>
+                                        <TableCell>
+                                          {new Date(
+                                            entry.date
+                                          ).toLocaleDateString()}
+                                        </TableCell>
+                                        <TableCell>
+                                          {(entry.duration / 60).toFixed(1)}
+                                        </TableCell>
+                                        <TableCell>
+                                          {entry.description}
+                                        </TableCell>
+                                        <TableCell>{entry.category}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                </TableBody>
+                              </Table>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      )} */}
+                    </React.Fragment>
                   );
                 })
               ) : (
@@ -454,62 +534,6 @@ const ProjectHistory = () => {
         </TableContainer>
 
         {/* Project History for Selected Project */}
-        {selectedProjectId && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h5" fontWeight="bold" sx={{ mb: 3 }}>
-              📋 Time Entries for{" "}
-              {projects.find((p) => p._id === selectedProjectId)?.name}
-            </Typography>
-            <TableContainer component={Paper} sx={{ boxShadow: 1 }}>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
-                    <TableCell sx={{ fontWeight: "bold" }}>Employee</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Date</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      Duration (hours)
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>
-                      Description
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
-                    {/* <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell> */}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {allTimeEntries
-                    .filter((entry) => entry.project._id === selectedProjectId)
-                    .map((entry) => (
-                      <TableRow
-                        key={entry._id}
-                        sx={{ "&:hover": { backgroundColor: "#e1f5fe" } }}
-                      >
-                        <TableCell>{entry.employee.username}</TableCell>
-                        <TableCell>
-                          {new Date(entry.date).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          {(entry.duration / 60).toFixed(1)}
-                        </TableCell>
-                        <TableCell>{entry.description}</TableCell>
-                        <TableCell>{entry.category}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<Edit />}
-                            onClick={() => openEditDialog(entry)}
-                          >
-                            Edit
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        )}
 
         {/* Status Edit Dialog */}
         <Dialog
@@ -640,6 +664,84 @@ const ProjectHistory = () => {
             <Button onClick={handleEditSubmit} variant="contained">
               Update Entry
             </Button>
+          </DialogActions>
+        </Dialog>
+        {/* View Project Details Dialog */}
+        <Dialog
+          open={viewDialogOpen}
+          onClose={() => setViewDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Project Details</DialogTitle>
+          <DialogContent>
+            {viewProject && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="h6" sx={{ mb: 1 }}>
+                  {viewProject.name}
+                </Typography>
+                <Typography variant="body2" sx={{ mb: 2 }}>
+                  {viewProject.description || "No description provided"}
+                </Typography>
+
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                  Status: <b>{viewProject.status || "Not started"}</b>
+                </Typography>
+
+                <Typography variant="subtitle1" sx={{ mb: 2 }}>
+                  Team Size:{" "}
+                  <b>
+                    {Array.isArray(viewProject.employees)
+                      ? viewProject.employees.length
+                      : 0}
+                  </b>
+                </Typography>
+
+                <Typography
+                  variant="subtitle1"
+                  fontWeight="bold"
+                  sx={{ mb: 1 }}
+                >
+                  Time Entries
+                </Typography>
+
+                <TableContainer component={Paper} sx={{ boxShadow: 1 }}>
+                  <Table size="small">
+                    <TableHead sx={{ backgroundColor: "#e3f2fd" }}>
+                      <TableRow>
+                        <TableCell>Employee</TableCell>
+                        <TableCell>Date</TableCell>
+                        <TableCell>Duration (hours)</TableCell>
+                        <TableCell>Description</TableCell>
+                        <TableCell>Category</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {allTimeEntries
+                        .filter(
+                          (entry) => entry.project._id === viewProject._id
+                        )
+                        .map((entry) => (
+                          <TableRow key={entry._id}>
+                            <TableCell>{entry.employee.username}</TableCell>
+                            <TableCell>
+                              {new Date(entry.date).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              {(entry.duration / 60).toFixed(1)}
+                            </TableCell>
+                            <TableCell>{entry.description}</TableCell>
+                            <TableCell>{entry.category}</TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
           </DialogActions>
         </Dialog>
 

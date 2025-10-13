@@ -304,12 +304,15 @@ const ProjectDetails = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell>Project Name</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Assigned Employees</TableCell>
-                <TableCell>Actions</TableCell>
+              {/* <TableRow>  */}
+              <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                <TableCell sx={{ fontWeight: "bold" }}>Project Name</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Description</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>
+                  Assigned Employees
+                </TableCell>
+                <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

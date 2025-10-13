@@ -604,8 +604,6 @@ const EmployeeTimeTracker = () => {
     }
   };
 
-
-
   if (loading) {
     return (
       <Box
@@ -624,7 +622,7 @@ const EmployeeTimeTracker = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Breadcrumbs */}
-      {/* <Breadcrumbs sx={{ mb: 3 }}>
+      <Breadcrumbs sx={{ mb: 3 }}>
         <Link
           href="/employee/overview"
           color="inherit"
@@ -633,7 +631,7 @@ const EmployeeTimeTracker = () => {
           Employee
         </Link>
         <Typography color="text.primary">Time Tracker</Typography>
-      </Breadcrumbs> */}
+      </Breadcrumbs>
 
       {/* Header */}
       <Box sx={{ mb: 3 }}>
@@ -2215,8 +2213,6 @@ const EmployeeTimeTracker = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-
 
       <Fab
         color="primary"
