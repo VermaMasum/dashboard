@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Box,
@@ -8,10 +8,15 @@ import {
   Divider,
   Button,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Grid,
+  IconButton as MuiIconButton,
 } from '@mui/material';
 import * as dropdownData from './data';
 
-import { IconMail } from '@tabler/icons-react';
+import { IconMail, IconUpload } from '@tabler/icons-react';
 import { Stack } from '@mui/system';
 // import Image from 'next/image'; // Commented out as requested
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +25,22 @@ import { useAuth } from '@/contexts/AuthContext';
 const Profile = () => {
   const { user, logout } = useAuth();
   const [anchorEl2, setAnchorEl2] = useState(null);
+  const [currentProfileImg, setCurrentProfileImg] = useState('user-2.jpg');
+  const [changeDialogOpen, setChangeDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const savedImg = localStorage.getItem('profileImg');
+    if (savedImg) {
+      setCurrentProfileImg(savedImg);
+    }
+  }, []);
+
+  const handleProfileImgChange = (newImg: string) => {
+    setCurrentProfileImg(newImg);
+    localStorage.setItem('profileImg', newImg);
+    setChangeDialogOpen(false);
+  };
+
   const handleClick2 = (event: any) => {
     setAnchorEl2(event.currentTarget);
   };
@@ -30,6 +51,14 @@ const Profile = () => {
   const handleLogout = () => {
     logout();
     handleClose2();
+  };
+
+  const handleChangePictureClick = () => {
+    setChangeDialogOpen(true);
+  };
+
+  const handleCloseChangeDialog = () => {
+    setChangeDialogOpen(false);
   };
 
   return (
@@ -48,7 +77,7 @@ const Profile = () => {
         onClick={handleClick2}
       >
         <Avatar
-          src={"/images/profile/user2.jpg"}
+          src={`/images/profile/${currentProfileImg}`}
           alt={'ProfileImg'}
           sx={{
             width: 35,
@@ -76,7 +105,24 @@ const Profile = () => {
       >
         <Typography variant="h5">User Profile</Typography>
         <Stack direction="row" py={3} spacing={2} alignItems="center">
-        <Avatar src={"/images/profile/user2.jpg"} alt={"ProfileImg"} sx={{ width: 95, height: 95 }} />
+          <Box sx={{ position: 'relative', display: 'inline-block' }}>
+            <Avatar src={`/images/profile/${currentProfileImg}`} alt={"ProfileImg"} sx={{ width: 95, height: 95 }} />
+            <MuiIconButton
+              onClick={handleChangePictureClick}
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                backgroundColor: 'primary.main',
+                color: 'white',
+                width: 32,
+                height: 32,
+                '&:hover': { backgroundColor: 'primary.dark' },
+              }}
+            >
+              <IconUpload size={16} />
+            </MuiIconButton>
+          </Box>
           <Box>
             <Typography variant="subtitle2" color="textPrimary" fontWeight={600}>
               {user?.username || 'Admin'}
@@ -170,6 +216,33 @@ const Profile = () => {
             Logout
           </Button>
         </Box>
+
+        {/* Change Profile Dialog */}
+        <Dialog open={changeDialogOpen} onClose={handleCloseChangeDialog} maxWidth="sm" fullWidth>
+          <DialogTitle>Choose Profile Picture</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              {['user-1.jpg', 'user-2.jpg', 'user-3.jpg', 'user-4.jpg', 'user-5.jpg', 'user-6.jpg', 'user-7.jpg', 'user-8.jpg', 'user-9.jpg', 'user-10.jpg'].map((img) => (
+                <Grid item xs={4} key={img}>
+                  <MuiIconButton
+                    onClick={() => handleProfileImgChange(img)}
+                    sx={{
+                      p: 1,
+                      border: currentProfileImg === img ? '2px solid primary.main' : '1px solid grey',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Avatar
+                      src={`/images/profile/${img}`}
+                      alt={img}
+                      sx={{ width: 80, height: 80 }}
+                    />
+                  </MuiIconButton>
+                </Grid>
+              ))}
+            </Grid>
+          </DialogContent>
+        </Dialog>
       </Menu>
     </Box>
   );
