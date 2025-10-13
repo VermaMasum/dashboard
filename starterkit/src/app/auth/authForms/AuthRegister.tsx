@@ -1,8 +1,22 @@
 "use client";
-import { Box, Typography, Button, Divider, Alert, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Divider,
+  Alert,
+  CircularProgress,
+  Avatar,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Grid,
+} from "@mui/material";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { IconUpload } from "@tabler/icons-react";
 import CustomTextField from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomTextField";
 import CustomFormLabel from "@/app/(DashboardLayout)/components/forms/theme-elements/CustomFormLabel";
 import { Stack } from "@mui/system";
@@ -21,6 +35,29 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [currentProfileImg, setCurrentProfileImg] = useState("user-1.jpg");
+  const [changeDialogOpen, setChangeDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const savedImg = localStorage.getItem("profileImg");
+    if (savedImg) {
+      setCurrentProfileImg(savedImg);
+    }
+  }, []);
+
+  const handleProfileImgChange = (img: string) => {
+    setCurrentProfileImg(img);
+    localStorage.setItem("profileImg", img);
+    setChangeDialogOpen(false);
+  };
+
+  const handleChangePictureClick = () => {
+    setChangeDialogOpen(true);
+  };
+
+  const handleCloseChangeDialog = () => {
+    setChangeDialogOpen(false);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -67,14 +104,15 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
 
       console.log("✅ Registration successful:", response.data);
       setSuccess("Registration successful! Redirecting to login...");
-      
+
       // Redirect to login after 2 seconds
       setTimeout(() => {
         router.push("/auth/auth1/login");
       }, 2000);
     } catch (err: any) {
       console.error("❌ Registration error:", err);
-      const errorMessage = err.response?.data?.message || err.message || "Registration failed";
+      const errorMessage =
+        err.response?.data?.message || err.message || "Registration failed";
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -83,6 +121,31 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
 
   return (
     <>
+      <Box display="flex" justifyContent="center" mb={3}>
+        <Box position="relative">
+          <Avatar
+            src={`/images/profile/${currentProfileImg}`}
+            alt="Profile"
+            sx={{ width: 80, height: 80 }}
+          />
+          <IconButton
+            onClick={handleChangePictureClick}
+            sx={{
+              position: "absolute",
+              bottom: 0,
+              right: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "rgba(0,0,0,0.7)",
+              },
+            }}
+            size="small"
+          >
+            <IconUpload size={16} />
+          </IconButton>
+        </Box>
+      </Box>
       {title ? (
         <Typography fontWeight="700" variant="h3" mb={1}>
           {title}
@@ -90,9 +153,9 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
       ) : null}
 
       {subtext}
-      <AuthSocialButtons title="Sign up with" />
+      {/* <AuthSocialButtons title="Sign up with" /> */}
 
-      <Box mt={3}>
+      {/* <Box mt={3}>
         <Divider>
           <Typography
             component="span"
@@ -105,7 +168,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
             or sign up with
           </Typography>
         </Divider>
-      </Box>
+      </Box> */}
 
       {error && (
         <Alert severity="error" sx={{ mt: 2 }}>
@@ -132,7 +195,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
             disabled={loading}
             required
           />
-          
+
           <CustomFormLabel htmlFor="email">Email Address</CustomFormLabel>
           <CustomTextField
             id="email"
@@ -145,7 +208,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
             disabled={loading}
             required
           />
-          
+
           <CustomFormLabel htmlFor="password">Password</CustomFormLabel>
           <CustomTextField
             id="password"
@@ -158,8 +221,10 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
             disabled={loading}
             required
           />
-          
-          <CustomFormLabel htmlFor="confirmPassword">Confirm Password</CustomFormLabel>
+
+          <CustomFormLabel htmlFor="confirmPassword">
+            Confirm Password
+          </CustomFormLabel>
           <CustomTextField
             id="confirmPassword"
             name="confirmPassword"
@@ -172,7 +237,7 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
             required
           />
         </Stack>
-        
+
         <Button
           type="submit"
           color="primary"
@@ -192,6 +257,26 @@ const AuthRegister = ({ title, subtitle, subtext }: registerType) => {
         </Button>
       </Box>
       {subtitle}
+      <Dialog open={changeDialogOpen} onClose={handleCloseChangeDialog}>
+        <DialogTitle>Choose Profile Picture</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2}>
+            {Array.from({ length: 10 }, (_, i) => `user-${i + 1}.jpg`).map(
+              (img) => (
+                <Grid item xs={4} key={img}>
+                  <IconButton onClick={() => handleProfileImgChange(img)}>
+                    <Avatar
+                      src={`/images/profile/${img}`}
+                      alt={img}
+                      sx={{ width: 60, height: 60 }}
+                    />
+                  </IconButton>
+                </Grid>
+              )
+            )}
+          </Grid>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

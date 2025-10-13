@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   AppBar,
@@ -13,8 +13,12 @@ import {
   Avatar,
   Divider,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Grid,
 } from "@mui/material";
-import { IconMail, IconMenu2 } from "@tabler/icons-react";
+import { IconMail, IconMenu2, IconUpload } from "@tabler/icons-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDispatch } from "@/store/hooks";
 import { toggleMobileSidebar } from "@/store/customizer/CustomizerSlice";
@@ -25,6 +29,29 @@ const Header = () => {
   const [anchorEl2, setAnchorEl2] = useState(null);
   const { user, logout } = useAuth();
   const dispatch = useDispatch();
+  const [currentProfileImg, setCurrentProfileImg] = useState("user2.jpg");
+  const [changeDialogOpen, setChangeDialogOpen] = useState(false);
+
+  useEffect(() => {
+    const savedImg = localStorage.getItem("profileImg");
+    if (savedImg) {
+      setCurrentProfileImg(savedImg);
+    }
+  }, []);
+
+  const handleProfileImgChange = (img: string) => {
+    setCurrentProfileImg(img);
+    localStorage.setItem("profileImg", img);
+    setChangeDialogOpen(false);
+  };
+
+  const handleChangePictureClick = () => {
+    setChangeDialogOpen(true);
+  };
+
+  const handleCloseChangeDialog = () => {
+    setChangeDialogOpen(false);
+  };
 
   const handleClick2 = (event: any) => {
     console.log("Profile icon clicked, opening dropdown");
@@ -123,7 +150,7 @@ const Header = () => {
               }}
             >
               <Avatar
-                src={"/images/profile/user2.jpg"}
+                src={`/images/profile/${currentProfileImg}`}
                 alt={"ProfileImg"}
                 sx={{ width: 35, height: 35 }}
               />
@@ -150,11 +177,29 @@ const Header = () => {
             >
               <Typography variant="h5">Employee Profile</Typography>
               <Stack direction="row" py={3} spacing={2} alignItems="center">
-                <Avatar
-                  src={"/images/profile/user2.jpg"}
-                  alt={"ProfileImg"}
-                  sx={{ width: 95, height: 95 }}
-                />
+                <Box position="relative">
+                  <Avatar
+                    src={`/images/profile/${currentProfileImg}`}
+                    alt={"ProfileImg"}
+                    sx={{ width: 95, height: 95 }}
+                  />
+                  <IconButton
+                    onClick={handleChangePictureClick}
+                    sx={{
+                      position: "absolute",
+                      bottom: 0,
+                      right: 0,
+                      backgroundColor: "rgba(0,0,0,0.5)",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "rgba(0,0,0,0.7)",
+                      },
+                    }}
+                    size="small"
+                  >
+                    <IconUpload size={16} />
+                  </IconButton>
+                </Box>
                 <Box>
                   <Typography
                     variant="subtitle2"
@@ -193,6 +238,24 @@ const Header = () => {
           </Box>
         </Stack>
       </ToolbarStyled>
+      <Dialog open={changeDialogOpen} onClose={handleCloseChangeDialog}>
+        <DialogTitle>Choose Profile Picture</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2}>
+            {Array.from({ length: 10 }, (_, i) => `user-${i + 1}.jpg`).map((img) => (
+              <Grid item xs={4} key={img}>
+                <IconButton onClick={() => handleProfileImgChange(img)}>
+                  <Avatar
+                    src={`/images/profile/${img}`}
+                    alt={img}
+                    sx={{ width: 60, height: 60 }}
+                  />
+                </IconButton>
+              </Grid>
+            ))}
+          </Grid>
+        </DialogContent>
+      </Dialog>
     </AppBarStyled>
   );
 };
