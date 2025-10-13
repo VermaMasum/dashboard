@@ -343,9 +343,11 @@ const EmployeeManagement = () => {
               margin="normal"
               required
             />
+
             <TextField
               fullWidth
               label="Password"
+              placeholder="*******"
               type="password"
               value={formData.password}
               onChange={(e) =>
@@ -353,7 +355,9 @@ const EmployeeManagement = () => {
               }
               margin="normal"
               required
+              InputLabelProps={{ shrink: true }} // ✅ THIS is the fix
             />
+
             <FormControl fullWidth margin="normal">
               <InputLabel>Role</InputLabel>
               <Select
