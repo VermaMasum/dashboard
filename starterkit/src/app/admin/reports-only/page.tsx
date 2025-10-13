@@ -298,13 +298,17 @@ const ReportsOnly = () => {
               {showDatePicker && (
                 <DatePicker
                   value={selectedDate}
-                  onChange={(newValue) => {
+                  onChange={(newValue: Dayjs | null) => {
                     setSelectedDate(newValue);
                     setShowDatePicker(false);
                   }}
-                  slotProps={{
-                    textField: { size: "small", sx: { display: "none" } },
-                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      sx={{ display: "none" }}
+                    />
+                  )}
                 />
               )}
               {selectedDate && (
