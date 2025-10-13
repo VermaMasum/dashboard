@@ -127,16 +127,19 @@ const EmployeeManagement = () => {
     try {
       setError(""); // Clear previous errors
       console.log("💾 Submitting employee data:", formData);
-      
+
       // Validate required fields
       if (!formData.username || !formData.password) {
         setError("Username and password are required");
         return;
       }
-      
+
       if (editingEmployee) {
         console.log("📝 Updating employee:", editingEmployee._id);
-        const response = await axios.put(`/users/${editingEmployee._id}`, formData);
+        const response = await axios.put(
+          `/users/${editingEmployee._id}`,
+          formData
+        );
         console.log("✅ Employee updated:", response.data);
         setSuccess("Employee updated successfully");
       } else {
@@ -153,7 +156,9 @@ const EmployeeManagement = () => {
       console.error("❌ Error saving employee:", err);
       console.error("❌ Error response:", err.response?.data);
       console.error("❌ Error status:", err.response?.status);
-      setError(err.response?.data?.message || err.message || "Failed to save employee");
+      setError(
+        err.response?.data?.message || err.message || "Failed to save employee"
+      );
     }
   };
 
@@ -173,8 +178,8 @@ const EmployeeManagement = () => {
     switch (role) {
       case "admin":
         return "primary";
-      case "superAdmin":
-        return "secondary";
+      // case "superAdmin":
+      //   return "secondary";
       case "employee":
         return "default";
       default:
@@ -357,10 +362,12 @@ const EmployeeManagement = () => {
                   setFormData({ ...formData, role: e.target.value })
                 }
                 required
+                label="Role" // Add a label so it aligns well with the TextField elements
+                fullWidth // Ensure the Select field takes full width
               >
                 <MenuItem value="employee">Employee</MenuItem>
                 <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="superAdmin">Super Admin</MenuItem>
+                {/* <MenuItem value="superAdmin">Super Admin</MenuItem> */}
               </Select>
             </FormControl>
             <TextField

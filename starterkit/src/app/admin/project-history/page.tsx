@@ -88,6 +88,8 @@ const ProjectHistory = () => {
   // Dropdown filter state
   const [selectedStatus, setSelectedStatus] = useState<string>("in progress");
 
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
   // Project selection and editing state
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -263,10 +265,22 @@ const ProjectHistory = () => {
   };
 
   // Filter projects based on dropdown
+  // const filteredProjects = projects.filter((p) => {
+  //   if (selectedStatus === "not started")
+  //     return p.status === "not started" || !p.status;
+  //   return p.status === selectedStatus;
+  // });
   const filteredProjects = projects.filter((p) => {
-    if (selectedStatus === "not started")
-      return p.status === "not started" || !p.status;
-    return p.status === selectedStatus;
+    const matchesStatus =
+      selectedStatus === "not started"
+        ? p.status === "not started" || !p.status
+        : p.status === selectedStatus;
+
+    const matchesSearch = p.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    return matchesStatus && matchesSearch;
   });
 
   if (analyticsLoading) {
@@ -344,7 +358,7 @@ const ProjectHistory = () => {
             </Select>
           </FormControl>
 
-          <FormControl sx={{ minWidth: 220 }}>
+          {/* <FormControl sx={{ minWidth: 220 }}>
             <InputLabel>Select Project</InputLabel>
             <Select
               value={selectedProjectId}
@@ -360,7 +374,15 @@ const ProjectHistory = () => {
                 </MenuItem>
               ))}
             </Select>
-          </FormControl>
+          </FormControl> */}
+          <TextField
+            label="Search Project"
+            variant="outlined"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ minWidth: 300 }}
+            placeholder="Type to search by project name..."
+          />
         </Box>
 
         {/* Table */}
