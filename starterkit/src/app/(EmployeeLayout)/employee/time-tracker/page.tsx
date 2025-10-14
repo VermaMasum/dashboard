@@ -662,7 +662,7 @@ const EmployeeTimeTracker = () => {
           minHeight: "100vh",
         }}
       >
-        <Box sx={{ p: 3, width: "100%", maxWidth: "1200px" }}>
+        <Box sx={{ width: "100%", maxWidth: "1200px" }}>
           {/* Breadcrumbs */}
           {/* <Breadcrumbs sx={{ mb: 3 }}>
             <Link
@@ -676,19 +676,21 @@ const EmployeeTimeTracker = () => {
           </Breadcrumbs> */}
 
           {/* Header */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+          <Box sx={{ mb: 0 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               {/* Left side - Time Tracker title */}
-              <Typography
-                variant="h4"
-                fontWeight="bold"
-                color="#1976D2"
-              >
+              <Typography variant="h4" fontWeight="bold" color="#1976D2">
                 Time Tracker
               </Typography>
 
               {/* Center - Navigation with arrows and date period */}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
                 <IconButton
                   onClick={() => handleDateChange("prev")}
                   size="small"
@@ -700,18 +702,13 @@ const EmployeeTimeTracker = () => {
                   <ArrowBack />
                 </IconButton>
 
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="#1976D2"
-                >
-                  {viewMode === "month" && (
+                <Typography variant="h4" fontWeight="bold" color="#1976D2">
+                  {viewMode === "month" &&
                     currentDate.toLocaleDateString("en-US", {
                       month: "long",
                       year: "numeric",
-                    })
-                  )}
-                  {viewMode === "week" && (
+                    })}
+                  {viewMode === "week" &&
                     `Week of ${getWeekDays()[0]?.toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -719,16 +716,14 @@ const EmployeeTimeTracker = () => {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
-                    })}`
-                  )}
-                  {viewMode === "day" && (
+                    })}`}
+                  {viewMode === "day" &&
                     currentDate.toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
                       day: "numeric",
                       year: "numeric",
-                    })
-                  )}
+                    })}
                 </Typography>
 
                 <IconButton
@@ -743,196 +738,214 @@ const EmployeeTimeTracker = () => {
                 </IconButton>
               </Box>
 
-              {/* Right side - empty for balance */}
-              <Box sx={{ width: "200px" }} />
-            </Box>
-
-            {/* Combined Header with View Toggle, Date Picker, and Controls */}
-            <Card sx={{ mb: 3 }}>
-              <CardContent sx={{ py: 2 }}>
-                <Box
+              {/* Right side - Date Picker and Today Button */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <CalendarToday sx={{ color: "#1976D2", fontSize: "1.2rem" }} />
+                <TextField
+                  type="date"
+                  value={currentDate.toISOString().split("T")[0]}
+                  onChange={(e) => setCurrentDate(new Date(e.target.value))}
+                  size="small"
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    flexWrap: "wrap",
-                    gap: 2,
+                    "& .MuiOutlinedInput-root": {
+                      height: "32px",
+                      fontSize: "0.85rem",
+                      "& fieldset": {
+                        borderColor: "#e0e0e0",
+                      },
+                      "&:hover fieldset": {
+                        borderColor: "#1976D2",
+                      },
+                      "&.Mui-focused fieldset": {
+                        borderColor: "#1976D2",
+                      },
+                    },
+                    "& .MuiInputBase-input": {
+                      padding: "6px 8px",
+                      fontSize: "0.85rem",
+                    },
+                  }}
+                />
+                <Button
+                  onClick={handleReturnToToday}
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    minWidth: "auto",
+                    px: 1.5,
+                    py: 0.5,
+                    fontSize: "0.75rem",
+                    borderColor: "#1976D2",
+                    color: "#1976D2",
+                    "&:hover": {
+                      borderColor: "#1565C0",
+                      backgroundColor: "#f3f9ff",
+                    },
                   }}
                 >
-                  {/* Left Corner - View Toggle (Month/Week/Day) */}
-                  <ToggleButtonGroup
-                    value={viewMode}
-                    exclusive
-                    onChange={(event, newViewMode) => {
-                      if (newViewMode !== null) {
-                        setViewMode(newViewMode);
-                      }
-                    }}
+                  Today
+                </Button>
+              </Box>
+            </Box>
+
+          {/* Combined Header with View Toggle, Date Picker, and Controls */}
+          <Box
+            sx={{
+              p: 2,
+              backgroundColor: "white",
+              borderRadius: 1,
+              boxShadow: 1,
+              mb: 0,
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 2,
+              }}
+            >
+              {/* Left Corner - View Toggle (Month/Week/Day) */}
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(event, newViewMode) => {
+                  if (newViewMode !== null) {
+                    setViewMode(newViewMode);
+                  }
+                }}
+                size="small"
+                sx={{
+                  "& .MuiToggleButton-root": {
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "8px",
+                    px: 2,
+                    py: 0.5,
+                    minWidth: "80px",
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    fontSize: "0.8rem",
+                    "&.Mui-selected": {
+                      backgroundColor: "#1976D2",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "#1565C0",
+                      },
+                    },
+                    "&:not(.Mui-selected)": {
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      "&:hover": {
+                        backgroundColor: "#e0e0e0",
+                      },
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="month">Month</ToggleButton>
+                <ToggleButton value="week">Week</ToggleButton>
+                <ToggleButton value="day">Day</ToggleButton>
+              </ToggleButtonGroup>
+
+              {/* Center - Date Picker and Total Hours Display */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
+              >
+                {/* Total Hours Display */}
+                <Box
+                  sx={{
+                    backgroundColor: "#e3f2fd",
+                    px: 1.2,
+                    py: 0.4,
+                    borderRadius: 1,
+                    border: "1px solid #2196f3",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.8,
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: "0.7rem" }}
+                  >
+                    Total{" "}
+                    {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
+                    Hours:
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    fontWeight="bold"
+                    color="primary"
+                    sx={{ fontSize: "0.9rem" }}
+                  >
+                    {calculateTotalHours()}
+                  </Typography>
+                </Box>
+
+                {/* Project Filter */}
+                <FormControl size="small" sx={{ minWidth: 180 }}>
+                  <InputLabel>Filter by Project</InputLabel>
+                  <Select
+                    value={filterProject}
+                    onChange={(e) => setFilterProject(e.target.value)}
+                    label="Filter by Project"
+                  >
+                    <MenuItem value="">All Projects</MenuItem>
+                    {filteredProjects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+
+              {/* Right Corner - Action Buttons */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                {/* <IconButton
+                    onClick={handleRefreshData}
                     size="small"
                     sx={{
-                      "& .MuiToggleButton-root": {
-                        border: "1px solid #e0e0e0",
-                        borderRadius: "8px",
-                        px: 2,
-                        py: 0.5,
-                        minWidth: "80px",
-                        textTransform: "none",
-                        fontWeight: "bold",
-                        fontSize: "0.8rem",
-                        "&.Mui-selected": {
-                          backgroundColor: "#1976D2",
-                          color: "white",
-                          "&:hover": {
-                            backgroundColor: "#1565C0",
-                          },
-                        },
-                        "&:not(.Mui-selected)": {
-                          backgroundColor: "#f5f5f5",
-                          color: "#666",
-                          "&:hover": {
-                            backgroundColor: "#e0e0e0",
-                          },
-                        },
-                      },
+                      backgroundColor: "#f5f5f5",
+                      "&:hover": { backgroundColor: "#e0e0e0" },
                     }}
+                    title="Refresh Data"
                   >
-                    <ToggleButton value="month">Month</ToggleButton>
-                    <ToggleButton value="week">Week</ToggleButton>
-                    <ToggleButton value="day">Day</ToggleButton>
-                  </ToggleButtonGroup>
+                    <Refresh />
+                  </IconButton> */}
 
-                  {/* Center - Date Picker and Total Hours Display */}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 2,
-                      justifyContent: "center",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    {/* Date Picker with Calendar Icon */}
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CalendarToday
-                        sx={{ color: "#1976D2", fontSize: "1.2rem" }}
-                      />
-                      <TextField
-                        type="date"
-                        value={currentDate.toISOString().split("T")[0]}
-                        onChange={(e) =>
-                          setCurrentDate(new Date(e.target.value))
-                        }
-                        size="small"
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            height: "32px",
-                            fontSize: "0.85rem",
-                            "& fieldset": {
-                              borderColor: "#e0e0e0",
-                            },
-                            "&:hover fieldset": {
-                              borderColor: "#1976D2",
-                            },
-                            "&.Mui-focused fieldset": {
-                              borderColor: "#1976D2",
-                            },
-                          },
-                          "& .MuiInputBase-input": {
-                            padding: "6px 8px",
-                            fontSize: "0.85rem",
-                          },
-                        }}
-                      />
-                    </Box>
-
-                    {/* Total Hours Display */}
-                    <Box
-                      sx={{
-                        backgroundColor: "#e3f2fd",
-                        px: 1.2,
-                        py: 0.4,
-                        borderRadius: 1,
-                        border: "1px solid #2196f3",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.8,
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{ fontSize: "0.7rem" }}
-                      >
-                        Total{" "}
-                        {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
-                        Hours:
-                      </Typography>
-                      <Typography
-                        variant="body1"
-                        fontWeight="bold"
-                        color="primary"
-                        sx={{ fontSize: "0.9rem" }}
-                      >
-                        {calculateTotalHours()}
-                      </Typography>
-                    </Box>
-
-                    {/* Project Filter */}
-                    <FormControl size="small" sx={{ minWidth: 180 }}>
-                      <InputLabel>Filter by Project</InputLabel>
-                      <Select
-                        value={filterProject}
-                        onChange={(e) => setFilterProject(e.target.value)}
-                        label="Filter by Project"
-                      >
-                        <MenuItem value="">All Projects</MenuItem>
-                        {filteredProjects.map((project) => (
-                          <MenuItem key={project._id} value={project._id}>
-                            {project.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  </Box>
-
-                  {/* Right Corner - Action Buttons */}
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    {/* <IconButton
-                      onClick={handleRefreshData}
-                      size="small"
-                      sx={{
-                        backgroundColor: "#f5f5f5",
-                        "&:hover": { backgroundColor: "#e0e0e0" },
-                      }}
-                      title="Refresh Data"
-                    >
-                      <Refresh />
-                    </IconButton> */}
-
-                    <Button
-                      variant="contained"
-                      startIcon={<Add />}
-                      onClick={handleAddEntry}
-                      sx={{
-                        background:
-                          "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
-                        color: "white",
-                        borderRadius: 2,
-                        px: 2,
-                        py: 0.8,
-                        fontSize: "0.85rem",
-                        "&:hover": {
-                          background:
-                            "linear-gradient(45deg, #1976D2 30%, #1CB5E0 90%)",
-                        },
-                      }}
-                    >
-                      Add Entry
-                    </Button>
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={handleAddEntry}
+                  sx={{
+                    background:
+                      "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+                    color: "white",
+                    borderRadius: 2,
+                    px: 2,
+                    py: 0.8,
+                    fontSize: "0.85rem",
+                    "&:hover": {
+                      background:
+                        "linear-gradient(45deg, #1976D2 30%, #1CB5E0 90%)",
+                    },
+                  }}
+                >
+                  Add Entry
+                </Button>
+              </Box>
+            </Box>
+          </Box>
           </Box>
 
           {/* Error Snackbar */}
@@ -972,7 +985,6 @@ const EmployeeTimeTracker = () => {
           {/* Month View */}
           {viewMode === "month" && (
             <Box>
-
               {/* Day headers */}
               <Box
                 sx={{
@@ -1147,7 +1159,6 @@ const EmployeeTimeTracker = () => {
           {/* Day View */}
           {viewMode === "day" && (
             <Box>
-
               {/* Day Summary Block */}
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {(() => {
@@ -1279,7 +1290,6 @@ const EmployeeTimeTracker = () => {
           {/* Week View */}
           {viewMode === "week" && (
             <Box>
-
               {/* Week View - Compact Calendar Grid */}
               <Box
                 sx={{

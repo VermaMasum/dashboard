@@ -123,9 +123,9 @@ const AdminTimeTracker = () => {
   );
 
   // View states - using tabs instead of filters
-  const [viewCategory, setViewCategory] = useState<
-    "employee" | "project"
-  >("employee");
+  const [viewCategory, setViewCategory] = useState<"employee" | "project">(
+    "employee"
+  );
 
   // Date picker dialog state
   const [datePickerDialogOpen, setDatePickerDialogOpen] = useState(false);
@@ -700,10 +700,7 @@ const AdminTimeTracker = () => {
     // Get all entries for the selected day
     const dayEntries = timeEntries.filter((entry) => {
       const entryDate = new Date(entry.date);
-      return (
-        entryDate.toDateString() ===
-        selectedDayForDetails.toDateString()
-      );
+      return entryDate.toDateString() === selectedDayForDetails.toDateString();
     });
 
     if (dayEntries.length === 0) {
@@ -810,8 +807,7 @@ const AdminTimeTracker = () => {
               const color = colors[groupIndex % colors.length];
 
               const totalMinutes = group.entries.reduce(
-                (sum: number, entry: any) =>
-                  sum + (entry.duration || 0),
+                (sum: number, entry: any) => sum + (entry.duration || 0),
                 0
               );
 
@@ -858,9 +854,7 @@ const AdminTimeTracker = () => {
                         }}
                       >
                         {viewCategory === "project"
-                          ? group.project?.name
-                              ?.charAt(0)
-                              ?.toUpperCase() || "P"
+                          ? group.project?.name?.charAt(0)?.toUpperCase() || "P"
                           : group.employee?.username
                               ?.charAt(0)
                               ?.toUpperCase() || "U"}
@@ -869,13 +863,9 @@ const AdminTimeTracker = () => {
                         <Typography variant="h6" fontWeight="bold">
                           {viewCategory === "project"
                             ? group.project?.name || "Unknown Project"
-                            : group.employee?.username ||
-                              "Unknown Employee"}
+                            : group.employee?.username || "Unknown Employee"}
                         </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{ opacity: 0.9 }}
-                        >
+                        <Typography variant="body2" sx={{ opacity: 0.9 }}>
                           {group.entries.length} task
                           {group.entries.length !== 1 ? "s" : ""} •{" "}
                           {formatDuration(totalMinutes)} total
@@ -898,10 +888,7 @@ const AdminTimeTracker = () => {
                         },
                       }}
                     >
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: "bold" }}
-                      >
+                      <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                         {isExpanded ? "−" : "+"}
                       </Typography>
                     </Button>
@@ -917,84 +904,76 @@ const AdminTimeTracker = () => {
                           gap: 1,
                         }}
                       >
-                        {group.entries.map(
-                          (entry: any, entryIndex: number) => (
+                        {group.entries.map((entry: any, entryIndex: number) => (
+                          <Box
+                            key={entryIndex}
+                            onClick={() => handleViewDetails(entry)}
+                            sx={{
+                              border: "1px solid #e0e0e0",
+                              borderRadius: 1,
+                              p: 2,
+                              backgroundColor: "#fff",
+                              cursor: "pointer",
+                              "&:hover": {
+                                backgroundColor: "#f8f9fa",
+                              },
+                            }}
+                          >
                             <Box
-                              key={entryIndex}
-                              onClick={() => handleViewDetails(entry)}
                               sx={{
-                                border: "1px solid #e0e0e0",
-                                borderRadius: 1,
-                                p: 2,
-                                backgroundColor: "#fff",
-                                cursor: "pointer",
-                                "&:hover": {
-                                  backgroundColor: "#f8f9fa",
-                                },
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-start",
                               }}
                             >
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  justifyContent: "space-between",
-                                  alignItems: "flex-start",
-                                }}
-                              >
-                                <Box sx={{ flex: 1 }}>
-                                  <Typography
-                                    variant="body1"
-                                    fontWeight="bold"
-                                    sx={{ mb: 0.5 }}
-                                  >
-                                    {viewCategory === "project"
-                                      ? entry.employee?.username ||
-                                        "Unknown Employee"
-                                      : entry.project?.name ||
-                                        "General Work"}
-                                  </Typography>
-                                  <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                    sx={{ mb: 1 }}
-                                  >
-                                    {entry.description ||
-                                      "No description"}
-                                  </Typography>
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: 1,
-                                      flexWrap: "wrap",
-                                    }}
-                                  >
-                                    <Chip
-                                      label={
-                                        entry.category || "General"
-                                      }
-                                      size="small"
-                                      sx={{
-                                        backgroundColor: color,
-                                        color: "white",
-                                        fontWeight: "bold",
-                                      }}
-                                    />
-                                  </Box>
-                                </Box>
+                              <Box sx={{ flex: 1 }}>
                                 <Typography
-                                  variant="h6"
+                                  variant="body1"
                                   fontWeight="bold"
-                                  color={color}
-                                  sx={{ ml: 2 }}
+                                  sx={{ mb: 0.5 }}
                                 >
-                                  {formatDuration(
-                                    entry.duration || 0
-                                  )}
+                                  {viewCategory === "project"
+                                    ? entry.employee?.username ||
+                                      "Unknown Employee"
+                                    : entry.project?.name || "General Work"}
                                 </Typography>
+                                <Typography
+                                  variant="body2"
+                                  color="text.secondary"
+                                  sx={{ mb: 1 }}
+                                >
+                                  {entry.description || "No description"}
+                                </Typography>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    flexWrap: "wrap",
+                                  }}
+                                >
+                                  <Chip
+                                    label={entry.category || "General"}
+                                    size="small"
+                                    sx={{
+                                      backgroundColor: color,
+                                      color: "white",
+                                      fontWeight: "bold",
+                                    }}
+                                  />
+                                </Box>
                               </Box>
+                              <Typography
+                                variant="h6"
+                                fontWeight="bold"
+                                color={color}
+                                sx={{ ml: 2 }}
+                              >
+                                {formatDuration(entry.duration || 0)}
+                              </Typography>
                             </Box>
-                          )
-                        )}
+                          </Box>
+                        ))}
                       </Box>
                     </Box>
                   )}
@@ -1027,10 +1006,17 @@ const AdminTimeTracker = () => {
       title="Time Tracker"
       description="Track and manage employee time entries"
     >
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <Box sx={{ p: 3, width: '100%', maxWidth: '1200px' }}>
-        {/* Breadcrumbs */}
-        {/* <Breadcrumbs sx={{ mb: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+        }}
+      >
+        <Box sx={{ p: 3, width: "100%", maxWidth: "1200px" }}>
+          {/* Breadcrumbs */}
+          {/* <Breadcrumbs sx={{ mb: 3 }}>
         <Link
           href="/admin/dashboard"
           color="inherit"
@@ -1041,8 +1027,8 @@ const AdminTimeTracker = () => {
         <Typography color="text.primary">Time Tracker</Typography>
       </Breadcrumbs> */}
 
-        {/* Header */}
-        {/* <Box sx={{ mb: 3 }}>
+          {/* Header */}
+          {/* <Box sx={{ mb: 3 }}>
           <Typography
             variant="h4"
             fontWeight="bold"
@@ -1106,38 +1092,15 @@ const AdminTimeTracker = () => {
                   <ToggleButton value="day">Day</ToggleButton>
                 </ToggleButtonGroup>
 
-                {/* Center - Date Display and Total Hours */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
-                  {/* Date Picker with Calendar Icon */}
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <CalendarToday sx={{ color: "#1976D2", fontSize: "1.2rem" }} />
-                    <TextField
-                      type="date"
-                      value={currentDate.toISOString().split("T")[0]}
-                      onChange={(e) => setCurrentDate(new Date(e.target.value))}
-                      size="small"
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          height: "32px",
-                          fontSize: "0.85rem",
-                          "& fieldset": {
-                            borderColor: "#e0e0e0",
-                          },
-                          "&:hover fieldset": {
-                            borderColor: "#1976D2",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#1976D2",
-                          },
-                        },
-                        "& .MuiInputBase-input": {
-                          padding: "6px 8px",
-                          fontSize: "0.85rem",
-                        },
-                      }}
-                    />
-                  </Box>
-
+                {/* Center - Total Hours Display */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    justifyContent: "center",
+                  }}
+                >
                   {/* Total Hours Display */}
                   <Box
                     sx={{
@@ -1156,9 +1119,16 @@ const AdminTimeTracker = () => {
                       color="text.secondary"
                       sx={{ fontSize: "0.7rem" }}
                     >
-                      Total {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} Hours:
+                      Total{" "}
+                      {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
+                      Hours:
                     </Typography>
-                    <Typography variant="body1" fontWeight="bold" color="primary" sx={{ fontSize: "0.9rem" }}>
+                    <Typography
+                      variant="body1"
+                      fontWeight="bold"
+                      color="primary"
+                      sx={{ fontSize: "0.9rem" }}
+                    >
                       {calculateTotalHours()}
                     </Typography>
                   </Box>
@@ -1205,99 +1175,605 @@ const AdminTimeTracker = () => {
             </CardContent>
           </Card>
 
-        {/* Error Alert */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
-            {error}
-          </Alert>
-        )}
+          {/* Error Alert */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
+              {error}
+            </Alert>
+          )}
 
-        {/* Employee-wise Calendar View - Same structure as All Entries */}
-        {viewCategory === "employee" && (
-          <Box>
-            {/* Month View */}
-            {viewMode === "month" && (
-              <Box>
-                {/* Month Header */}
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 3 }}>
-                  <IconButton
-                    onClick={() => handleDateChange("prev")}
-                    size="small"
-                    sx={{ backgroundColor: "#f5f5f5", mr: 2 }}
+          {/* Employee-wise Calendar View - Same structure as All Entries */}
+          {viewCategory === "employee" && (
+            <Box>
+              {/* Month View */}
+              {viewMode === "month" && (
+                <Box>
+                  {/* Month Header */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      mb: 3,
+                      minHeight: "60px",
+                    }}
                   >
-                    <ArrowBack />
-                  </IconButton>
-                  <Typography variant="h4" fontWeight="bold" color="primary">
-                    {currentDate.toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    })}{" "}
-                    - {viewCategory === "employee" ? "Employee-wise" : "Project-wise"}
-                  </Typography>
-                  <IconButton
-                    onClick={() => handleDateChange("next")}
-                    size="small"
-                    sx={{ backgroundColor: "#f5f5f5", ml: 2 }}
-                  >
-                    <ArrowForward />
-                  </IconButton>
-                </Box>
-
-                {/* Day headers */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    backgroundColor: "#f5f5f5",
-                    borderRadius: 1,
-                    mb: 1,
-                    py: 1,
-                  }}
-                >
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                    (day) => (
-                      <Typography
-                        key={day}
-                        align="center"
-                        fontWeight="bold"
-                        sx={{ color: "#666" }}
+                    {/* Navigation Arrows around Title */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <IconButton
+                        onClick={() => handleDateChange("prev")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
                       >
-                        {day}
+                        <ArrowBack />
+                      </IconButton>
+                      <Typography
+                        variant="h4"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        {currentDate.toLocaleDateString("en-US", {
+                          month: "long",
+                          year: "numeric",
+                        })}{" "}
+                        -{" "}
+                        {viewCategory === "employee"
+                          ? "Employee-wise"
+                          : "Project-wise"}
                       </Typography>
-                    )
-                  )}
+                      <IconButton
+                        onClick={() => handleDateChange("next")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowForward />
+                      </IconButton>
+                    </Box>
+
+                    {/* Date Picker and Today Button on the right */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <CalendarToday
+                        sx={{ color: "#1976D2", fontSize: "1.2rem" }}
+                      />
+                      <TextField
+                        type="date"
+                        value={currentDate.toISOString().split("T")[0]}
+                        onChange={(e) =>
+                          setCurrentDate(new Date(e.target.value))
+                        }
+                        size="small"
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            height: "32px",
+                            fontSize: "0.85rem",
+                            "& fieldset": {
+                              borderColor: "#e0e0e0",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                          },
+                          "& .MuiInputBase-input": {
+                            padding: "6px 8px",
+                            fontSize: "0.85rem",
+                          },
+                        }}
+                      />
+                      <Button
+                        onClick={handleReturnToToday}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          minWidth: "auto",
+                          px: 1.5,
+                          py: 0.5,
+                          fontSize: "0.75rem",
+                          borderColor: "#1976D2",
+                          color: "#1976D2",
+                          "&:hover": {
+                            borderColor: "#1565C0",
+                            backgroundColor: "#f3f9ff",
+                          },
+                        }}
+                      >
+                        Today
+                      </Button>
+                    </Box>
+                  </Box>
+
+                  {/* Day headers */}
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(7, 1fr)",
+                      backgroundColor: "#f5f5f5",
+                      borderRadius: 1,
+                      mb: 1,
+                      py: 1,
+                    }}
+                  >
+                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                      (day) => (
+                        <Typography
+                          key={day}
+                          align="center"
+                          fontWeight="bold"
+                          sx={{ color: "#666" }}
+                        >
+                          {day}
+                        </Typography>
+                      )
+                    )}
+                  </Box>
+
+                  {/* Employee-wise Calendar Grid */}
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(7, 1fr)",
+                      border: "1px solid #e0e0e0",
+                      borderRadius: 1,
+                      overflow: "hidden",
+                    }}
+                  >
+                    {(() => {
+                      const year = currentDate.getFullYear();
+                      const month = currentDate.getMonth();
+                      const firstDay = new Date(year, month, 1);
+                      const startDate = new Date(firstDay);
+                      startDate.setDate(
+                        startDate.getDate() - firstDay.getDay()
+                      );
+
+                      const days = [];
+                      for (let i = 0; i < 42; i++) {
+                        const dayDate = new Date(startDate);
+                        dayDate.setDate(startDate.getDate() + i);
+                        const isCurrentMonth = dayDate.getMonth() === month;
+                        const isToday =
+                          dayDate.toDateString() === new Date().toDateString();
+
+                        // Get entries for this day
+                        const dayEntries = timeEntries.filter((entry) => {
+                          const entryDate = new Date(entry.date);
+                          return (
+                            entryDate.toDateString() === dayDate.toDateString()
+                          );
+                        });
+
+                        // Group entries by employee
+                        const employeeGroups = dayEntries.reduce(
+                          (acc, entry) => {
+                            const empId = entry.employee?._id || "unknown";
+                            if (!acc[empId]) {
+                              acc[empId] = {
+                                employee: entry.employee,
+                                entries: [],
+                              };
+                            }
+                            acc[empId].entries.push(entry);
+                            return acc;
+                          },
+                          {} as any
+                        );
+
+                        days.push(
+                          <Box
+                            key={i}
+                            onClick={() =>
+                              dayEntries.length > 0 && handleDayClick(dayDate)
+                            }
+                            sx={{
+                              minHeight: 120,
+                              border: "1px solid #e0e0e0",
+                              backgroundColor: "#fff",
+                              p: 1,
+                              cursor:
+                                dayEntries.length > 0 ? "pointer" : "default",
+                              "&:hover": {
+                                backgroundColor:
+                                  dayEntries.length > 0 ? "#f8f9fa" : "#fff",
+                              },
+                            }}
+                          >
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: "bold",
+                                color: isCurrentMonth
+                                  ? isToday
+                                    ? "primary.main"
+                                    : "text.primary"
+                                  : "text.disabled",
+                                mb: 1,
+                              }}
+                            >
+                              {dayDate.getDate()}
+                            </Typography>
+
+                            {/* Show total hours for all employees combined */}
+                            {dayEntries.length > 0 && (
+                              <Box
+                                sx={{
+                                  backgroundColor: "#2196f3",
+                                  color: "white",
+                                  borderRadius: 1,
+                                  p: 0.5,
+                                  mb: 0.5,
+                                  cursor: "pointer",
+                                  fontSize: 10,
+                                  fontWeight: "bold",
+                                  textAlign: "center",
+                                  "&:hover": {
+                                    opacity: 0.8,
+                                  },
+                                }}
+                              >
+                                <Typography
+                                  variant="caption"
+                                  sx={{ fontWeight: "bold" }}
+                                >
+                                  Total:{" "}
+                                  {formatDuration(
+                                    dayEntries.reduce(
+                                      (sum, entry) =>
+                                        sum + (entry.duration || 0),
+                                      0
+                                    )
+                                  )}
+                                </Typography>
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    display: "block",
+                                    opacity: 0.9,
+                                    fontSize: "9px",
+                                    mt: 0.5,
+                                  }}
+                                >
+                                  {Object.keys(employeeGroups).length} employee
+                                  {Object.keys(employeeGroups).length !== 1
+                                    ? "s"
+                                    : ""}{" "}
+                                  • {dayEntries.length} task
+                                  {dayEntries.length !== 1 ? "s" : ""}
+                                </Typography>
+                              </Box>
+                            )}
+                          </Box>
+                        );
+                      }
+                      return days;
+                    })()}
+                  </Box>
                 </Box>
+              )}
 
-                {/* Employee-wise Calendar Grid */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 1,
-                    overflow: "hidden",
-                  }}
-                >
-                  {(() => {
-                    const year = currentDate.getFullYear();
-                    const month = currentDate.getMonth();
-                    const firstDay = new Date(year, month, 1);
-                    const startDate = new Date(firstDay);
-                    startDate.setDate(startDate.getDate() - firstDay.getDay());
+              {/* Week View */}
+              {viewMode === "week" && (
+                <Box>
+                  {/* Week View Header */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      mb: 3,
+                      minHeight: "60px",
+                    }}
+                  >
+                    {/* Navigation Arrows around Title */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <IconButton
+                        onClick={() => handleDateChange("prev")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowBack />
+                      </IconButton>
+                      <Typography
+                        variant="h4"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        Week of{" "}
+                        {getWeekDays()[0]?.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}{" "}
+                        -{" "}
+                        {getWeekDays()[6]?.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}{" "}
+                        - Employee-wise
+                      </Typography>
+                      <IconButton
+                        onClick={() => handleDateChange("next")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowForward />
+                      </IconButton>
+                    </Box>
 
-                    const days = [];
-                    for (let i = 0; i < 42; i++) {
-                      const dayDate = new Date(startDate);
-                      dayDate.setDate(startDate.getDate() + i);
-                      const isCurrentMonth = dayDate.getMonth() === month;
+                    {/* Date Picker and Today Button on the right */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <CalendarToday
+                        sx={{ color: "#1976D2", fontSize: "1.2rem" }}
+                      />
+                      <TextField
+                        type="date"
+                        value={currentDate.toISOString().split("T")[0]}
+                        onChange={(e) =>
+                          setCurrentDate(new Date(e.target.value))
+                        }
+                        size="small"
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            height: "32px",
+                            fontSize: "0.85rem",
+                            "& fieldset": {
+                              borderColor: "#e0e0e0",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                          },
+                          "& .MuiInputBase-input": {
+                            padding: "6px 8px",
+                            fontSize: "0.85rem",
+                          },
+                        }}
+                      />
+                      <Button
+                        onClick={handleReturnToToday}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          minWidth: "auto",
+                          px: 1.5,
+                          py: 0.5,
+                          fontSize: "0.75rem",
+                          borderColor: "#1976D2",
+                          color: "#1976D2",
+                          "&:hover": {
+                            borderColor: "#1565C0",
+                            backgroundColor: "#f3f9ff",
+                          },
+                        }}
+                      >
+                        Today
+                      </Button>
+                    </Box>
+                  </Box>
+
+                  {/* Week View - Employee-wise Calendar Grid */}
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(7, 1fr)",
+                      gap: 1,
+                    }}
+                  >
+                    {getWeekDays().map((day, dayIndex) => {
+                      const dayEntries = timeEntries.filter((entry) => {
+                        const entryDate = new Date(entry.date);
+                        return entryDate.toDateString() === day.toDateString();
+                      });
+
                       const isToday =
-                        dayDate.toDateString() === new Date().toDateString();
+                        day.toDateString() === new Date().toDateString();
 
-                      // Get entries for this day
+                      // Group entries by employee
+                      const employeeGroups = dayEntries.reduce((acc, entry) => {
+                        const empId = entry.employee?._id || "unknown";
+                        if (!acc[empId]) {
+                          acc[empId] = {
+                            employee: entry.employee,
+                            entries: [],
+                          };
+                        }
+                        acc[empId].entries.push(entry);
+                        return acc;
+                      }, {} as any);
+
+                      const totalMinutes = dayEntries.reduce(
+                        (sum, entry) => sum + (entry.duration || 0),
+                        0
+                      );
+
+                      return (
+                        <Box
+                          key={dayIndex}
+                          sx={{
+                            minHeight: 120,
+                            border: "1px solid #e0e0e0",
+                            borderRadius: 1,
+                            p: 1,
+                            backgroundColor: "#fff",
+                            cursor:
+                              dayEntries.length > 0 ? "pointer" : "default",
+                            "&:hover": {
+                              backgroundColor:
+                                dayEntries.length > 0 ? "#f8f9fa" : "#fff",
+                            },
+                          }}
+                          onClick={() => {
+                            if (dayEntries.length > 0) {
+                              setSelectedDayForDetails(day);
+                              setDayDetailsDialog(true);
+                            }
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: "bold",
+                              color: isToday ? "primary.main" : "text.primary",
+                              mb: 1,
+                            }}
+                          >
+                            {day.getDate()}
+                          </Typography>
+
+                          {dayEntries.length > 0 && (
+                            <Box
+                              sx={{
+                                backgroundColor: "#2196f3",
+                                color: "white",
+                                borderRadius: 1,
+                                p: 0.5,
+                                textAlign: "center",
+                                fontSize: "0.75rem",
+                                fontWeight: "bold",
+                                mb: 1,
+                              }}
+                            >
+                              <Typography
+                                variant="caption"
+                                sx={{ display: "block", fontSize: "0.7rem" }}
+                              >
+                                {Math.floor(totalMinutes / 60)}:
+                                {String(totalMinutes % 60).padStart(2, "0")}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{ display: "block", fontSize: "0.65rem" }}
+                              >
+                                {Object.keys(employeeGroups).length} employee
+                                {Object.keys(employeeGroups).length !== 1
+                                  ? "s"
+                                  : ""}{" "}
+                                • {dayEntries.length} task
+                                {dayEntries.length !== 1 ? "s" : ""}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              )}
+
+              {viewMode === "day" && (
+                <Box>
+                  {/* Day View Header */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      mb: 3,
+                      minHeight: "60px",
+                    }}
+                  >
+                    {/* Navigation Arrows around Title */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <IconButton
+                        onClick={() => handleDateChange("prev")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowBack />
+                      </IconButton>
+                      <Typography
+                        variant="h4"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        {currentDate.toLocaleDateString("en-US", {
+                          weekday: "long",
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}{" "}
+                        - Employee-wise
+                      </Typography>
+                      <IconButton
+                        onClick={() => handleDateChange("next")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowForward />
+                      </IconButton>
+                    </Box>
+
+                    {/* Date Picker and Today Button on the right */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <CalendarToday
+                        sx={{ color: "#1976D2", fontSize: "1.2rem" }}
+                      />
+                      <TextField
+                        type="date"
+                        value={currentDate.toISOString().split("T")[0]}
+                        onChange={(e) =>
+                          setCurrentDate(new Date(e.target.value))
+                        }
+                        size="small"
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            height: "32px",
+                            fontSize: "0.85rem",
+                            "& fieldset": {
+                              borderColor: "#e0e0e0",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                          },
+                          "& .MuiInputBase-input": {
+                            padding: "6px 8px",
+                            fontSize: "0.85rem",
+                          },
+                        }}
+                      />
+                      <Button
+                        onClick={handleReturnToToday}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          minWidth: "auto",
+                          px: 1.5,
+                          py: 0.5,
+                          fontSize: "0.75rem",
+                          borderColor: "#1976D2",
+                          color: "#1976D2",
+                          "&:hover": {
+                            borderColor: "#1565C0",
+                            backgroundColor: "#f3f9ff",
+                          },
+                        }}
+                      >
+                        Today
+                      </Button>
+                    </Box>
+                  </Box>
+                  {/* Day View - Employee-wise Grouping */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                    }}
+                  >
+                    {(() => {
                       const dayEntries = timeEntries.filter((entry) => {
                         const entryDate = new Date(entry.date);
                         return (
-                          entryDate.toDateString() === dayDate.toDateString()
+                          entryDate.toDateString() ===
+                          currentDate.toDateString()
                         );
                       });
 
@@ -1314,571 +1790,593 @@ const AdminTimeTracker = () => {
                         return acc;
                       }, {} as any);
 
-                      days.push(
-                        <Box
-                          key={i}
-                          onClick={() =>
-                            dayEntries.length > 0 && handleDayClick(dayDate)
-                          }
-                          sx={{
-                            minHeight: 120,
-                            border: "1px solid #e0e0e0",
-                            backgroundColor: "#fff",
-                            p: 1,
-                            cursor:
-                              dayEntries.length > 0 ? "pointer" : "default",
-                            "&:hover": {
-                              backgroundColor:
-                                dayEntries.length > 0 ? "#f8f9fa" : "#fff",
-                            },
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontWeight: "bold",
-                              color: isCurrentMonth
-                                ? isToday
-                                  ? "primary.main"
-                                  : "text.primary"
-                                : "text.disabled",
-                              mb: 1,
-                            }}
-                          >
-                            {dayDate.getDate()}
-                          </Typography>
+                      return Object.values(employeeGroups).map(
+                        (group: any, groupIndex) => {
+                          const colors = [
+                            "#2196f3",
+                            "#e91e63",
+                            "#4caf50",
+                            "#ff9800",
+                            "#9c27b0",
+                          ];
+                          const color = colors[groupIndex % colors.length];
+                          const totalMinutes = group.entries.reduce(
+                            (sum: number, entry: any) =>
+                              sum + (entry.duration || 0),
+                            0
+                          );
 
-                          {/* Show total hours for all employees combined */}
-                          {dayEntries.length > 0 && (
-                            <Box
-                              sx={{
-                                backgroundColor: "#2196f3",
-                                color: "white",
-                                borderRadius: 1,
-                                p: 0.5,
-                                mb: 0.5,
-                                cursor: "pointer",
-                                fontSize: 10,
-                                fontWeight: "bold",
-                                textAlign: "center",
-                                "&:hover": {
-                                  opacity: 0.8,
-                                },
-                              }}
+                          const isExpanded = expandedEmployees.has(
+                            group.employee?._id || ""
+                          );
+
+                          return (
+                            <Card
+                              key={group.employee?._id || groupIndex}
+                              sx={{ p: 2 }}
                             >
-                              <Typography
-                                variant="caption"
-                                sx={{ fontWeight: "bold" }}
-                              >
-                                Total:{" "}
-                                {formatDuration(
-                                  dayEntries.reduce(
-                                    (sum, entry) => sum + (entry.duration || 0),
-                                    0
-                                  )
-                                )}
-                              </Typography>
-                              <Typography
-                                variant="caption"
+                              <Box
                                 sx={{
-                                  display: "block",
-                                  opacity: 0.9,
-                                  fontSize: "9px",
-                                  mt: 0.5,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 2,
+                                  mb: 2,
                                 }}
                               >
-                                {Object.keys(employeeGroups).length} employee
-                                {Object.keys(employeeGroups).length !== 1
-                                  ? "s"
-                                  : ""}{" "}
-                                • {dayEntries.length} task
-                                {dayEntries.length !== 1 ? "s" : ""}
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
+                                <Avatar
+                                  sx={{
+                                    backgroundColor: color,
+                                    color: "white",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  {group.employee?.username
+                                    ?.charAt(0)
+                                    ?.toUpperCase() || "U"}
+                                </Avatar>
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="h6" fontWeight="bold">
+                                    {group.employee?.username ||
+                                      "Unknown Employee"}
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {group.entries.length} tasks •{" "}
+                                    {formatDuration(totalMinutes)} total
+                                  </Typography>
+                                </Box>
+                                <Button
+                                  onClick={() =>
+                                    toggleExpandedEmployee(
+                                      group.employee?._id || ""
+                                    )
+                                  }
+                                  sx={{
+                                    minWidth: 32,
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: "50%",
+                                    backgroundColor: "rgba(0,0,0,0.1)",
+                                    color: "text.primary",
+                                    "&:hover": {
+                                      backgroundColor: "rgba(0,0,0,0.2)",
+                                    },
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      fontSize: "14px",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    {isExpanded ? "−" : "+"}
+                                  </Typography>
+                                </Button>
+                              </Box>
+
+                              {isExpanded && (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 1,
+                                  }}
+                                >
+                                  {group.entries.map(
+                                    (entry: any, entryIndex: number) => (
+                                      <Box
+                                        key={entryIndex}
+                                        onClick={() => handleViewDetails(entry)}
+                                        sx={{
+                                          border: "1px solid #e0e0e0",
+                                          borderRadius: 1,
+                                          p: 2,
+                                          backgroundColor: "#fff",
+                                          cursor: "pointer",
+                                          "&:hover": {
+                                            backgroundColor: "#f8f9fa",
+                                          },
+                                        }}
+                                      >
+                                        <Box
+                                          sx={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          <Box sx={{ flex: 1 }}>
+                                            <Typography
+                                              variant="body1"
+                                              fontWeight="bold"
+                                              sx={{ mb: 0.5 }}
+                                            >
+                                              {entry.description ||
+                                                "No description"}
+                                            </Typography>
+                                            <Typography
+                                              variant="body2"
+                                              color="text.secondary"
+                                              sx={{ mb: 1 }}
+                                            >
+                                              {entry.category || "General"}
+                                            </Typography>
+                                            <Box
+                                              sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                              }}
+                                            >
+                                              <Chip
+                                                label={
+                                                  entry.category || "General"
+                                                }
+                                                size="small"
+                                                sx={{
+                                                  backgroundColor: color,
+                                                  color: "white",
+                                                  fontWeight: "bold",
+                                                }}
+                                              />
+                                            </Box>
+                                          </Box>
+                                          <Typography
+                                            variant="h6"
+                                            fontWeight="bold"
+                                            color={color}
+                                          >
+                                            {formatDuration(
+                                              entry.duration || 0
+                                            )}
+                                          </Typography>
+                                        </Box>
+                                      </Box>
+                                    )
+                                  )}
+                                </Box>
+                              )}
+                            </Card>
+                          );
+                        }
                       );
-                    }
-                    return days;
-                  })()}
+                    })()}
+                  </Box>
                 </Box>
-              </Box>
-            )}
+              )}
+            </Box>
+          )}
 
-            {/* Week View */}
-            {viewMode === "week" && (
-              <Box>
-                {/* Week View Header */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h4" fontWeight="bold" color="primary" sx={{ textAlign: "left" }}>
-                    Week of{" "}
-                    {getWeekDays()[0]?.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}{" "}
-                    -{" "}
-                    {getWeekDays()[6]?.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}{" "}
-                    - Employee-wise
-                  </Typography>
-                </Box>
+          {/* Project-wise Calendar View */}
+          {viewCategory === "project" && (
+            <Box>
+              {/* Month View */}
+              {viewMode === "month" && (
+                <Box>
+                  {/* Month Header */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      mb: 3,
+                      minHeight: "60px",
+                    }}
+                  >
+                    {/* Navigation Arrows around Title */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <IconButton
+                        onClick={() => handleDateChange("prev")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowBack />
+                      </IconButton>
+                      <Typography
+                        variant="h4"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        {currentDate.toLocaleDateString("en-US", {
+                          month: "long",
+                          year: "numeric",
+                        })}{" "}
+                        - Project-wise
+                      </Typography>
+                      <IconButton
+                        onClick={() => handleDateChange("next")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowForward />
+                      </IconButton>
+                    </Box>
 
-                {/* Week View - Employee-wise Calendar Grid */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    gap: 1,
-                  }}
-                >
-                  {getWeekDays().map((day, dayIndex) => {
-                    const dayEntries = timeEntries.filter((entry) => {
-                      const entryDate = new Date(entry.date);
-                      return entryDate.toDateString() === day.toDateString();
-                    });
-
-                    const isToday =
-                      day.toDateString() === new Date().toDateString();
-
-                    // Group entries by employee
-                    const employeeGroups = dayEntries.reduce((acc, entry) => {
-                      const empId = entry.employee?._id || "unknown";
-                      if (!acc[empId]) {
-                        acc[empId] = {
-                          employee: entry.employee,
-                          entries: [],
-                        };
-                      }
-                      acc[empId].entries.push(entry);
-                      return acc;
-                    }, {} as any);
-
-                    const totalMinutes = dayEntries.reduce(
-                      (sum, entry) => sum + (entry.duration || 0),
-                      0
-                    );
-
-                    return (
-                      <Box
-                        key={dayIndex}
+                    {/* Date Picker and Today Button on the right */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <CalendarToday
+                        sx={{ color: "#1976D2", fontSize: "1.2rem" }}
+                      />
+                      <TextField
+                        type="date"
+                        value={currentDate.toISOString().split("T")[0]}
+                        onChange={(e) =>
+                          setCurrentDate(new Date(e.target.value))
+                        }
+                        size="small"
                         sx={{
-                          minHeight: 120,
-                          border: "1px solid #e0e0e0",
-                          borderRadius: 1,
-                          p: 1,
-                          backgroundColor: "#fff",
-                          cursor: dayEntries.length > 0 ? "pointer" : "default",
-                          "&:hover": {
-                            backgroundColor:
-                              dayEntries.length > 0 ? "#f8f9fa" : "#fff",
+                          "& .MuiOutlinedInput-root": {
+                            height: "32px",
+                            fontSize: "0.85rem",
+                            "& fieldset": {
+                              borderColor: "#e0e0e0",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                          },
+                          "& .MuiInputBase-input": {
+                            padding: "6px 8px",
+                            fontSize: "0.85rem",
                           },
                         }}
-                        onClick={() => {
-                          if (dayEntries.length > 0) {
-                            setSelectedDayForDetails(day);
-                            setDayDetailsDialog(true);
-                          }
+                      />
+                      <Button
+                        onClick={handleReturnToToday}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          minWidth: "auto",
+                          px: 1.5,
+                          py: 0.5,
+                          fontSize: "0.75rem",
+                          borderColor: "#1976D2",
+                          color: "#1976D2",
+                          "&:hover": {
+                            borderColor: "#1565C0",
+                            backgroundColor: "#f3f9ff",
+                          },
                         }}
                       >
+                        Today
+                      </Button>
+                    </Box>
+                  </Box>
+
+                  {/* Month Calendar Header */}
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(7, 1fr)",
+                      backgroundColor: "#f5f5f5",
+                      borderRadius: 1,
+                      mb: 1,
+                      py: 1,
+                    }}
+                  >
+                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                      (day) => (
                         <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: "bold",
-                            color: isToday ? "primary.main" : "text.primary",
-                            mb: 1,
-                          }}
+                          key={day}
+                          align="center"
+                          fontWeight="bold"
+                          sx={{ color: "#666" }}
                         >
-                          {day.getDate()}
+                          {day}
                         </Typography>
+                      )
+                    )}
+                  </Box>
 
-                        {dayEntries.length > 0 && (
-                          <Box
-                            sx={{
-                              backgroundColor: "#2196f3",
-                              color: "white",
-                              borderRadius: 1,
-                              p: 0.5,
-                              textAlign: "center",
-                              fontSize: "0.75rem",
-                              fontWeight: "bold",
-                              mb: 1,
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
-                              sx={{ display: "block", fontSize: "0.7rem" }}
-                            >
-                              {Math.floor(totalMinutes / 60)}:
-                              {String(totalMinutes % 60).padStart(2, "0")}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{ display: "block", fontSize: "0.65rem" }}
-                            >
-                              {Object.keys(employeeGroups).length} employee
-                              {Object.keys(employeeGroups).length !== 1
-                                ? "s"
-                                : ""}{" "}
-                              • {dayEntries.length} task
-                              {dayEntries.length !== 1 ? "s" : ""}
-                            </Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    );
-                  })}
-                </Box>
-              </Box>
-            )}
-
-            {/* Day View */}
-            {viewMode === "day" && (
-              <Box>
-                {/* Day View Header */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h4" fontWeight="bold" color="primary" sx={{ textAlign: "left" }}>
-                    {currentDate.toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}{" "}
-                    - Employee-wise
-                  </Typography>
-                </Box>
-
-                {/* Day View - Employee-wise Grouping */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                  }}
-                >
-                  {(() => {
-                    const dayEntries = timeEntries.filter((entry) => {
-                      const entryDate = new Date(entry.date);
-                      return (
-                        entryDate.toDateString() === currentDate.toDateString()
+                  {/* Single Unified Calendar Grid */}
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(7, 1fr)",
+                      gap: 1,
+                    }}
+                  >
+                    {(() => {
+                      const startOfMonth = new Date(
+                        currentDate.getFullYear(),
+                        currentDate.getMonth(),
+                        1
                       );
-                    });
+                      const endOfMonth = new Date(
+                        currentDate.getFullYear(),
+                        currentDate.getMonth() + 1,
+                        0
+                      );
+                      const startDate = new Date(startOfMonth);
+                      startDate.setDate(
+                        startDate.getDate() - startOfMonth.getDay()
+                      );
 
-                    // Group entries by employee
-                    const employeeGroups = dayEntries.reduce((acc, entry) => {
-                      const empId = entry.employee?._id || "unknown";
-                      if (!acc[empId]) {
-                        acc[empId] = {
-                          employee: entry.employee,
-                          entries: [],
-                        };
+                      const days = [];
+                      const current = new Date(startDate);
+
+                      for (let i = 0; i < 42; i++) {
+                        days.push(new Date(current));
+                        current.setDate(current.getDate() + 1);
                       }
-                      acc[empId].entries.push(entry);
-                      return acc;
-                    }, {} as any);
 
-                    return Object.values(employeeGroups).map(
-                      (group: any, groupIndex) => {
-                        const colors = [
-                          "#2196f3",
-                          "#e91e63",
-                          "#4caf50",
-                          "#ff9800",
-                          "#9c27b0",
-                        ];
-                        const color = colors[groupIndex % colors.length];
-                        const totalMinutes = group.entries.reduce(
-                          (sum: number, entry: any) => sum + (entry.duration || 0),
+                      return days.map((day, dayIndex) => {
+                        // Get all entries for this day across all projects
+                        const dayEntries = timeEntries.filter((entry) => {
+                          const entryDate = new Date(entry.date);
+                          return (
+                            entryDate.toDateString() === day.toDateString()
+                          );
+                        });
+
+                        const isCurrentMonth =
+                          day.getMonth() === currentDate.getMonth();
+                        const isToday =
+                          day.toDateString() === new Date().toDateString();
+
+                        const totalMinutes = dayEntries.reduce(
+                          (sum, entry) => sum + (entry.duration || 0),
                           0
                         );
 
-                        const isExpanded = expandedEmployees.has(
-                          group.employee?._id || ""
-                        );
+                        // Count unique projects for this day
+                        const uniqueProjects = new Set(
+                          dayEntries.map((entry) => entry.project?._id)
+                        ).size;
 
                         return (
-                          <Card
-                            key={group.employee?._id || groupIndex}
-                            sx={{ p: 2 }}
+                          <Box
+                            key={dayIndex}
+                            sx={{
+                              minHeight: 80,
+                              p: 1,
+                              border: "1px solid #e0e0e0",
+                              backgroundColor: isCurrentMonth
+                                ? "white"
+                                : "#f9f9f9",
+                              position: "relative",
+                              cursor:
+                                dayEntries.length > 0 ? "pointer" : "default",
+                            }}
+                            onClick={() => {
+                              if (dayEntries.length > 0) {
+                                setSelectedDayForDetails(day);
+                                setDayDetailsDialog(true);
+                              }
+                            }}
                           >
-                            <Box
+                            <Typography
+                              variant="body2"
                               sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                                mb: 2,
+                                color: isCurrentMonth
+                                  ? isToday
+                                    ? "primary.main"
+                                    : "text.primary"
+                                  : "text.disabled",
+                                fontWeight: isToday ? "bold" : "normal",
+                                mb: 1,
                               }}
                             >
-                              <Avatar
+                              {day.getDate()}
+                            </Typography>
+
+                            {dayEntries.length > 0 && (
+                              <Box
                                 sx={{
-                                  backgroundColor: color,
+                                  backgroundColor: "#4caf50", // Green color for project-wise
                                   color: "white",
+                                  borderRadius: 1,
+                                  p: 0.5,
+                                  textAlign: "center",
+                                  fontSize: "0.75rem",
                                   fontWeight: "bold",
-                                }}
-                              >
-                                {group.employee?.username
-                                  ?.charAt(0)
-                                  ?.toUpperCase() || "U"}
-                              </Avatar>
-                              <Box sx={{ flex: 1 }}>
-                                <Typography variant="h6" fontWeight="bold">
-                                  {group.employee?.username ||
-                                    "Unknown Employee"}
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                >
-                                  {group.entries.length} tasks •{" "}
-                                  {formatDuration(totalMinutes)} total
-                                </Typography>
-                              </Box>
-                              <Button
-                                onClick={() =>
-                                  toggleExpandedEmployee(
-                                    group.employee?._id || ""
-                                  )
-                                }
-                                sx={{
-                                  minWidth: 32,
-                                  width: 32,
-                                  height: 32,
-                                  borderRadius: "50%",
-                                  backgroundColor: "rgba(0,0,0,0.1)",
-                                  color: "text.primary",
-                                  "&:hover": {
-                                    backgroundColor: "rgba(0,0,0,0.2)",
-                                  },
                                 }}
                               >
                                 <Typography
                                   variant="caption"
-                                  sx={{
-                                    fontSize: "14px",
-                                    fontWeight: "bold",
-                                  }}
+                                  sx={{ display: "block", fontSize: "0.7rem" }}
                                 >
-                                  {isExpanded ? "−" : "+"}
+                                  Total: {Math.floor(totalMinutes / 60)}:
+                                  {String(totalMinutes % 60).padStart(2, "0")}
                                 </Typography>
-                              </Button>
-                            </Box>
-
-                            {isExpanded && (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 1,
-                                }}
-                              >
-                                {group.entries.map(
-                                  (entry: any, entryIndex: number) => (
-                                    <Box
-                                      key={entryIndex}
-                                      onClick={() => handleViewDetails(entry)}
-                                      sx={{
-                                        border: "1px solid #e0e0e0",
-                                        borderRadius: 1,
-                                        p: 2,
-                                        backgroundColor: "#fff",
-                                        cursor: "pointer",
-                                        "&:hover": {
-                                          backgroundColor: "#f8f9fa",
-                                        },
-                                      }}
-                                    >
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          justifyContent: "space-between",
-                                          alignItems: "center",
-                                        }}
-                                      >
-                                        <Box sx={{ flex: 1 }}>
-                                          <Typography
-                                            variant="body1"
-                                            fontWeight="bold"
-                                            sx={{ mb: 0.5 }}
-                                          >
-                                            {entry.description ||
-                                              "No description"}
-                                          </Typography>
-                                          <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{ mb: 1 }}
-                                          >
-                                            {entry.category || "General"}
-                                          </Typography>
-                                          <Box
-                                            sx={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                              gap: 1,
-                                            }}
-                                          >
-                                            <Chip
-                                              label={
-                                                entry.category || "General"
-                                              }
-                                              size="small"
-                                              sx={{
-                                                backgroundColor: color,
-                                                color: "white",
-                                                fontWeight: "bold",
-                                              }}
-                                            />
-                                          </Box>
-                                        </Box>
-                                        <Typography
-                                          variant="h6"
-                                          fontWeight="bold"
-                                          color={color}
-                                        >
-                                          {formatDuration(entry.duration || 0)}
-                                        </Typography>
-                                      </Box>
-                                    </Box>
-                                  )
-                                )}
+                                <Typography
+                                  variant="caption"
+                                  sx={{ display: "block", fontSize: "0.65rem" }}
+                                >
+                                  {uniqueProjects} project
+                                  {uniqueProjects !== 1 ? "s" : ""} •{" "}
+                                  {dayEntries.length} task
+                                  {dayEntries.length !== 1 ? "s" : ""}
+                                </Typography>
                               </Box>
                             )}
-                          </Card>
+                          </Box>
                         );
-                      }
-                    );
-                  })()}
+                      });
+                    })()}
+                  </Box>
                 </Box>
-              </Box>
-            )}
-          </Box>
-        )}
+              )}
 
-        {/* Project-wise Calendar View */}
-        {viewCategory === "project" && (
-          <Box>
-            {/* Month View */}
-            {viewMode === "month" && (
-              <Box>
-                {/* Month Header */}
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 3 }}>
-                  <IconButton
-                    onClick={() => handleDateChange("prev")}
-                    size="small"
-                    sx={{ backgroundColor: "#f5f5f5", mr: 2 }}
+              {/* Week View */}
+              {viewMode === "week" && (
+                <Box>
+                  {/* Week View Header */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      mb: 3,
+                      minHeight: "60px",
+                    }}
                   >
-                    <ArrowBack />
-                  </IconButton>
-                  <Typography variant="h4" fontWeight="bold" color="primary">
-                    {currentDate.toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    })}{" "}
-                    - Project-wise
-                  </Typography>
-                  <IconButton
-                    onClick={() => handleDateChange("next")}
-                    size="small"
-                    sx={{ backgroundColor: "#f5f5f5", ml: 2 }}
-                  >
-                    <ArrowForward />
-                  </IconButton>
-                </Box>
-
-                {/* Month Calendar Header */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    backgroundColor: "#f5f5f5",
-                    borderRadius: 1,
-                    mb: 1,
-                    py: 1,
-                  }}
-                >
-                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                    (day) => (
-                      <Typography
-                        key={day}
-                        align="center"
-                        fontWeight="bold"
-                        sx={{ color: "#666" }}
+                    {/* Navigation Arrows around Title */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <IconButton
+                        onClick={() => handleDateChange("prev")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
                       >
-                        {day}
+                        <ArrowBack />
+                      </IconButton>
+                      <Typography
+                        variant="h4"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        Week of{" "}
+                        {getWeekDays()[0]?.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}{" "}
+                        -{" "}
+                        {getWeekDays()[6]?.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}{" "}
+                        - Project-wise
                       </Typography>
-                    )
-                  )}
-                </Box>
+                      <IconButton
+                        onClick={() => handleDateChange("next")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowForward />
+                      </IconButton>
+                    </Box>
 
-                {/* Single Unified Calendar Grid */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    gap: 1,
-                  }}
-                >
-                  {(() => {
-                    const startOfMonth = new Date(
-                      currentDate.getFullYear(),
-                      currentDate.getMonth(),
-                      1
-                    );
-                    const endOfMonth = new Date(
-                      currentDate.getFullYear(),
-                      currentDate.getMonth() + 1,
-                      0
-                    );
-                    const startDate = new Date(startOfMonth);
-                    startDate.setDate(
-                      startDate.getDate() - startOfMonth.getDay()
-                    );
+                    {/* Date Picker and Today Button on the right */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <CalendarToday
+                        sx={{ color: "#1976D2", fontSize: "1.2rem" }}
+                      />
+                      <TextField
+                        type="date"
+                        value={currentDate.toISOString().split("T")[0]}
+                        onChange={(e) =>
+                          setCurrentDate(new Date(e.target.value))
+                        }
+                        size="small"
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            height: "32px",
+                            fontSize: "0.85rem",
+                            "& fieldset": {
+                              borderColor: "#e0e0e0",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                          },
+                          "& .MuiInputBase-input": {
+                            padding: "6px 8px",
+                            fontSize: "0.85rem",
+                          },
+                        }}
+                      />
+                      <Button
+                        onClick={handleReturnToToday}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          minWidth: "auto",
+                          px: 1.5,
+                          py: 0.5,
+                          fontSize: "0.75rem",
+                          borderColor: "#1976D2",
+                          color: "#1976D2",
+                          "&:hover": {
+                            borderColor: "#1565C0",
+                            backgroundColor: "#f3f9ff",
+                          },
+                        }}
+                      >
+                        Today
+                      </Button>
+                    </Box>
+                  </Box>
 
-                    const days = [];
-                    const current = new Date(startDate);
-
-                    for (let i = 0; i < 42; i++) {
-                      days.push(new Date(current));
-                      current.setDate(current.getDate() + 1);
-                    }
-
-                    return days.map((day, dayIndex) => {
-                      // Get all entries for this day across all projects
+                  {/* Week View - Project-wise Calendar Grid */}
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(7, 1fr)",
+                      gap: 1,
+                    }}
+                  >
+                    {getWeekDays().map((day, dayIndex) => {
                       const dayEntries = timeEntries.filter((entry) => {
                         const entryDate = new Date(entry.date);
                         return entryDate.toDateString() === day.toDateString();
                       });
 
-                      const isCurrentMonth =
-                        day.getMonth() === currentDate.getMonth();
                       const isToday =
                         day.toDateString() === new Date().toDateString();
+
+                      // Group entries by project
+                      const projectGroups = dayEntries.reduce((acc, entry) => {
+                        const projId = entry.project?._id || "unknown";
+                        if (!acc[projId]) {
+                          acc[projId] = {
+                            project: entry.project,
+                            entries: [],
+                          };
+                        }
+                        acc[projId].entries.push(entry);
+                        return acc;
+                      }, {} as any);
 
                       const totalMinutes = dayEntries.reduce(
                         (sum, entry) => sum + (entry.duration || 0),
                         0
                       );
 
-                      // Count unique projects for this day
-                      const uniqueProjects = new Set(
-                        dayEntries.map((entry) => entry.project?._id)
-                      ).size;
-
                       return (
                         <Box
                           key={dayIndex}
                           sx={{
-                            minHeight: 80,
-                            p: 1,
+                            minHeight: 120,
                             border: "1px solid #e0e0e0",
-                            backgroundColor: isCurrentMonth
-                              ? "white"
-                              : "#f9f9f9",
-                            position: "relative",
+                            borderRadius: 1,
+                            p: 1,
+                            backgroundColor: "#fff",
                             cursor:
                               dayEntries.length > 0 ? "pointer" : "default",
+                            "&:hover": {
+                              backgroundColor:
+                                dayEntries.length > 0 ? "#f8f9fa" : "#fff",
+                            },
                           }}
                           onClick={() => {
                             if (dayEntries.length > 0) {
@@ -1890,12 +2388,8 @@ const AdminTimeTracker = () => {
                           <Typography
                             variant="body2"
                             sx={{
-                              color: isCurrentMonth
-                                ? isToday
-                                  ? "primary.main"
-                                  : "text.primary"
-                                : "text.disabled",
-                              fontWeight: isToday ? "bold" : "normal",
+                              fontWeight: "bold",
+                              color: isToday ? "primary.main" : "text.primary",
                               mb: 1,
                             }}
                           >
@@ -1905,602 +2399,565 @@ const AdminTimeTracker = () => {
                           {dayEntries.length > 0 && (
                             <Box
                               sx={{
-                                backgroundColor: "#4caf50", // Green color for project-wise
+                                backgroundColor: "#4caf50",
                                 color: "white",
                                 borderRadius: 1,
                                 p: 0.5,
                                 textAlign: "center",
                                 fontSize: "0.75rem",
                                 fontWeight: "bold",
+                                mb: 1,
                               }}
                             >
                               <Typography
                                 variant="caption"
                                 sx={{ display: "block", fontSize: "0.7rem" }}
                               >
-                                Total: {Math.floor(totalMinutes / 60)}:
+                                {Math.floor(totalMinutes / 60)}:
                                 {String(totalMinutes % 60).padStart(2, "0")}
                               </Typography>
                               <Typography
                                 variant="caption"
                                 sx={{ display: "block", fontSize: "0.65rem" }}
                               >
-                                {uniqueProjects} project
-                                {uniqueProjects !== 1 ? "s" : ""} •{" "}
-                                {dayEntries.length} task
+                                {Object.keys(projectGroups).length} project
+                                {Object.keys(projectGroups).length !== 1
+                                  ? "s"
+                                  : ""}{" "}
+                                • {dayEntries.length} task
                                 {dayEntries.length !== 1 ? "s" : ""}
                               </Typography>
                             </Box>
                           )}
                         </Box>
                       );
-                    });
-                  })()}
+                    })}
+                  </Box>
                 </Box>
-              </Box>
-            )}
+              )}
 
-            {/* Week View */}
-            {viewMode === "week" && (
-              <Box>
-                {/* Week View Header */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h4" fontWeight="bold" color="primary">
-                    Week of{" "}
-                    {getWeekDays()[0]?.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}{" "}
-                    -{" "}
-                    {getWeekDays()[6]?.toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}{" "}
-                    - Project-wise
-                  </Typography>
-                </Box>
+              {/* Day View */}
+              {viewMode === "day" && (
+                <Box>
+                  {/* Day View Header */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      mb: 3,
+                      minHeight: "60px",
+                    }}
+                  >
+                    {/* Navigation Arrows around Title */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <IconButton
+                        onClick={() => handleDateChange("prev")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowBack />
+                      </IconButton>
+                      <Typography
+                        variant="h4"
+                        fontWeight="bold"
+                        color="primary"
+                      >
+                        {currentDate.toLocaleDateString("en-US", {
+                          weekday: "long",
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        })}{" "}
+                        - Project-wise
+                      </Typography>
+                      <IconButton
+                        onClick={() => handleDateChange("next")}
+                        size="small"
+                        sx={{ backgroundColor: "#f5f5f5" }}
+                      >
+                        <ArrowForward />
+                      </IconButton>
+                    </Box>
 
-                {/* Week View - Project-wise Calendar Grid */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    gap: 1,
-                  }}
-                >
-                  {getWeekDays().map((day, dayIndex) => {
-                    const dayEntries = timeEntries.filter((entry) => {
-                      const entryDate = new Date(entry.date);
-                      return entryDate.toDateString() === day.toDateString();
-                    });
-
-                    const isToday =
-                      day.toDateString() === new Date().toDateString();
-
-                    // Group entries by project
-                    const projectGroups = dayEntries.reduce((acc, entry) => {
-                      const projId = entry.project?._id || "unknown";
-                      if (!acc[projId]) {
-                        acc[projId] = {
-                          project: entry.project,
-                          entries: [],
-                        };
-                      }
-                      acc[projId].entries.push(entry);
-                      return acc;
-                    }, {} as any);
-
-                    const totalMinutes = dayEntries.reduce(
-                      (sum, entry) => sum + (entry.duration || 0),
-                      0
-                    );
-
-                    return (
-                      <Box
-                        key={dayIndex}
+                    {/* Date Picker and Today Button on the right */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <CalendarToday
+                        sx={{ color: "#1976D2", fontSize: "1.2rem" }}
+                      />
+                      <TextField
+                        type="date"
+                        value={currentDate.toISOString().split("T")[0]}
+                        onChange={(e) =>
+                          setCurrentDate(new Date(e.target.value))
+                        }
+                        size="small"
                         sx={{
-                          minHeight: 120,
-                          border: "1px solid #e0e0e0",
-                          borderRadius: 1,
-                          p: 1,
-                          backgroundColor: "#fff",
-                          cursor: dayEntries.length > 0 ? "pointer" : "default",
-                          "&:hover": {
-                            backgroundColor:
-                              dayEntries.length > 0 ? "#f8f9fa" : "#fff",
+                          "& .MuiOutlinedInput-root": {
+                            height: "32px",
+                            fontSize: "0.85rem",
+                            "& fieldset": {
+                              borderColor: "#e0e0e0",
+                            },
+                            "&:hover fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#1976D2",
+                            },
+                          },
+                          "& .MuiInputBase-input": {
+                            padding: "6px 8px",
+                            fontSize: "0.85rem",
                           },
                         }}
-                        onClick={() => {
-                          if (dayEntries.length > 0) {
-                            setSelectedDayForDetails(day);
-                            setDayDetailsDialog(true);
-                          }
+                      />
+                      <Button
+                        onClick={handleReturnToToday}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          minWidth: "auto",
+                          px: 1.5,
+                          py: 0.5,
+                          fontSize: "0.75rem",
+                          borderColor: "#1976D2",
+                          color: "#1976D2",
+                          "&:hover": {
+                            borderColor: "#1565C0",
+                            backgroundColor: "#f3f9ff",
+                          },
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: "bold",
-                            color: isToday ? "primary.main" : "text.primary",
-                            mb: 1,
-                          }}
-                        >
-                          {day.getDate()}
-                        </Typography>
+                        Today
+                      </Button>
+                    </Box>
+                  </Box>
 
-                        {dayEntries.length > 0 && (
-                          <Box
-                            sx={{
-                              backgroundColor: "#4caf50",
-                              color: "white",
-                              borderRadius: 1,
-                              p: 0.5,
-                              textAlign: "center",
-                              fontSize: "0.75rem",
-                              fontWeight: "bold",
-                              mb: 1,
-                            }}
-                          >
-                            <Typography
-                              variant="caption"
-                              sx={{ display: "block", fontSize: "0.7rem" }}
+                  {/* Day View - Project-wise Grouping */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                    }}
+                  >
+                    {(() => {
+                      const dayEntries = timeEntries.filter((entry) => {
+                        const entryDate = new Date(entry.date);
+                        return (
+                          entryDate.toDateString() ===
+                          currentDate.toDateString()
+                        );
+                      });
+
+                      // Group entries by project
+                      const projectGroups = dayEntries.reduce((acc, entry) => {
+                        const projId = entry.project?._id || "unknown";
+                        if (!acc[projId]) {
+                          acc[projId] = {
+                            project: entry.project,
+                            entries: [],
+                          };
+                        }
+                        acc[projId].entries.push(entry);
+                        return acc;
+                      }, {} as any);
+
+                      return Object.values(projectGroups).map(
+                        (group: any, groupIndex) => {
+                          const colors = [
+                            "#4caf50",
+                            "#2196f3",
+                            "#e91e63",
+                            "#ff9800",
+                            "#9c27b0",
+                          ];
+                          const color = colors[groupIndex % colors.length];
+                          const totalMinutes = group.entries.reduce(
+                            (sum: number, entry: any) =>
+                              sum + (entry.duration || 0),
+                            0
+                          );
+
+                          const isExpanded = expandedEmployees.has(
+                            group.project?._id || ""
+                          );
+
+                          return (
+                            <Card
+                              key={group.project?._id || groupIndex}
+                              sx={{ p: 2 }}
                             >
-                              {Math.floor(totalMinutes / 60)}:
-                              {String(totalMinutes % 60).padStart(2, "0")}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{ display: "block", fontSize: "0.65rem" }}
-                            >
-                              {Object.keys(projectGroups).length} project
-                              {Object.keys(projectGroups).length !== 1
-                                ? "s"
-                                : ""}{" "}
-                              • {dayEntries.length} task
-                              {dayEntries.length !== 1 ? "s" : ""}
-                            </Typography>
-                          </Box>
-                        )}
-                      </Box>
-                    );
-                  })}
+                              <Box
+                                sx={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 2,
+                                  mb: 2,
+                                }}
+                              >
+                                <Avatar
+                                  sx={{
+                                    backgroundColor: color,
+                                    color: "white",
+                                    fontWeight: "bold",
+                                  }}
+                                >
+                                  {group.project?.name
+                                    ?.charAt(0)
+                                    ?.toUpperCase() || "P"}
+                                </Avatar>
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="h6" fontWeight="bold">
+                                    {group.project?.name || "Unknown Project"}
+                                  </Typography>
+                                  <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                  >
+                                    {group.entries.length} tasks •{" "}
+                                    {formatDuration(totalMinutes)} total
+                                  </Typography>
+                                </Box>
+                                <Button
+                                  onClick={() =>
+                                    toggleExpandedEmployee(
+                                      group.project?._id || ""
+                                    )
+                                  }
+                                  sx={{
+                                    minWidth: 32,
+                                    width: 32,
+                                    height: 32,
+                                    borderRadius: "50%",
+                                    backgroundColor: "rgba(0,0,0,0.1)",
+                                    color: "text.primary",
+                                    "&:hover": {
+                                      backgroundColor: "rgba(0,0,0,0.2)",
+                                    },
+                                  }}
+                                >
+                                  <Typography
+                                    variant="caption"
+                                    sx={{
+                                      fontSize: "14px",
+                                      fontWeight: "bold",
+                                    }}
+                                  >
+                                    {isExpanded ? "−" : "+"}
+                                  </Typography>
+                                </Button>
+                              </Box>
+
+                              {isExpanded && (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 1,
+                                  }}
+                                >
+                                  {group.entries.map(
+                                    (entry: any, entryIndex: number) => (
+                                      <Box
+                                        key={entryIndex}
+                                        onClick={() => handleViewDetails(entry)}
+                                        sx={{
+                                          border: "1px solid #e0e0e0",
+                                          borderRadius: 1,
+                                          p: 2,
+                                          backgroundColor: "#fff",
+                                          cursor: "pointer",
+                                          "&:hover": {
+                                            backgroundColor: "#f8f9fa",
+                                          },
+                                        }}
+                                      >
+                                        <Box
+                                          sx={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                          }}
+                                        >
+                                          <Box sx={{ flex: 1 }}>
+                                            <Typography
+                                              variant="body1"
+                                              fontWeight="bold"
+                                              sx={{ mb: 0.5 }}
+                                            >
+                                              {entry.description ||
+                                                "No description"}
+                                            </Typography>
+                                            <Typography
+                                              variant="body2"
+                                              color="text.secondary"
+                                              sx={{ mb: 1 }}
+                                            >
+                                              {entry.category || "General"}
+                                            </Typography>
+                                            <Box
+                                              sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                              }}
+                                            >
+                                              <Chip
+                                                label={
+                                                  entry.category || "General"
+                                                }
+                                                size="small"
+                                                sx={{
+                                                  backgroundColor: color,
+                                                  color: "white",
+                                                  fontWeight: "bold",
+                                                }}
+                                              />
+                                            </Box>
+                                          </Box>
+                                          <Typography
+                                            variant="h6"
+                                            fontWeight="bold"
+                                            color={color}
+                                          >
+                                            {formatDuration(
+                                              entry.duration || 0
+                                            )}
+                                          </Typography>
+                                        </Box>
+                                      </Box>
+                                    )
+                                  )}
+                                </Box>
+                              )}
+                            </Card>
+                          );
+                        }
+                      );
+                    })()}
+                  </Box>
                 </Box>
+              )}
+            </Box>
+          )}
+
+          {/* Add/Edit Entry Dialog */}
+          <Dialog
+            open={addEntryDialog || editEntryDialog}
+            onClose={() => {
+              setAddEntryDialog(false);
+              setEditEntryDialog(false);
+            }}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle>
+              {selectedEntry ? "Edit Time Entry" : "Add New Time Entry"}
+            </DialogTitle>
+            <DialogContent>
+              <Box
+                sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
+              >
+                <FormControl fullWidth>
+                  <InputLabel>Employee</InputLabel>
+                  <Select
+                    value={selectedEmployee}
+                    onChange={(e) => setSelectedEmployee(e.target.value)}
+                    label="Employee"
+                  >
+                    {employees.map((employee) => (
+                      <MenuItem key={employee._id} value={employee._id}>
+                        {employee.username}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl fullWidth>
+                  <InputLabel>Project</InputLabel>
+                  <Select
+                    value={selectedProject}
+                    onChange={(e) => setSelectedProject(e.target.value)}
+                    label="Project"
+                  >
+                    {projects.map((project) => (
+                      <MenuItem key={project._id} value={project._id}>
+                        {project.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <TextField
+                  label="Category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  fullWidth
+                />
+
+                <TextField
+                  label="Description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  fullWidth
+                  multiline
+                  rows={3}
+                />
+
+                <TextField
+                  label="Duration (minutes)"
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  fullWidth
+                />
+
+                <TextField
+                  label="Date"
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  fullWidth
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
               </Box>
-            )}
+            </DialogContent>
+            <DialogActions>
+              <Button
+                onClick={() => {
+                  setAddEntryDialog(false);
+                  setEditEntryDialog(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEntry} variant="contained">
+                {selectedEntry ? "Update" : "Add"} Entry
+              </Button>
+            </DialogActions>
+          </Dialog>
 
-            {/* Day View */}
-            {viewMode === "day" && (
-              <Box>
-                {/* Day View Header */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h4" fontWeight="bold" color="primary">
-                    {currentDate.toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}{" "}
-                    - Project-wise
-                  </Typography>
-                </Box>
-
-                {/* Day View - Project-wise Grouping */}
+          {/* Details Dialog */}
+          <Dialog
+            open={detailsDialog}
+            onClose={() => setDetailsDialog(false)}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle>Time Entry Details</DialogTitle>
+            <DialogContent>
+              {selectedEntry && (
                 <Box
                   sx={{
                     display: "flex",
                     flexDirection: "column",
                     gap: 2,
+                    mt: 1,
                   }}
                 >
-                  {(() => {
-                    const dayEntries = timeEntries.filter((entry) => {
-                      const entryDate = new Date(entry.date);
-                      return (
-                        entryDate.toDateString() === currentDate.toDateString()
-                      );
-                    });
-
-                    // Group entries by project
-                    const projectGroups = dayEntries.reduce((acc, entry) => {
-                      const projId = entry.project?._id || "unknown";
-                      if (!acc[projId]) {
-                        acc[projId] = {
-                          project: entry.project,
-                          entries: [],
-                        };
-                      }
-                      acc[projId].entries.push(entry);
-                      return acc;
-                    }, {} as any);
-
-                    return Object.values(projectGroups).map(
-                      (group: any, groupIndex) => {
-                        const colors = [
-                          "#4caf50",
-                          "#2196f3",
-                          "#e91e63",
-                          "#ff9800",
-                          "#9c27b0",
-                        ];
-                        const color = colors[groupIndex % colors.length];
-                        const totalMinutes = group.entries.reduce(
-                          (sum: number, entry: any) => sum + (entry.duration || 0),
-                          0
-                        );
-
-                        const isExpanded = expandedEmployees.has(
-                          group.project?._id || ""
-                        );
-
-                        return (
-                          <Card
-                            key={group.project?._id || groupIndex}
-                            sx={{ p: 2 }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 2,
-                                mb: 2,
-                              }}
-                            >
-                              <Avatar
-                                sx={{
-                                  backgroundColor: color,
-                                  color: "white",
-                                  fontWeight: "bold",
-                                }}
-                              >
-                                {group.project?.name
-                                  ?.charAt(0)
-                                  ?.toUpperCase() || "P"}
-                              </Avatar>
-                              <Box sx={{ flex: 1 }}>
-                                <Typography variant="h6" fontWeight="bold">
-                                  {group.project?.name || "Unknown Project"}
-                                </Typography>
-                                <Typography
-                                  variant="body2"
-                                  color="text.secondary"
-                                >
-                                  {group.entries.length} tasks •{" "}
-                                  {formatDuration(totalMinutes)} total
-                                </Typography>
-                              </Box>
-                              <Button
-                                onClick={() =>
-                                  toggleExpandedEmployee(
-                                    group.project?._id || ""
-                                  )
-                                }
-                                sx={{
-                                  minWidth: 32,
-                                  width: 32,
-                                  height: 32,
-                                  borderRadius: "50%",
-                                  backgroundColor: "rgba(0,0,0,0.1)",
-                                  color: "text.primary",
-                                  "&:hover": {
-                                    backgroundColor: "rgba(0,0,0,0.2)",
-                                  },
-                                }}
-                              >
-                                <Typography
-                                  variant="caption"
-                                  sx={{
-                                    fontSize: "14px",
-                                    fontWeight: "bold",
-                                  }}
-                                >
-                                  {isExpanded ? "−" : "+"}
-                                </Typography>
-                              </Button>
-                            </Box>
-
-                            {isExpanded && (
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: 1,
-                                }}
-                              >
-                                {group.entries.map(
-                                  (entry: any, entryIndex: number) => (
-                                    <Box
-                                      key={entryIndex}
-                                      onClick={() => handleViewDetails(entry)}
-                                      sx={{
-                                        border: "1px solid #e0e0e0",
-                                        borderRadius: 1,
-                                        p: 2,
-                                        backgroundColor: "#fff",
-                                        cursor: "pointer",
-                                        "&:hover": {
-                                          backgroundColor: "#f8f9fa",
-                                        },
-                                      }}
-                                    >
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          justifyContent: "space-between",
-                                          alignItems: "center",
-                                        }}
-                                      >
-                                        <Box sx={{ flex: 1 }}>
-                                          <Typography
-                                            variant="body1"
-                                            fontWeight="bold"
-                                            sx={{ mb: 0.5 }}
-                                          >
-                                            {entry.description ||
-                                              "No description"}
-                                          </Typography>
-                                          <Typography
-                                            variant="body2"
-                                            color="text.secondary"
-                                            sx={{ mb: 1 }}
-                                          >
-                                            {entry.category || "General"}
-                                          </Typography>
-                                          <Box
-                                            sx={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                              gap: 1,
-                                            }}
-                                          >
-                                            <Chip
-                                              label={
-                                                entry.category || "General"
-                                              }
-                                              size="small"
-                                              sx={{
-                                                backgroundColor: color,
-                                                color: "white",
-                                                fontWeight: "bold",
-                                              }}
-                                            />
-                                          </Box>
-                                        </Box>
-                                        <Typography
-                                          variant="h6"
-                                          fontWeight="bold"
-                                          color={color}
-                                        >
-                                          {formatDuration(entry.duration || 0)}
-                                        </Typography>
-                                      </Box>
-                                    </Box>
-                                  )
-                                )}
-                              </Box>
-                            )}
-                          </Card>
-                        );
-                      }
-                    );
-                  })()}
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Project
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedEntry.project?.name || "General Work"}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Employee
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedEntry.employee?.username || "Unknown Employee"}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Category
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedEntry.category || "General"}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Description
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedEntry.description || "No description provided."}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Duration
+                    </Typography>
+                    <Typography variant="body1">
+                      {formatDuration(selectedEntry.duration || 0)}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Date
+                    </Typography>
+                    <Typography variant="body1">
+                      {new Date(selectedEntry.date).toLocaleDateString()}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            )}
-          </Box>
-        )}
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDetailsDialog(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
 
-        {/* Add/Edit Entry Dialog */}
-        <Dialog
-          open={addEntryDialog || editEntryDialog}
-          onClose={() => {
-            setAddEntryDialog(false);
-            setEditEntryDialog(false);
-          }}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>
-            {selectedEntry ? "Edit Time Entry" : "Add New Time Entry"}
-          </DialogTitle>
-          <DialogContent>
-            <Box
-              sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
-            >
-              <FormControl fullWidth>
-                <InputLabel>Employee</InputLabel>
-                <Select
-                  value={selectedEmployee}
-                  onChange={(e) => setSelectedEmployee(e.target.value)}
-                  label="Employee"
-                >
-                  {employees.map((employee) => (
-                    <MenuItem key={employee._id} value={employee._id}>
-                      {employee.username}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel>Project</InputLabel>
-                <Select
-                  value={selectedProject}
-                  onChange={(e) => setSelectedProject(e.target.value)}
-                  label="Project"
-                >
-                  {projects.map((project) => (
-                    <MenuItem key={project._id} value={project._id}>
-                      {project.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <TextField
-                label="Category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                fullWidth
-              />
-
-              <TextField
-                label="Description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                fullWidth
-                multiline
-                rows={3}
-              />
-
-              <TextField
-                label="Duration (minutes)"
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                fullWidth
-              />
-
-              <TextField
-                label="Date"
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                fullWidth
-                InputLabelProps={{
-                  shrink: true,
-                }}
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => {
-                setAddEntryDialog(false);
-                setEditEntryDialog(false);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSaveEntry} variant="contained">
-              {selectedEntry ? "Update" : "Add"} Entry
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Details Dialog */}
-        <Dialog
-          open={detailsDialog}
-          onClose={() => setDetailsDialog(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>Time Entry Details</DialogTitle>
-          <DialogContent>
-            {selectedEntry && (
+          {/* Day Details Dialog */}
+          <Dialog
+            open={dayDetailsDialog}
+            onClose={() => setDayDetailsDialog(false)}
+            maxWidth="lg"
+            fullWidth
+            PaperProps={{
+              sx: {
+                height: "80vh",
+                maxHeight: "80vh",
+              },
+            }}
+          >
+            <DialogTitle sx={{ pb: 1 }}>
               <Box
-                sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
               >
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Project
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedEntry.project?.name || "General Work"}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Employee
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedEntry.employee?.username || "Unknown Employee"}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Category
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedEntry.category || "General"}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Description
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedEntry.description || "No description provided."}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Duration
-                  </Typography>
-                  <Typography variant="body1">
-                    {formatDuration(selectedEntry.duration || 0)}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Date
-                  </Typography>
-                  <Typography variant="body1">
-                    {new Date(selectedEntry.date).toLocaleDateString()}
-                  </Typography>
-                </Box>
+                <Typography variant="h5" fontWeight="bold">
+                  Daily Summary -{" "}
+                  {selectedDayForDetails?.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </Typography>
               </Box>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDetailsDialog(false)}>Close</Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Day Details Dialog */}
-        <Dialog
-          open={dayDetailsDialog}
-          onClose={() => setDayDetailsDialog(false)}
-          maxWidth="lg"
-          fullWidth
-          PaperProps={{
-            sx: {
-              height: "80vh",
-              maxHeight: "80vh",
-            },
-          }}
-        >
-          <DialogTitle sx={{ pb: 1 }}>
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Typography variant="h5" fontWeight="bold">
-                Daily Summary -{" "}
-                {selectedDayForDetails?.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </Typography>
-            </Box>
-          </DialogTitle>
-          <DialogContent sx={{ px: 3, py: 2 }}>
-            {renderDayDetailsContent()}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDayDetailsDialog(false)}>Close</Button>
-          </DialogActions>
-        </Dialog>
+            </DialogTitle>
+            <DialogContent sx={{ px: 3, py: 2 }}>
+              {renderDayDetailsContent()}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDayDetailsDialog(false)}>Close</Button>
+            </DialogActions>
+          </Dialog>
+        </Box>
       </Box>
-    </Box>
-  </PageContainer>
+    </PageContainer>
   );
 };
 
-
-export default AdminTimeTracker; 
+export default AdminTimeTracker;
