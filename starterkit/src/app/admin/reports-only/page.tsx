@@ -198,8 +198,10 @@ const ReportsOnly = () => {
 
   return (
     <PageContainer title="Reports" description="View and manage reports">
+      <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }} color="#1976D2">
+        Reports
+      </Typography>
       <Box sx={{ p: 3 }}>
-
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -333,14 +335,14 @@ const ReportsOnly = () => {
                           </Typography>
                         </TableCell>
                         <TableCell sx={{ maxWidth: 300 }}>
-                          <Typography 
-                            variant="body2" 
-                            sx={{ 
+                          <Typography
+                            variant="body2"
+                            sx={{
                               maxWidth: 300,
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
-                              display: "block"
+                              display: "block",
                             }}
                           >
                             {report.details || "No details provided"}
