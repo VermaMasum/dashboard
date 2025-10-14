@@ -1053,8 +1053,8 @@ const AdminTimeTracker = () => {
             Time Tracker
           </Typography>
 
-          {/* Header with Navigation, Date and View Toggle */}
-          <Card sx={{ mb: 2 }}>
+          {/* Combined Header with Navigation, Date, View Toggle, Category Tabs and Analytics */}
+          <Card sx={{ mb: 3 }}>
             <CardContent sx={{ py: 2 }}>
               <Box
                 sx={{
@@ -1065,57 +1065,7 @@ const AdminTimeTracker = () => {
                   gap: 2,
                 }}
               >
-                {/* Left Side - Navigation Arrows and Refresh */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                  }}
-                >
-                  <IconButton
-                    onClick={() => handleDateChange("prev")}
-                    size="small"
-                    sx={{ backgroundColor: "#f5f5f5" }}
-                  >
-                    <ArrowBack />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => handleDateChange("next")}
-                    size="small"
-                    sx={{ backgroundColor: "#f5f5f5" }}
-                  >
-                    <ArrowForward />
-                  </IconButton>
-                  <IconButton
-                    onClick={handleRefreshData}
-                    size="small"
-                    sx={{ backgroundColor: "#f5f5f5" }}
-                  >
-                    <Refresh />
-                  </IconButton>
-                </Box>
-
-                {/* Center - Date Display */}
-                <Box
-                  sx={{
-                    flex: 1,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="h6" fontWeight="bold" color="primary">
-                    {currentDate.toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </Typography>
-                </Box>
-
-                {/* Right Side - View Toggle */}
+                {/* Left Corner - View Toggle (Month/Week/Day) */}
                 <ToggleButtonGroup
                   value={viewMode}
                   exclusive
@@ -1124,14 +1074,17 @@ const AdminTimeTracker = () => {
                       setViewMode(newViewMode);
                     }
                   }}
+                  size="small"
                   sx={{
                     "& .MuiToggleButton-root": {
                       border: "1px solid #e0e0e0",
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
+                      borderRadius: "8px",
+                      px: 2,
+                      py: 0.5,
+                      minWidth: "80px",
                       textTransform: "none",
                       fontWeight: "bold",
+                      fontSize: "0.8rem",
                       "&.Mui-selected": {
                         backgroundColor: "#1976D2",
                         color: "white",
@@ -1153,86 +1106,106 @@ const AdminTimeTracker = () => {
                   <ToggleButton value="week">Week</ToggleButton>
                   <ToggleButton value="day">Day</ToggleButton>
                 </ToggleButtonGroup>
-              </Box>
-            </CardContent>
-          </Card>
 
-          {/* View Category Tabs and Analytics */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent sx={{ py: 2 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: 2,
-                }}
-              >
-                {/* Left Side - View Category Tabs and Analytics */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  {/* View Category Tabs */}
-                  <ToggleButtonGroup
-                    value={viewCategory}
-                    exclusive
-                    onChange={(event, newCategory) => {
-                      if (newCategory !== null) {
-                        setViewCategory(newCategory);
-                      }
-                    }}
-                    sx={{
-                      "& .MuiToggleButton-root": {
-                        border: "2px solid #e0e0e0",
-                        borderRadius: "12px",
-                        px: 3,
-                        py: 1.5,
-                        textTransform: "none",
-                        fontWeight: "bold",
-                        fontSize: "0.9rem",
-                        "&.Mui-selected": {
-                          backgroundColor: "#4CAF50",
-                          color: "white",
-                          borderColor: "#4CAF50",
-                          "&:hover": {
-                            backgroundColor: "#388E3C",
+                {/* Center - Date Display and Total Hours */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "center" }}>
+                  {/* Date Picker with Calendar Icon */}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <CalendarToday sx={{ color: "#1976D2", fontSize: "1.2rem" }} />
+                    <TextField
+                      type="date"
+                      value={currentDate.toISOString().split("T")[0]}
+                      onChange={(e) => setCurrentDate(new Date(e.target.value))}
+                      size="small"
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          height: "32px",
+                          fontSize: "0.85rem",
+                          "& fieldset": {
+                            borderColor: "#e0e0e0",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "#1976D2",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#1976D2",
                           },
                         },
-                        "&:hover": {
-                          backgroundColor: "#f5f5f5",
+                        "& .MuiInputBase-input": {
+                          padding: "6px 8px",
+                          fontSize: "0.85rem",
                         },
-                      },
+                      }}
+                    />
+                  </Box>
+
+                  {/* Total Hours Display */}
+                  <Box
+                    sx={{
+                      backgroundColor: "#e3f2fd",
+                      px: 1.2,
+                      py: 0.4,
+                      borderRadius: 1,
+                      border: "1px solid #2196f3",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 0.8,
                     }}
                   >
-                    <ToggleButton value="employee">Employee-wise</ToggleButton>
-                    <ToggleButton value="project">Project-wise</ToggleButton>
-                  </ToggleButtonGroup>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ fontSize: "0.7rem" }}
+                    >
+                      Total {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} Hours:
+                    </Typography>
+                    <Typography variant="body1" fontWeight="bold" color="primary" sx={{ fontSize: "0.9rem" }}>
+                      {calculateTotalHours()}
+                    </Typography>
+                  </Box>
                 </Box>
 
-                {/* Right Side - Total Hours Display */}
-                <Box
+                {/* Right Corner - View Category Tabs (Employee-wise/Project-wise) */}
+                <ToggleButtonGroup
+                  value={viewCategory}
+                  exclusive
+                  onChange={(event, newCategory) => {
+                    if (newCategory !== null) {
+                      setViewCategory(newCategory);
+                    }
+                  }}
+                  size="small"
                   sx={{
-                    backgroundColor: "#e3f2fd",
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2,
-                    border: "1px solid #2196f3",
+                    "& .MuiToggleButton-root": {
+                      border: "1px solid #e0e0e0",
+                      borderRadius: "8px",
+                      px: 2,
+                      py: 0.5,
+                      minWidth: "80px",
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      fontSize: "0.8rem",
+                      "&.Mui-selected": {
+                        backgroundColor: "#4CAF50",
+                        color: "white",
+                        borderColor: "#4CAF50",
+                        "&:hover": {
+                          backgroundColor: "#388E3C",
+                        },
+                      },
+                      "&:hover": {
+                        backgroundColor: "#f5f5f5",
+                      },
+                    },
                   }}
                 >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ fontSize: "0.75rem" }}
-                  >
-                    Total {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
-                    Hours
-                  </Typography>
-                  <Typography variant="h6" fontWeight="bold" color="primary">
-                    {calculateTotalHours()}
-                  </Typography>
-                </Box>
+                  <ToggleButton value="employee">Employee-wise</ToggleButton>
+                  <ToggleButton value="project">Project-wise</ToggleButton>
+                </ToggleButtonGroup>
               </Box>
             </CardContent>
           </Card>
+
         </Box>
 
         {/* Error Alert */}
@@ -1249,14 +1222,28 @@ const AdminTimeTracker = () => {
             {viewMode === "month" && (
               <Box>
                 {/* Month Header */}
-                <Box sx={{ textAlign: "center", mb: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 3 }}>
+                  <IconButton
+                    onClick={() => handleDateChange("prev")}
+                    size="small"
+                    sx={{ backgroundColor: "#f5f5f5", mr: 2 }}
+                  >
+                    <ArrowBack />
+                  </IconButton>
                   <Typography variant="h4" fontWeight="bold" color="primary">
                     {currentDate.toLocaleDateString("en-US", {
                       month: "long",
                       year: "numeric",
                     })}{" "}
-                    - Employee-wise
+                    - {viewCategory === "employee" ? "Employee-wise" : "Project-wise"}
                   </Typography>
+                  <IconButton
+                    onClick={() => handleDateChange("next")}
+                    size="small"
+                    sx={{ backgroundColor: "#f5f5f5", ml: 2 }}
+                  >
+                    <ArrowForward />
+                  </IconButton>
                 </Box>
 
                 {/* Day headers */}
@@ -1425,16 +1412,8 @@ const AdminTimeTracker = () => {
             {viewMode === "week" && (
               <Box>
                 {/* Week View Header */}
-                <Box
-                  sx={{
-                    backgroundColor: "#f5f5f5",
-                    p: 2,
-                    borderRadius: 1,
-                    mb: 2,
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography variant="h5" fontWeight="bold">
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h4" fontWeight="bold" color="primary" sx={{ textAlign: "left" }}>
                     Week of{" "}
                     {getWeekDays()[0]?.toLocaleDateString("en-US", {
                       month: "short",
@@ -1562,16 +1541,8 @@ const AdminTimeTracker = () => {
             {viewMode === "day" && (
               <Box>
                 {/* Day View Header */}
-                <Box
-                  sx={{
-                    backgroundColor: "#f5f5f5",
-                    p: 2,
-                    borderRadius: 1,
-                    mb: 2,
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography variant="h5" fontWeight="bold">
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h4" fontWeight="bold" color="primary" sx={{ textAlign: "left" }}>
                     {currentDate.toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
@@ -1794,6 +1765,31 @@ const AdminTimeTracker = () => {
             {/* Month View */}
             {viewMode === "month" && (
               <Box>
+                {/* Month Header */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", mb: 3 }}>
+                  <IconButton
+                    onClick={() => handleDateChange("prev")}
+                    size="small"
+                    sx={{ backgroundColor: "#f5f5f5", mr: 2 }}
+                  >
+                    <ArrowBack />
+                  </IconButton>
+                  <Typography variant="h4" fontWeight="bold" color="primary">
+                    {currentDate.toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })}{" "}
+                    - Project-wise
+                  </Typography>
+                  <IconButton
+                    onClick={() => handleDateChange("next")}
+                    size="small"
+                    sx={{ backgroundColor: "#f5f5f5", ml: 2 }}
+                  >
+                    <ArrowForward />
+                  </IconButton>
+                </Box>
+
                 {/* Month Calendar Header */}
                 <Box
                   sx={{
@@ -1951,16 +1947,8 @@ const AdminTimeTracker = () => {
             {viewMode === "week" && (
               <Box>
                 {/* Week View Header */}
-                <Box
-                  sx={{
-                    backgroundColor: "#f5f5f5",
-                    p: 2,
-                    borderRadius: 1,
-                    mb: 2,
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography variant="h5" fontWeight="bold">
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h4" fontWeight="bold" color="primary">
                     Week of{" "}
                     {getWeekDays()[0]?.toLocaleDateString("en-US", {
                       month: "short",
@@ -2088,16 +2076,8 @@ const AdminTimeTracker = () => {
             {viewMode === "day" && (
               <Box>
                 {/* Day View Header */}
-                <Box
-                  sx={{
-                    backgroundColor: "#f5f5f5",
-                    p: 2,
-                    borderRadius: 1,
-                    mb: 2,
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography variant="h5" fontWeight="bold">
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h4" fontWeight="bold" color="primary">
                     {currentDate.toLocaleDateString("en-US", {
                       weekday: "long",
                       month: "long",
