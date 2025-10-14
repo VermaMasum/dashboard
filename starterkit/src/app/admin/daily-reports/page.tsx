@@ -83,6 +83,7 @@ const DailyReports = () => {
     return today.toISOString().split("T")[0];
   });
   const [selectedProject, setSelectedProject] = useState<string>("");
+  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
 
   useEffect(() => {
     fetchData();
@@ -245,6 +246,9 @@ const DailyReports = () => {
 
     const projectMatch =
       !selectedProject || report.project?._id === selectedProject;
+    
+    const employeeMatch =
+      !selectedEmployee || report.employee?._id === selectedEmployee;
 
     // Debug: Log filtering details
     console.log("🔍 Filtering report:", {
@@ -254,10 +258,11 @@ const DailyReports = () => {
       selectedDate,
       dateMatch,
       projectMatch,
-      finalMatch: dateMatch && projectMatch,
+      employeeMatch,
+      finalMatch: dateMatch && projectMatch && employeeMatch,
     });
 
-    return dateMatch && projectMatch;
+    return dateMatch && projectMatch && employeeMatch;
   });
 
   // Debug: Monitor filtered reports
@@ -396,70 +401,95 @@ const DailyReports = () => {
         </Grid>
       </Grid>
 
-      {/* Filters */}
-      <Box display="flex" gap={2} mb={3} alignItems="center" flexWrap="wrap">
-        <TextField
-          type="date"
-          label="Select Date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 200 }}
-        />
-        <Button
-          variant="outlined"
-          onClick={() =>
-            setSelectedDate(new Date().toISOString().split("T")[0])
-          }
-          size="small"
-        >
-          Today
-        </Button>
-        <Button
-          variant="outlined"
-          onClick={() => {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            setSelectedDate(yesterday.toISOString().split("T")[0]);
-          }}
-          size="small"
-        >
-          Yesterday
-        </Button>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Filter by Project</InputLabel>
-          <Select
-            value={selectedProject}
-            onChange={(e) => setSelectedProject(e.target.value)}
-            label="Filter by Project"
-            disabled={loading}
-          >
-            <MenuItem value="">All Projects</MenuItem>
-            {loading ? (
-              <MenuItem disabled>Loading projects...</MenuItem>
-            ) : projects.length === 0 ? (
-              <MenuItem disabled>No projects available</MenuItem>
-            ) : (
-              projects.map((project) => (
-                <MenuItem key={project._id} value={project._id}>
-                  {project.name} ({project.employees?.length || 0} employees)
-                </MenuItem>
-              ))
-            )}
-          </Select>
-        </FormControl>
-        <Button
-          variant="outlined"
-          onClick={() => {
-            setSelectedProject("");
-            setSelectedDate(new Date().toISOString().split("T")[0]);
-          }}
-          size="small"
-          disabled={!selectedProject}
-        >
-          Clear Filters
-        </Button>
-      </Box>
+      {/* Filters - All in One Line */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ py: 2 }}>
+          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" justifyContent="space-between">
+            {/* Left Side - Date Selection */}
+            <Box display="flex" gap={1} alignItems="center">
+              <TextField
+                type="date"
+                label="Select Date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                InputLabelProps={{ shrink: true }}
+                size="small"
+                sx={{ width: 180 }}
+              />
+              <Button
+                variant="outlined"
+                onClick={() =>
+                  setSelectedDate(new Date().toISOString().split("T")[0])
+                }
+                size="small"
+              >
+                Today
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  const yesterday = new Date();
+                  yesterday.setDate(yesterday.getDate() - 1);
+                  setSelectedDate(yesterday.toISOString().split("T")[0]);
+                }}
+                size="small"
+              >
+                Yesterday
+              </Button>
+            </Box>
+
+            {/* Right Side - Project and Employee Filters */}
+            <Box display="flex" gap={2} alignItems="center">
+              <FormControl size="small" sx={{ minWidth: 180 }}>
+                <InputLabel>Filter by Project</InputLabel>
+                <Select
+                  value={selectedProject}
+                  onChange={(e) => setSelectedProject(e.target.value)}
+                  label="Filter by Project"
+                  disabled={loading}
+                >
+                  <MenuItem value="">All Projects</MenuItem>
+                  {projects.map((project) => (
+                    <MenuItem key={project._id} value={project._id}>
+                      {project.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" sx={{ minWidth: 180 }}>
+                <InputLabel>Filter by Employee</InputLabel>
+                <Select
+                  value={selectedEmployee}
+                  onChange={(e) => setSelectedEmployee(e.target.value)}
+                  label="Filter by Employee"
+                  disabled={loading}
+                >
+                  <MenuItem value="">All Employees</MenuItem>
+                  {employees.map((employee) => (
+                    <MenuItem key={employee._id} value={employee._id}>
+                      {employee.username}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setSelectedProject("");
+                  setSelectedEmployee("");
+                  setSelectedDate(new Date().toISOString().split("T")[0]);
+                }}
+                size="small"
+                disabled={!selectedProject && !selectedEmployee}
+              >
+                Clear All
+              </Button>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
 
       {/* Filter Status */}
       {/* <Box mb={2}> */}
