@@ -654,15 +654,7 @@ const EmployeeTimeTracker = () => {
       title="Time Tracker"
       description="Track and manage your time entries"
     >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-        }}
-      >
-        <Box sx={{ width: "100%", maxWidth: "1200px" }}>
+      <Box sx={{ width: "100%", maxWidth: "1200px", mx: "auto" }}>
           {/* Breadcrumbs */}
           {/* <Breadcrumbs sx={{ mb: 3 }}>
             <Link
@@ -2369,7 +2361,6 @@ const EmployeeTimeTracker = () => {
             <Add />
           </Fab>
         </Box>
-      </Box>
     </PageContainer>
   );
 };

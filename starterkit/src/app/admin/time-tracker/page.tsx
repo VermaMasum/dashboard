@@ -1006,15 +1006,7 @@ const AdminTimeTracker = () => {
       title="Time Tracker"
       description="Track and manage employee time entries"
     >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-        }}
-      >
-        <Box sx={{ p: 3, width: "100%", maxWidth: "1200px" }}>
+      <Box sx={{ p: 3, width: "100%", maxWidth: "1200px", mx: "auto" }}>
           {/* Breadcrumbs */}
           {/* <Breadcrumbs sx={{ mb: 3 }}>
         <Link
@@ -2958,7 +2950,6 @@ const AdminTimeTracker = () => {
             </DialogActions>
           </Dialog>
         </Box>
-      </Box>
     </PageContainer>
   );
 };
