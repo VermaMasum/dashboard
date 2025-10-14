@@ -27,7 +27,9 @@ import {
   DialogActions,
   Alert,
   Snackbar,
+  IconButton,
 } from "@mui/material";
+import { Visibility } from "@mui/icons-material";
 import { Add } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
 import axios from "@/utils/axios";
@@ -108,6 +110,8 @@ const EmployeeReports = () => {
   // Dialog states
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [editingReport, setEditingReport] = useState<Report | null>(null);
+  const [viewReportDialog, setViewReportDialog] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [formData, setFormData] = useState<FormData>({
     project: "",
     date: "",
@@ -144,7 +148,7 @@ const EmployeeReports = () => {
         statusMap[project._id] = project.status || "unknown";
       });
       setProjectStatusMap(statusMap);
-      
+
       console.log("📊 Project status map:", statusMap);
     } catch (error: any) {
       console.error("❌ Error fetching data:", error);
@@ -194,7 +198,7 @@ const EmployeeReports = () => {
     console.log("📊 Daily reports - Total reports:", reports.length);
     console.log("📊 Daily reports - Selected date:", selectedDate);
     console.log("📊 Daily reports - Selected project:", selectedProject);
-    
+
     // Filter by project if selected
     if (selectedProject) {
       filtered = filtered.filter(
@@ -202,7 +206,7 @@ const EmployeeReports = () => {
       );
       console.log("📊 After project filter:", filtered.length);
     }
-    
+
     // Filter by date
     if (selectedDate) {
       filtered = filtered.filter((report) => {
@@ -215,27 +219,27 @@ const EmployeeReports = () => {
           reportDate,
           selectedDateFormatted,
           matches,
-          reportId: report._id
+          reportId: report._id,
         });
         return matches;
       });
       console.log("📊 After date filter:", filtered.length);
     }
-    
+
     console.log("📊 Final daily reports count:", filtered.length);
     return filtered;
   };
 
   const getWeeklyReports = () => {
     let filtered = reports;
-    
+
     // Filter by project if selected
     if (selectedProject) {
       filtered = filtered.filter(
         (report) => report.project && report.project._id === selectedProject
       );
     }
-    
+
     // Filter by date range
     if (fromDate && toDate) {
       filtered = filtered.filter((report) => {
@@ -247,20 +251,20 @@ const EmployeeReports = () => {
         return reportDate >= fromDateFormatted && reportDate <= toDateFormatted;
       });
     }
-    
+
     return filtered;
   };
 
   const getMonthlyReports = () => {
     let filtered = reports;
-    
+
     // Filter by project if selected
     if (selectedProject) {
       filtered = filtered.filter(
         (report) => report.project && report.project._id === selectedProject
       );
     }
-    
+
     // Filter by month
     if (selectedMonth) {
       const { start, end } = getMonthRange(selectedMonth);
@@ -269,7 +273,7 @@ const EmployeeReports = () => {
         return reportDate >= start && reportDate <= end;
       });
     }
-    
+
     return filtered;
   };
 
@@ -306,11 +310,30 @@ const EmployeeReports = () => {
     });
   };
 
+  const handleViewReport = (report: Report) => {
+    setSelectedReport(report);
+    setViewReportDialog(true);
+  };
+
+  const handleCloseViewReportDialog = () => {
+    setViewReportDialog(false);
+    setSelectedReport(null);
+  };
+
   const handleSaveReport = async () => {
     // Prevent saving for projects not 'in progress' or 'completed'
-    const selectedProjectStatus = (projectStatusMap[formData.project] || "").trim().toLowerCase();
-    if (!(selectedProjectStatus === "in progress" || selectedProjectStatus === "completed")) {
-      setError("You cannot add a time entry for a project that is not in progress or completed.");
+    const selectedProjectStatus = (projectStatusMap[formData.project] || "")
+      .trim()
+      .toLowerCase();
+    if (
+      !(
+        selectedProjectStatus === "in progress" ||
+        selectedProjectStatus === "completed"
+      )
+    ) {
+      setError(
+        "You cannot add a time entry for a project that is not in progress or completed."
+      );
       return;
     }
     try {
@@ -326,7 +349,10 @@ const EmployeeReports = () => {
       handleCloseReportDialog();
     } catch (error: any) {
       console.error("Error saving report:", error);
-      setError(error.response?.data?.message || "Failed to save report. Please try again.");
+      setError(
+        error.response?.data?.message ||
+          "Failed to save report. Please try again."
+      );
     }
   };
 
@@ -512,11 +538,12 @@ const EmployeeReports = () => {
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Project</TableCell>
-                    <TableCell>Details</TableCell>
-                    <TableCell>Hours</TableCell>
+                  <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                    <TableCell sx={{ fontWeight: "bold" }}>Date</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Project</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Details</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Hours</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -532,8 +559,27 @@ const EmployeeReports = () => {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{report.details}</TableCell>
+                      <TableCell
+                        sx={{
+                          maxWidth: "300px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                        title={report.details}
+                      >
+                        {report.details}
+                      </TableCell>
                       <TableCell>{report.hoursWorked}</TableCell>
+                      <TableCell>
+                        <IconButton
+                          onClick={() => handleViewReport(report)}
+                          color="primary"
+                          size="small"
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -616,11 +662,12 @@ const EmployeeReports = () => {
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Project</TableCell>
-                    <TableCell>Details</TableCell>
-                    <TableCell>Hours</TableCell>
+                  <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                    <TableCell sx={{ fontWeight: "bold" }}>Date</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Project</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Details</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Hours</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -636,8 +683,27 @@ const EmployeeReports = () => {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{report.details}</TableCell>
+                      <TableCell
+                        sx={{
+                          maxWidth: "300px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                        title={report.details}
+                      >
+                        {report.details}
+                      </TableCell>
                       <TableCell>{report.hoursWorked}</TableCell>
+                      <TableCell>
+                        <IconButton
+                          onClick={() => handleViewReport(report)}
+                          color="primary"
+                          size="small"
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -710,11 +776,12 @@ const EmployeeReports = () => {
             <TableContainer component={Paper}>
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Project</TableCell>
-                    <TableCell>Details</TableCell>
-                    <TableCell>Hours</TableCell>
+                  <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                    <TableCell sx={{ fontWeight: "bold" }}>Date</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Project</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Details</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Hours</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -730,8 +797,27 @@ const EmployeeReports = () => {
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>{report.details}</TableCell>
+                      <TableCell
+                        sx={{
+                          maxWidth: "300px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                        title={report.details}
+                      >
+                        {report.details}
+                      </TableCell>
                       <TableCell>{report.hoursWorked}</TableCell>
+                      <TableCell>
+                        <IconButton
+                          onClick={() => handleViewReport(report)}
+                          color="primary"
+                          size="small"
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -740,6 +826,71 @@ const EmployeeReports = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* View Report Dialog */}
+      <Dialog
+        open={viewReportDialog}
+        onClose={handleCloseViewReportDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Report Details</DialogTitle>
+        <DialogContent>
+          {selectedReport && (
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}
+            >
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Date
+                </Typography>
+                <Typography variant="body1">
+                  {new Date(selectedReport.date).toLocaleDateString()}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Project
+                </Typography>
+                <Typography variant="body1">
+                  {selectedReport.project?.name || "No Project"}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Details
+                </Typography>
+                <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
+                  {selectedReport.details}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Hours Worked
+                </Typography>
+                <Typography variant="body1">
+                  {selectedReport.hoursWorked}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Employee
+                </Typography>
+                <Typography variant="body1">
+                  {selectedReport.employee?.username || "Unknown"}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseViewReportDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Add/Edit Report Dialog */}
       <Dialog

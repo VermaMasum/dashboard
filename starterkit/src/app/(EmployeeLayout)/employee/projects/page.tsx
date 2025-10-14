@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -19,10 +19,10 @@ import {
   DialogActions,
   Button,
   Chip,
-} from '@mui/material';
-import { Visibility, People, AccessTime } from '@mui/icons-material';
-import { useAuth } from '@/contexts/AuthContext';
-import axios from '@/utils/axios';
+} from "@mui/material";
+import { Visibility, People, AccessTime } from "@mui/icons-material";
+import { useAuth } from "@/contexts/AuthContext";
+import axios from "@/utils/axios";
 
 interface Project {
   _id: string;
@@ -58,8 +58,11 @@ const EmployeeProjects = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [projectDetailsOpen, setProjectDetailsOpen] = useState(false);
-  const [selectedProjectDetails, setSelectedProjectDetails] = useState<Project | null>(null);
-  const [projectReportsForModal, setProjectReportsForModal] = useState<Report[]>([]);
+  const [selectedProjectDetails, setSelectedProjectDetails] =
+    useState<Project | null>(null);
+  const [projectReportsForModal, setProjectReportsForModal] = useState<
+    Report[]
+  >([]);
 
   useEffect(() => {
     if (user) {
@@ -70,21 +73,21 @@ const EmployeeProjects = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching projects data for user:', user?.username);
-      
+      console.log("🔄 Fetching projects data for user:", user?.username);
+
       const [projectsResponse, reportsResponse] = await Promise.all([
-        axios.get('/projects'),
-        axios.get('/reports'),
+        axios.get("/projects"),
+        axios.get("/reports"),
       ]);
 
-      console.log('📋 Projects response:', projectsResponse.data);
-      console.log('📊 Reports response:', reportsResponse.data);
+      console.log("📋 Projects response:", projectsResponse.data);
+      console.log("📊 Reports response:", reportsResponse.data);
 
       setProjects(projectsResponse.data);
       setReports(reportsResponse.data);
     } catch (error: any) {
-      console.error('❌ Error fetching data:', error);
-      console.error('Error details:', error.response?.data || error.message);
+      console.error("❌ Error fetching data:", error);
+      console.error("Error details:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -92,21 +95,23 @@ const EmployeeProjects = () => {
 
   const calculateProjectTotalHours = (projectId: string) => {
     return reports
-      .filter(report => report.project && report.project._id === projectId)
+      .filter((report) => report.project && report.project._id === projectId)
       .reduce((total, report) => total + (report.hoursWorked || 0), 0);
   };
 
   const handleViewProjectDetails = async (project: Project) => {
     try {
       setSelectedProjectDetails(project);
-      
+
       // Fetch reports for this specific project
-      const projectReportsResponse = await axios.get(`/reports?project=${project._id}`);
+      const projectReportsResponse = await axios.get(
+        `/reports?project=${project._id}`
+      );
       setProjectReportsForModal(projectReportsResponse.data);
-      
+
       setProjectDetailsOpen(true);
     } catch (error) {
-      console.error('Error fetching project details:', error);
+      console.error("Error fetching project details:", error);
     }
   };
 
@@ -118,7 +123,12 @@ const EmployeeProjects = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <Typography>Loading...</Typography>
       </Box>
     );
@@ -151,93 +161,119 @@ const EmployeeProjects = () => {
             <TableContainer>
               <Table>
                 <TableHead>
-                  <TableRow>
-                    <TableCell><strong>Project Name</strong></TableCell>
-                    <TableCell><strong>Description</strong></TableCell>
-                  <TableCell><strong>Created Date</strong></TableCell>
-                  <TableCell><strong>Team Members</strong></TableCell>
-                  <TableCell><strong>Status</strong></TableCell>
-                  <TableCell><strong>Total Hours</strong></TableCell>
-                  <TableCell><strong>Actions</strong></TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {projects.map((project) => (
-                  <TableRow key={project._id} hover>
-                    <TableCell>
-                      <Typography variant="subtitle2" fontWeight="medium">
-                        {project.name}
-                      </Typography>
+                  <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      <strong>Project Name</strong>
                     </TableCell>
-                    <TableCell>
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          maxWidth: 200,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          display: 'block'
-                        }}
-                      >
-                        {project.description || 'No description'}
-                      </Typography>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      <strong>Description</strong>
                     </TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        {project.date ? new Date(project.date).toLocaleDateString() : 'N/A'}
-                      </Typography>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      <strong>Created Date</strong>
                     </TableCell>
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <People fontSize="small" color="action" />
-                        <Typography variant="body2">
-                          {project.employees ? project.employees.length : 0} member(s)
-                        </Typography>
-                      </Box>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      <strong>Team Members</strong>
                     </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={project.status ? project.status.toUpperCase() : "UNKNOWN"}
-                        size="small"
-                        sx={{
-                          backgroundColor: project.status === "completed" ? "#4caf50" :
-                            project.status === "in progress" ? "#ff9800" :
-                            project.status === "not started" ? "#f44336" : "#9e9e9e",
-                          color: "white",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          fontSize: "0.75rem",
-                          px: 1.5,
-                          py: 0.5,
-                          borderRadius: 1,
-                          display: "inline-block",
-                          minWidth: 80,
-                          textAlign: "center",
-                        }}
-                      />
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      <strong>Status</strong>
                     </TableCell>
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <AccessTime fontSize="small" color="action" />
-                        <Typography variant="body2" fontWeight="medium">
-                          {calculateProjectTotalHours(project._id)}h
-                        </Typography>
-                      </Box>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      <strong>Total Hours</strong>
                     </TableCell>
-                    <TableCell>
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleViewProjectDetails(project)}
-                        title="View Details"
-                      >
-                        <Visibility />
-                      </IconButton>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      <strong>Actions</strong>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
+                </TableHead>
+                <TableBody>
+                  {projects.map((project) => (
+                    <TableRow key={project._id} hover>
+                      <TableCell>
+                        <Typography variant="subtitle2" fontWeight="medium">
+                          {project.name}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            maxWidth: 200,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            display: "block",
+                          }}
+                        >
+                          {project.description || "No description"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          {project.date
+                            ? new Date(project.date).toLocaleDateString()
+                            : "N/A"}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <People fontSize="small" color="action" />
+                          <Typography variant="body2">
+                            {project.employees ? project.employees.length : 0}{" "}
+                            member(s)
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={
+                            project.status
+                              ? project.status.toUpperCase()
+                              : "UNKNOWN"
+                          }
+                          size="small"
+                          sx={{
+                            backgroundColor:
+                              project.status === "completed"
+                                ? "#4caf50"
+                                : project.status === "in progress"
+                                ? "#ff9800"
+                                : project.status === "not started"
+                                ? "#f44336"
+                                : "#9e9e9e",
+                            color: "white",
+                            fontWeight: "bold",
+                            textTransform: "uppercase",
+                            fontSize: "0.75rem",
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 1,
+                            display: "inline-block",
+                            minWidth: 80,
+                            textAlign: "center",
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <AccessTime fontSize="small" color="action" />
+                          <Typography variant="body2" fontWeight="medium">
+                            {calculateProjectTotalHours(project._id)}h
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <IconButton
+                          color="primary"
+                          onClick={() => handleViewProjectDetails(project)}
+                          title="View Details"
+                        >
+                          <Visibility />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
               </Table>
             </TableContainer>
           </CardContent>
@@ -282,14 +318,23 @@ const EmployeeProjects = () => {
                     Created Date
                   </Typography>
                   <Typography variant="body1">
-                    {selectedProjectDetails.date ? new Date(selectedProjectDetails.date).toLocaleDateString() : 'N/A'}
+                    {selectedProjectDetails.date
+                      ? new Date(
+                          selectedProjectDetails.date
+                        ).toLocaleDateString()
+                      : "N/A"}
                   </Typography>
                 </Box>
                 <Box>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
                     Team Members
                   </Typography>
-                  {selectedProjectDetails.employees && selectedProjectDetails.employees.length > 0 ? (
+                  {selectedProjectDetails.employees &&
+                  selectedProjectDetails.employees.length > 0 ? (
                     <Box display="flex" flexWrap="wrap" gap={1}>
                       {selectedProjectDetails.employees.map((employee) => (
                         <Chip
@@ -297,9 +342,9 @@ const EmployeeProjects = () => {
                           label={employee.username}
                           size="small"
                           variant="outlined"
-                          sx={{ 
-                            fontSize: '0.75rem',
-                            height: '24px'
+                          sx={{
+                            fontSize: "0.75rem",
+                            height: "24px",
                           }}
                         />
                       ))}
@@ -314,12 +359,16 @@ const EmployeeProjects = () => {
                   <Typography variant="body2" color="text.secondary">
                     Total Hours
                   </Typography>
-                  <Typography variant="body1" fontWeight="medium" color="primary">
+                  <Typography
+                    variant="body1"
+                    fontWeight="medium"
+                    color="primary"
+                  >
                     {calculateProjectTotalHours(selectedProjectDetails._id)}h
                   </Typography>
                 </Box>
               </Box>
-              
+
               {/* Project Reports */}
               <Card>
                 <CardContent>
@@ -327,14 +376,18 @@ const EmployeeProjects = () => {
                     Project Reports ({projectReportsForModal.length})
                   </Typography>
                   {projectReportsForModal.length === 0 ? (
-                    <Typography color="text.secondary" textAlign="center" py={2}>
+                    <Typography
+                      color="text.secondary"
+                      textAlign="center"
+                      py={2}
+                    >
                       No reports found for this project.
                     </Typography>
                   ) : (
                     <TableContainer>
                       <Table size="small">
                         <TableHead>
-                          <TableRow>
+                          <TableRow sx={{ backgroundColor: "#e3f2fd" }}>
                             <TableCell>Date</TableCell>
                             <TableCell>Employee</TableCell>
                             <TableCell>Hours</TableCell>
@@ -349,7 +402,7 @@ const EmployeeProjects = () => {
                               </TableCell>
                               <TableCell>
                                 <Chip
-                                  label={report.employee?.username || 'Unknown'}
+                                  label={report.employee?.username || "Unknown"}
                                   size="small"
                                   variant="outlined"
                                 />
@@ -360,7 +413,10 @@ const EmployeeProjects = () => {
                                 </Typography>
                               </TableCell>
                               <TableCell>
-                                <Typography variant="body2" sx={{ maxWidth: 200 }}>
+                                <Typography
+                                  variant="body2"
+                                  sx={{ maxWidth: 200 }}
+                                >
                                   {report.details}
                                 </Typography>
                               </TableCell>

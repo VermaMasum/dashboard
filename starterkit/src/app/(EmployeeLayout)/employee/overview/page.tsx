@@ -106,7 +106,7 @@ const EmployeeOverview = () => {
     <Box sx={{ p: 3 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
-        <Breadcrumbs sx={{ mb: 2 }}>
+        {/* <Breadcrumbs sx={{ mb: 2 }}>
           <Link
             href="/employee/overview"
             color="inherit"
@@ -116,7 +116,7 @@ const EmployeeOverview = () => {
             Employee Portal
           </Link>
           <Typography color="text.primary">Overview</Typography>
-        </Breadcrumbs>
+        </Breadcrumbs> */}
 
         <Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom>
