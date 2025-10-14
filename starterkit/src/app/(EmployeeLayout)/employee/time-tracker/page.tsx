@@ -675,13 +675,19 @@ const EmployeeTimeTracker = () => {
             <Typography color="text.primary">Time Tracker</Typography>
           </Breadcrumbs> */}
 
-          {/* Header */}
-          <Box sx={{ mb: 0 }}>
+          {/* Combined Header with Navigation, Date, View Toggle, and Controls */}
+          <Box
+            sx={{
+              mb: 0,
+            }}
+          >
+            {/* Top Row - Title and Navigation */}
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                mb: 2,
               }}
             >
               {/* Left side - Time Tracker title */}
@@ -690,7 +696,7 @@ const EmployeeTimeTracker = () => {
               </Typography>
 
               {/* Center - Navigation with arrows and date period */}
-              <Box sx={{ p: 2, display: "flex", alignItems: "center", gap: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <IconButton
                   onClick={() => handleDateChange("prev")}
                   size="small"
@@ -788,16 +794,7 @@ const EmployeeTimeTracker = () => {
               </Box>
             </Box>
 
-          {/* Combined Header with View Toggle, Date Picker, and Controls */}
-          <Box
-            sx={{
-              p: 2,
-              backgroundColor: "white",
-              borderRadius: 1,
-              boxShadow: 1,
-              mb: 0,
-            }}
-          >
+            {/* Bottom Row - View Toggle and Controls */}
             <Box
               sx={{
                 display: "flex",
@@ -805,6 +802,11 @@ const EmployeeTimeTracker = () => {
                 justifyContent: "space-between",
                 flexWrap: "wrap",
                 gap: 2,
+                p: 2,
+                mt: 2,
+                backgroundColor: "white",
+                borderRadius: 1,
+                boxShadow: 1,
               }}
             >
               {/* Left Corner - View Toggle (Month/Week/Day) */}
@@ -945,7 +947,6 @@ const EmployeeTimeTracker = () => {
                 </Button>
               </Box>
             </Box>
-          </Box>
           </Box>
 
           {/* Error Snackbar */}

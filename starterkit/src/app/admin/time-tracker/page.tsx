@@ -1039,141 +1039,144 @@ const AdminTimeTracker = () => {
           </Typography> */}
 
           {/* Combined Header with Navigation, Date, View Toggle, Category Tabs and Analytics */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent sx={{ py: 2 }}>
+          <Box sx={{ mb: 0 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 2,
+                p: 2,
+                mt: 2,
+                backgroundColor: "white",
+                borderRadius: 1,
+                boxShadow: 1,
+              }}
+            >
+              {/* Left Corner - View Toggle (Month/Week/Day) */}
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(event, newViewMode) => {
+                  if (newViewMode !== null) {
+                    setViewMode(newViewMode);
+                  }
+                }}
+                size="small"
+                sx={{
+                  "& .MuiToggleButton-root": {
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "8px",
+                    px: 2,
+                    py: 0.5,
+                    minWidth: "80px",
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    fontSize: "0.8rem",
+                    "&.Mui-selected": {
+                      backgroundColor: "#1976D2",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "#1565C0",
+                      },
+                    },
+                    "&:not(.Mui-selected)": {
+                      backgroundColor: "#f5f5f5",
+                      color: "#666",
+                      "&:hover": {
+                        backgroundColor: "#e0e0e0",
+                      },
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="month">Month</ToggleButton>
+                <ToggleButton value="week">Week</ToggleButton>
+                <ToggleButton value="day">Day</ToggleButton>
+              </ToggleButtonGroup>
+
+              {/* Center - Total Hours Display */}
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
                   gap: 2,
+                  justifyContent: "center",
                 }}
               >
-                {/* Left Corner - View Toggle (Month/Week/Day) */}
-                <ToggleButtonGroup
-                  value={viewMode}
-                  exclusive
-                  onChange={(event, newViewMode) => {
-                    if (newViewMode !== null) {
-                      setViewMode(newViewMode);
-                    }
-                  }}
-                  size="small"
-                  sx={{
-                    "& .MuiToggleButton-root": {
-                      border: "1px solid #e0e0e0",
-                      borderRadius: "8px",
-                      px: 2,
-                      py: 0.5,
-                      minWidth: "80px",
-                      textTransform: "none",
-                      fontWeight: "bold",
-                      fontSize: "0.8rem",
-                      "&.Mui-selected": {
-                        backgroundColor: "#1976D2",
-                        color: "white",
-                        "&:hover": {
-                          backgroundColor: "#1565C0",
-                        },
-                      },
-                      "&:not(.Mui-selected)": {
-                        backgroundColor: "#f5f5f5",
-                        color: "#666",
-                        "&:hover": {
-                          backgroundColor: "#e0e0e0",
-                        },
-                      },
-                    },
-                  }}
-                >
-                  <ToggleButton value="month">Month</ToggleButton>
-                  <ToggleButton value="week">Week</ToggleButton>
-                  <ToggleButton value="day">Day</ToggleButton>
-                </ToggleButtonGroup>
-
-                {/* Center - Total Hours Display */}
+                {/* Total Hours Display */}
                 <Box
                   sx={{
+                    backgroundColor: "#e3f2fd",
+                    px: 1.2,
+                    py: 0.4,
+                    borderRadius: 1,
+                    border: "1px solid #2196f3",
                     display: "flex",
                     alignItems: "center",
-                    gap: 2,
-                    justifyContent: "center",
+                    gap: 0.8,
                   }}
                 >
-                  {/* Total Hours Display */}
-                  <Box
-                    sx={{
-                      backgroundColor: "#e3f2fd",
-                      px: 1.2,
-                      py: 0.4,
-                      borderRadius: 1,
-                      border: "1px solid #2196f3",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 0.8,
-                    }}
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ fontSize: "0.7rem" }}
                   >
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{ fontSize: "0.7rem" }}
-                    >
-                      Total{" "}
-                      {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
-                      Hours:
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      fontWeight="bold"
-                      color="primary"
-                      sx={{ fontSize: "0.9rem" }}
-                    >
-                      {calculateTotalHours()}
-                    </Typography>
-                  </Box>
+                    Total{" "}
+                    {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}{" "}
+                    Hours:
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    fontWeight="bold"
+                    color="primary"
+                    sx={{ fontSize: "0.9rem" }}
+                  >
+                    {calculateTotalHours()}
+                  </Typography>
                 </Box>
+              </Box>
 
-                {/* Right Corner - View Category Tabs (Employee-wise/Project-wise) */}
-                <ToggleButtonGroup
-                  value={viewCategory}
-                  exclusive
-                  onChange={(event, newCategory) => {
-                    if (newCategory !== null) {
-                      setViewCategory(newCategory);
-                    }
-                  }}
-                  size="small"
-                  sx={{
-                    "& .MuiToggleButton-root": {
-                      border: "1px solid #e0e0e0",
-                      borderRadius: "8px",
-                      px: 2,
-                      py: 0.5,
-                      minWidth: "80px",
-                      textTransform: "none",
-                      fontWeight: "bold",
-                      fontSize: "0.8rem",
-                      "&.Mui-selected": {
-                        backgroundColor: "#4CAF50",
-                        color: "white",
-                        borderColor: "#4CAF50",
-                        "&:hover": {
-                          backgroundColor: "#388E3C",
-                        },
-                      },
+              {/* Right Corner - View Category Tabs (Employee-wise/Project-wise) */}
+              <ToggleButtonGroup
+                value={viewCategory}
+                exclusive
+                onChange={(event, newCategory) => {
+                  if (newCategory !== null) {
+                    setViewCategory(newCategory);
+                  }
+                }}
+                size="small"
+                sx={{
+                  "& .MuiToggleButton-root": {
+                    border: "1px solid #e0e0e0",
+                    borderRadius: "8px",
+                    px: 2,
+                    py: 0.5,
+                    minWidth: "80px",
+                    textTransform: "none",
+                    fontWeight: "bold",
+                    fontSize: "0.8rem",
+                    "&.Mui-selected": {
+                      backgroundColor: "#4CAF50",
+                      color: "white",
+                      borderColor: "#4CAF50",
                       "&:hover": {
-                        backgroundColor: "#f5f5f5",
+                        backgroundColor: "#388E3C",
                       },
                     },
-                  }}
-                >
-                  <ToggleButton value="employee">Employee-wise</ToggleButton>
-                  <ToggleButton value="project">Project-wise</ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
-            </CardContent>
-          </Card>
+                    "&:hover": {
+                      backgroundColor: "#f5f5f5",
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="employee">Employee-wise</ToggleButton>
+                <ToggleButton value="project">Project-wise</ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          </Box>
 
           {/* Error Alert */}
           {error && (
