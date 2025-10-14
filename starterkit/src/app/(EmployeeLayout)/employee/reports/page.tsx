@@ -862,9 +862,20 @@ const EmployeeReports = () => {
                 <Typography variant="subtitle2" color="text.secondary">
                   Details
                 </Typography>
-                <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
-                  {selectedReport.details}
-                </Typography>
+                <Box
+                  sx={{
+                    maxHeight: "200px",
+                    overflow: "auto",
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 1,
+                    padding: 1,
+                    backgroundColor: "#f9f9f9",
+                  }}
+                >
+                  <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
+                    {selectedReport.details}
+                  </Typography>
+                </Box>
               </Box>
 
               <Box>
