@@ -71,9 +71,6 @@ const ReportsOnly = () => {
 
   // Filters and search
   const [timePeriod, setTimePeriod] = useState<"day" | "week" | "month">("day");
-  const [viewCategory, setViewCategory] = useState<
-    "project" | "employee" | "all"
-  >("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Date picker state
@@ -183,12 +180,7 @@ const ReportsOnly = () => {
     const { start, end } = getDateRange(timePeriod);
     const matchesTimePeriod = reportDate >= start && reportDate < end;
 
-    let matchesViewCategory = true;
-    if (viewCategory === "project") matchesViewCategory = !!report.project;
-    else if (viewCategory === "employee")
-      matchesViewCategory = !!report.employee;
-
-    return matchesSearch && matchesTimePeriod && matchesViewCategory;
+    return matchesSearch && matchesTimePeriod;
   });
 
   if (loading) {
@@ -207,24 +199,6 @@ const ReportsOnly = () => {
   return (
     <PageContainer title="Reports" description="View and manage reports">
       <Box sx={{ p: 3 }}>
-        {/* Top Bar */}
-        <Box
-          sx={{
-            mb: 3,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<Refresh />}
-            onClick={fetchData}
-            disabled={loading}
-          >
-            Refresh
-          </Button>
-        </Box>
 
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -267,18 +241,6 @@ const ReportsOnly = () => {
             <ToggleButton value="month">This Month</ToggleButton>
           </ToggleButtonGroup>
 
-          <ToggleButtonGroup
-            value={viewCategory}
-            exclusive
-            onChange={(_, val) => val && setViewCategory(val)}
-            aria-label="view category"
-            size="small"
-          >
-            <ToggleButton value="all">All Reports</ToggleButton>
-            <ToggleButton value="project">By Project</ToggleButton>
-            <ToggleButton value="employee">By Employee</ToggleButton>
-          </ToggleButtonGroup>
-
           {/* Calendar Date Picker */}
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <DatePicker
@@ -287,20 +249,21 @@ const ReportsOnly = () => {
               onChange={(newValue: Dayjs | null) => {
                 setSelectedDate(newValue);
               }}
-              renderInput={(params) => (
-                <TextField {...params} size="small" sx={{ minWidth: 150 }} />
+              renderInput={(params: any) => (
+                <TextField {...params} size="small" sx={{ minWidth: 160 }} />
               )}
             />
-            {selectedDate && (
-              <Button
-                size="small"
-                onClick={() => setSelectedDate(null)}
-                sx={{ textTransform: "none", ml: 1 }}
-              >
-                Clear Date
-              </Button>
-            )}
           </LocalizationProvider>
+
+          {selectedDate && (
+            <Button
+              size="small"
+              onClick={() => setSelectedDate(null)}
+              variant="outlined"
+            >
+              Clear Date
+            </Button>
+          )}
         </Box>
 
         {/* Reports Table */}
@@ -369,8 +332,17 @@ const ReportsOnly = () => {
                             {report.title || "Untitled Report"}
                           </Typography>
                         </TableCell>
-                        <TableCell>
-                          <Typography variant="body2" sx={{ maxWidth: 300 }}>
+                        <TableCell sx={{ maxWidth: 300 }}>
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              maxWidth: 300,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              display: "block"
+                            }}
+                          >
                             {report.details || "No details provided"}
                           </Typography>
                         </TableCell>

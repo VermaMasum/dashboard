@@ -677,16 +677,77 @@ const EmployeeTimeTracker = () => {
 
           {/* Header */}
           <Box sx={{ mb: 3 }}>
-            <Typography
-              variant="h4"
-              fontWeight="bold"
-              sx={{ mb: 2 }}
-              color="#1976D2"
-            >
-              Time Tracker
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+              {/* Left side - Time Tracker title */}
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                color="#1976D2"
+              >
+                Time Tracker
+              </Typography>
 
-            {/* Combined Header with Navigation, Date, View Toggle and Controls */}
+              {/* Center - Navigation with arrows and date period */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <IconButton
+                  onClick={() => handleDateChange("prev")}
+                  size="small"
+                  sx={{
+                    backgroundColor: "#f5f5f5",
+                    "&:hover": { backgroundColor: "#e0e0e0" },
+                  }}
+                >
+                  <ArrowBack />
+                </IconButton>
+
+                <Typography
+                  variant="h4"
+                  fontWeight="bold"
+                  color="#1976D2"
+                >
+                  {viewMode === "month" && (
+                    currentDate.toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    })
+                  )}
+                  {viewMode === "week" && (
+                    `Week of ${getWeekDays()[0]?.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })} - ${getWeekDays()[6]?.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}`
+                  )}
+                  {viewMode === "day" && (
+                    currentDate.toLocaleDateString("en-US", {
+                      weekday: "long",
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  )}
+                </Typography>
+
+                <IconButton
+                  onClick={() => handleDateChange("next")}
+                  size="small"
+                  sx={{
+                    backgroundColor: "#f5f5f5",
+                    "&:hover": { backgroundColor: "#e0e0e0" },
+                  }}
+                >
+                  <ArrowForward />
+                </IconButton>
+              </Box>
+
+              {/* Right side - empty for balance */}
+              <Box sx={{ width: "200px" }} />
+            </Box>
+
+            {/* Combined Header with View Toggle, Date Picker, and Controls */}
             <Card sx={{ mb: 3 }}>
               <CardContent sx={{ py: 2 }}>
                 <Box
@@ -740,7 +801,7 @@ const EmployeeTimeTracker = () => {
                     <ToggleButton value="day">Day</ToggleButton>
                   </ToggleButtonGroup>
 
-                  {/* Center - Date Display, Total Hours, and Project Filter */}
+                  {/* Center - Date Picker and Total Hours Display */}
                   <Box
                     sx={{
                       display: "flex",
@@ -911,35 +972,6 @@ const EmployeeTimeTracker = () => {
           {/* Month View */}
           {viewMode === "month" && (
             <Box>
-              {/* Month Header */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  mb: 3,
-                  gap: 2,
-                }}
-              >
-                <IconButton
-                  onClick={() => handleDateChange("prev")}
-                  size="large"
-                >
-                  <ArrowBack />
-                </IconButton>
-                <Typography variant="h4" fontWeight="bold" color="primary">
-                  {currentDate.toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </Typography>
-                <IconButton
-                  onClick={() => handleDateChange("next")}
-                  size="large"
-                >
-                  <ArrowForward />
-                </IconButton>
-              </Box>
 
               {/* Day headers */}
               <Box
@@ -1115,27 +1147,6 @@ const EmployeeTimeTracker = () => {
           {/* Day View */}
           {viewMode === "day" && (
             <Box>
-              {/* Day View Header */}
-              <Box
-                sx={{
-                  backgroundColor: "#f5f5f5",
-                  p: 2,
-                  borderRadius: 1,
-                  mb: 2,
-                  textAlign: "center",
-                }}
-              >
-                <Typography variant="h6" fontWeight="bold">
-                  {currentDate.toLocaleDateString("en-US", {
-                    weekday: "long",
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </Typography>
-                {/* Total Hours for Day */}
-                {/* Removed duplicate Total Day Hours box to avoid duplication */}
-              </Box>
 
               {/* Day Summary Block */}
               <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -1268,45 +1279,6 @@ const EmployeeTimeTracker = () => {
           {/* Week View */}
           {viewMode === "week" && (
             <Box>
-              {/* Week View Header */}
-              <Box
-                sx={{
-                  backgroundColor: "#f5f5f5",
-                  p: 2,
-                  borderRadius: 1,
-                  mb: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 2,
-                }}
-              >
-                <IconButton
-                  onClick={() => handleDateChange("prev")}
-                  size="large"
-                >
-                  <ArrowBack />
-                </IconButton>
-                <Typography variant="h6" fontWeight="bold">
-                  Week of{" "}
-                  {getWeekDays()[0].toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                  })}{" "}
-                  -{" "}
-                  {getWeekDays()[6].toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </Typography>
-                <IconButton
-                  onClick={() => handleDateChange("next")}
-                  size="large"
-                >
-                  <ArrowForward />
-                </IconButton>
-              </Box>
 
               {/* Week View - Compact Calendar Grid */}
               <Box

@@ -1023,7 +1023,6 @@ const AdminTimeTracker = () => {
   }
 
   return (
-
     <PageContainer
       title="Time Tracker"
       description="Track and manage employee time entries"
@@ -1043,7 +1042,7 @@ const AdminTimeTracker = () => {
       </Breadcrumbs> */}
 
         {/* Header */}
-        <Box sx={{ mb: 3 }}>
+        {/* <Box sx={{ mb: 3 }}>
           <Typography
             variant="h4"
             fontWeight="bold"
@@ -1051,7 +1050,7 @@ const AdminTimeTracker = () => {
             color="#1976D2"
           >
             Time Tracker
-          </Typography>
+          </Typography> */}
 
           {/* Combined Header with Navigation, Date, View Toggle, Category Tabs and Analytics */}
           <Card sx={{ mb: 3 }}>
@@ -1205,8 +1204,6 @@ const AdminTimeTracker = () => {
               </Box>
             </CardContent>
           </Card>
-
-        </Box>
 
         {/* Error Alert */}
         {error && (
@@ -2496,14 +2493,13 @@ const AdminTimeTracker = () => {
             {renderDayDetailsContent()}
           </DialogContent>
           <DialogActions>
-                <Button onClick={() => setDayDetailsDialog(false)}>Close</Button>
-              </DialogActions>
-            </Dialog>
-        </Box>
+            <Button onClick={() => setDayDetailsDialog(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
       </Box>
-    </PageContainer>
+    </Box>
+  </PageContainer>
   );
-
 };
 
 
