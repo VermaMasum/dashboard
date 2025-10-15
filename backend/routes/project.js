@@ -65,7 +65,7 @@ router.post("/", protect, async (req, res) => {
     description,
     date,
     employees: employeeIds,
-    status: status || 'not started',
+    status: status || "not started",
   });
   const createdProject = await project.save();
   await createdProject.populate("employees", "username");

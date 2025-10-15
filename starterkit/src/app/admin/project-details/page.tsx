@@ -183,11 +183,13 @@ const ProjectDetails = () => {
 
   const handleSubmitProject = async () => {
     try {
+      const { assignedEmployees, ...rest } = formData;
+      const submitData = { ...rest, employees: assignedEmployees };
       if (editingProject) {
-        await axios.put(`/projects/${editingProject._id}`, formData);
+        await axios.put(`/projects/${editingProject._id}`, submitData);
         setSuccess("Project updated successfully");
       } else {
-        await axios.post("/projects", formData);
+        await axios.post("/projects", submitData);
         setSuccess("Project created successfully");
       }
       handleCloseProjectDialog();
@@ -702,12 +704,46 @@ const ProjectDetails = () => {
                           key={employee._id}
                           button
                           onClick={async () => {
-                            try {
-                              if (isChecked) {
-                                await axios.post(
-                                  `/projects/${editingProject?._id}/unassign`,
-                                  { employeeId: employee._id }
+                            if (editingProject) {
+                              try {
+                                if (isChecked) {
+                                  await axios.post(
+                                    `/projects/${editingProject._id}/unassign`,
+                                    { employeeId: employee._id }
+                                  );
+                                  setFormData({
+                                    ...formData,
+                                    assignedEmployees:
+                                      formData.assignedEmployees.filter(
+                                        (id) => id !== employee._id
+                                      ),
+                                  });
+                                } else {
+                                  await axios.post(
+                                    `/projects/${editingProject._id}/assign`,
+                                    { employeeId: employee._id }
+                                  );
+                                  setFormData({
+                                    ...formData,
+                                    assignedEmployees: [
+                                      ...formData.assignedEmployees,
+                                      employee._id,
+                                    ],
+                                  });
+                                }
+                                setSuccess(
+                                  "Employee assignments updated successfully"
                                 );
+                                fetchData();
+                              } catch (err: any) {
+                                setError(
+                                  err.response?.data?.message ||
+                                    "Failed to update employee assignments"
+                                );
+                              }
+                            } else {
+                              // For new projects, just update the form data
+                              if (isChecked) {
                                 setFormData({
                                   ...formData,
                                   assignedEmployees:
@@ -716,10 +752,6 @@ const ProjectDetails = () => {
                                     ),
                                 });
                               } else {
-                                await axios.post(
-                                  `/projects/${editingProject?._id}/assign`,
-                                  { employeeId: employee._id }
-                                );
                                 setFormData({
                                   ...formData,
                                   assignedEmployees: [
@@ -728,15 +760,6 @@ const ProjectDetails = () => {
                                   ],
                                 });
                               }
-                              setSuccess(
-                                "Employee assignments updated successfully"
-                              );
-                              fetchData();
-                            } catch (err: any) {
-                              setError(
-                                err.response?.data?.message ||
-                                  "Failed to update employee assignments"
-                              );
                             }
                           }}
                         >
