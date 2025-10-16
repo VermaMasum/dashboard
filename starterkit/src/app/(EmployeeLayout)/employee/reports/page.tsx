@@ -140,11 +140,13 @@ const EmployeeReports = () => {
       console.log("📊 Reports sample:", reportsResponse.data[0]);
       console.log("📊 Total reports count:", reportsResponse.data.length);
 
-      setProjects(projectsResponse.data);
+      // Handle both paginated and non-paginated responses
+      const projectsData = projectsResponse.data.data || projectsResponse.data || [];
+      setProjects(Array.isArray(projectsData) ? projectsData : []);
       setReports(reportsResponse.data);
       // Build a map of projectId -> status
       const statusMap: Record<string, string> = {};
-      projectsResponse.data.forEach((project: any) => {
+      projectsData.forEach((project: any) => {
         statusMap[project._id] = project.status || "unknown";
       });
       setProjectStatusMap(statusMap);

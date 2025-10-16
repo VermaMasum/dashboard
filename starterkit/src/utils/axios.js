@@ -11,9 +11,11 @@ import axios from "axios";
 
 // Backend URL - Change this to your actual backend server URL
 const PRODUCTION_API_URL = "http://3.111.194.111:5000/api"; // Your backend server IP
+const DEVELOPMENT_API_URL = "http://localhost:5000/api"; // Local development URL
 
 // Determine API URL based on environment
-const API_URL = process.env.NEXT_PUBLIC_API_URL || PRODUCTION_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL ||
+  (process.env.NODE_ENV === 'development' ? DEVELOPMENT_API_URL : PRODUCTION_API_URL);
 
 const axiosServices = axios.create({
   baseURL: API_URL,

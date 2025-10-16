@@ -9,7 +9,8 @@ const router = express.Router();
 // @access  Private (admin and superAdmin)
 router.get("/", protect, async (req, res) => {
   try {
-    const { date, project, startDate, endDate } = req.query;
+    const { date, project, startDate, endDate, page, limit } = req.query;
+    console.log("Query params:", req.query);
     let query = {};
 
     if (date) {
@@ -38,21 +39,48 @@ router.get("/", protect, async (req, res) => {
     }
     // If user is admin or superAdmin, show all reports
     
-    const reports = await Report.find(query)
-      .populate("project", "name")
-      .populate("employee", "username");
-    
-    console.log('📊 Reports query result:', reports.length, 'reports');
-    if (reports.length > 0) {
-      console.log('📊 Sample report:', {
-        id: reports[0]._id,
-        employee: reports[0].employee,
-        project: reports[0].project
+    // Check if pagination parameters are provided
+    if (page && limit) {
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const skip = (pageNum - 1) * limitNum;
+
+      const total = await Report.countDocuments(query);
+      const data = await Report.find(query)
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(limitNum)
+        .populate("project", "name")
+        .populate("employee", "username");
+
+      console.log('📊 Paginated reports query result:', data.length, 'reports');
+      
+      res.json({
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+        data,
       });
+    } else {
+      // Legacy support: return all reports without pagination
+      const reports = await Report.find(query)
+        .populate("project", "name")
+        .populate("employee", "username");
+      
+      console.log('📊 Reports query result:', reports.length, 'reports');
+      if (reports.length > 0) {
+        console.log('📊 Sample report:', {
+          id: reports[0]._id,
+          employee: reports[0].employee,
+          project: reports[0].project
+        });
+      }
+      
+      res.json(reports);
     }
-    
-    res.json(reports);
   } catch (error) {
+    console.error("Error fetching reports:", error);
     res.status(500).json({ message: 'Server error' });
   }
 });

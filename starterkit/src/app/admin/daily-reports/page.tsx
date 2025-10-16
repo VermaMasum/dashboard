@@ -28,6 +28,8 @@ import {
   CircularProgress,
   Grid,
   Snackbar,
+  Pagination,
+  Stack,
 } from "@mui/material";
 import { Add, Edit, Delete, Assessment, FilterList } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
@@ -84,10 +86,17 @@ const DailyReports = () => {
   });
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 5,
+    totalPages: 0,
+  });
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(currentPage, pagination.limit);
+  }, [currentPage]);
 
   // Debug: Monitor projects state changes
   useEffect(() => {
@@ -105,13 +114,13 @@ const DailyReports = () => {
     );
   }, [selectedDate, selectedProject]);
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1, limit = 5) => {
     try {
       setLoading(true);
       console.log("📊 Fetching reports data...");
 
       const [reportsRes, projectsRes, employeesRes] = await Promise.all([
-        axios.get("/reports"),
+        axios.get(`/reports?page=${page}&limit=${limit}`),
         axios.get("/projects"),
         axios.get("/users?role=employee"),
       ]);
@@ -120,18 +129,20 @@ const DailyReports = () => {
       console.log("📊 Projects data:", projectsRes.data);
       console.log("📊 Employees data:", employeesRes.data);
 
-      // Debug: Check report dates
-      reportsRes.data.forEach((report: Report, index: number) => {
-        console.log(`📊 Report ${index + 1}:`, {
-          id: report._id,
-          date: report.date,
-          dateType: typeof report.date,
-          dateString: new Date(report.date).toDateString(),
-          dateISO: new Date(report.date).toISOString(),
-        });
-      });
+      const newReports = reportsRes.data.data || [];
+      const newPagination = {
+        total: reportsRes.data.total || 0,
+        page: reportsRes.data.page || 1,
+        limit: reportsRes.data.limit || 5,
+        totalPages: reportsRes.data.totalPages || 0,
+      };
 
-      setReports(reportsRes.data);
+      console.log("Setting reports:", newReports);
+      console.log("Setting pagination:", newPagination);
+
+      setReports(newReports);
+      setPagination(newPagination);
+      setCurrentPage(newPagination.page);
       setProjects(projectsRes.data);
       setEmployees(employeesRes.data);
 
@@ -192,7 +203,7 @@ const DailyReports = () => {
         setSuccess("Report created successfully");
       }
       handleCloseDialog();
-      fetchData();
+      fetchData(currentPage, pagination.limit);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to save report");
     }
@@ -203,11 +214,15 @@ const DailyReports = () => {
       try {
         await axios.delete(`/reports/${id}`);
         setSuccess("Report deleted successfully");
-        fetchData();
+        fetchData(currentPage, pagination.limit);
       } catch (err: any) {
         setError(err.response?.data?.message || "Failed to delete report");
       }
     }
+  };
+
+  const handlePageChange = (event: React.ChangeEvent<unknown>, value: number) => {
+    setCurrentPage(value);
   };
 
   const todayReports = reports.filter((r) => {
@@ -219,47 +234,6 @@ const DailyReports = () => {
     (sum, report) => sum + report.hoursWorked,
     0
   );
-
-  const filteredReports = reports.filter((report) => {
-    // Handle date filtering more robustly
-    let reportDate;
-
-    // Handle date parsing
-    reportDate = new Date(report.date);
-
-    // Single date filtering logic
-    const filterDate = new Date(selectedDate);
-
-    // Compare dates by setting time to start of day
-    const reportDateOnly = new Date(
-      reportDate.getFullYear(),
-      reportDate.getMonth(),
-      reportDate.getDate()
-    );
-    const filterDateOnly = new Date(
-      filterDate.getFullYear(),
-      filterDate.getMonth(),
-      filterDate.getDate()
-    );
-
-    const dateMatch = reportDateOnly.getTime() === filterDateOnly.getTime();
-
-    // Debug: Log filtering details
-    console.log("🔍 Filtering report:", {
-      reportId: report._id,
-      reportDate: report.date,
-      reportDateType: typeof report.date,
-      selectedDate,
-      dateMatch,
-    });
-
-    return dateMatch;
-  });
-
-  // Debug: Monitor filtered reports
-  useEffect(() => {
-    console.log("📊 Filtered reports count:", filteredReports.length);
-  }, [filteredReports]);
 
   if (loading) {
     return (
@@ -392,68 +366,6 @@ const DailyReports = () => {
         </Grid>
       </Grid>
 
-      {/* Filters - Date Selection Only */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ py: 2 }}>
-          <Box display="flex" gap={2} alignItems="center">
-            <TextField
-              type="date"
-              label="Select Date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
-              size="small"
-              sx={{ width: 200 }}
-            />
-            <Button
-              variant="outlined"
-              onClick={() =>
-                setSelectedDate(new Date().toISOString().split("T")[0])
-              }
-              size="small"
-            >
-              Today
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                setSelectedDate(yesterday.toISOString().split("T")[0]);
-              }}
-              size="small"
-            >
-              Yesterday
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Filter Status */}
-      {/* <Box mb={2}> */}
-      {/* <Typography variant="body2" color="textSecondary">
-          Showing reports for: <strong>{new Date(selectedDate).toLocaleDateString()}</strong>
-          {selectedProject && (
-            <>
-              {' '}from project: <strong>{projects.find(p => p._id === selectedProject)?.name || 'Unknown'}</strong>
-            </>
-          )}
-          {' '}({filteredReports.length} reports found)
-        </Typography> */}
-
-      {/* Debug: Show available dates */}
-      {/* <Box mt={1}>
-          <Typography variant="caption" color="textSecondary">
-            Available dates in reports:{" "}
-            {Array.from(
-              new Set(reports.map((r) => new Date(r.date).toDateString()))
-            )
-              .sort()
-              .join(", ")}
-          </Typography>
-        </Box> */}
-      {/* </Box> */}
-
       {/* Reports Table */}
       <TableContainer component={Paper}>
         <Table>
@@ -468,7 +380,7 @@ const DailyReports = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredReports.map((report) => (
+            {reports.map((report) => (
               <TableRow key={report._id}>
                 <TableCell>
                   {new Date(report.date).toLocaleDateString()}
@@ -512,6 +424,23 @@ const DailyReports = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Pagination */}
+      <Box display="flex" justifyContent="center" mt={3}>
+        <Stack spacing={2}>
+          <Pagination
+            count={pagination.totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            showFirstButton
+            showLastButton
+          />
+          <Typography variant="body2" color="textSecondary" textAlign="center">
+            Showing {reports.length} of {pagination.total} reports
+          </Typography>
+        </Stack>
+      </Box>
 
       {/* Report Dialog */}
       <Dialog

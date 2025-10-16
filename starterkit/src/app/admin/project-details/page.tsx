@@ -107,7 +107,9 @@ const ProjectDetails = () => {
         axios.get("/projects"),
         axios.get("/users?role=employee"),
       ]);
-      setProjects(projectsRes.data);
+      // Admin API returns projects directly as array, not paginated
+      const projectsData = projectsRes.data || [];
+      setProjects(Array.isArray(projectsData) ? projectsData : []);
       setEmployees(employeesRes.data);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch data");
@@ -918,7 +920,7 @@ const ProjectDetails = () => {
                   );
                 })}
 
-              {/* ❌ No results found */}
+              {/* No results found */}
               {employees.filter((e) =>
                 e.username.toLowerCase().includes(searchTerm.toLowerCase())
               ).length === 0 && (

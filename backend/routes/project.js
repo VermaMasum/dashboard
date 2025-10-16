@@ -9,7 +9,8 @@ const router = express.Router();
 // @access  Private (admin, superAdmin, and employees)
 router.get("/", protect, async (req, res) => {
   try {
-    const { date } = req.query;
+    const { date, page, limit } = req.query;
+    console.log("Query params:", req.query);
     let query = {};
     if (date) {
       const startDate = new Date(date);
@@ -25,11 +26,32 @@ router.get("/", protect, async (req, res) => {
     }
     // If user is admin or superAdmin, show all projects
 
-    const projects = await Project.find(query).populate(
-      "employees",
-      "username"
-    );
-    res.json(projects);
+    // For admins, if no pagination params provided, return all projects
+    if ((req.user.role === "admin" || req.user.role === "superAdmin") && !page && !limit) {
+      const data = await Project.find(query)
+        .sort({ _id: -1 })
+        .populate("employees", "username");
+      return res.json(data);
+    }
+
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    const total = await Project.countDocuments(query);
+    const data = await Project.find(query)
+      .sort({ _id: -1 })
+      .skip(skip)
+      .limit(limitNum)
+      .populate("employees", "username");
+
+    res.json({
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
+      data,
+    });
   } catch (error) {
     console.error("Error fetching projects:", error);
     res.status(500).json({ message: "Server error" });
