@@ -119,13 +119,7 @@ const EmployeeReports = () => {
     hoursWorked: 0,
   });
 
-  useEffect(() => {
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
-
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
       console.log("🔄 Fetching reports data for user:", user?.username);
@@ -158,7 +152,13 @@ const EmployeeReports = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user, fetchData]);
 
   // Helper functions
   const getWeekRange = (date: string) => {

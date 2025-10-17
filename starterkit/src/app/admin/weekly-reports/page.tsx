@@ -206,6 +206,9 @@ const AdminWeeklyReports = () => {
   useEffect(() => {
     fetchEmployees();
     fetchProjects();
+  }, []);
+
+  useEffect(() => {
     fetchWeeklyData();
   }, [fetchWeeklyData]);
 

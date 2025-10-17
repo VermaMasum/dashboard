@@ -30,64 +30,64 @@ const EmployeeOverview = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        console.log("🔄 Fetching dashboard data for user:", user?.username);
+
+        // Fetch employee's reports and projects
+        const [reportsResponse, projectsResponse] = await Promise.all([
+          axios.get("/reports"),
+          axios.get("/projects"),
+        ]);
+
+        console.log("📊 Reports response:", reportsResponse.data);
+        console.log("📋 Projects response:", projectsResponse.data);
+
+        const employeeReports = reportsResponse.data;
+        const assignedProjects = projectsResponse.data;
+
+        // Calculate stats
+        const totalHours = employeeReports.reduce(
+          (sum: number, report: any) => sum + (report.hoursWorked || 0),
+          0
+        );
+        const today = new Date();
+        const todayStart = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        );
+        const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
+        const todayReports = employeeReports.filter((report: any) => {
+          const reportDate = new Date(report.date);
+          return reportDate >= todayStart && reportDate < todayEnd;
+        });
+
+        const totalHoursToday = todayReports.reduce(
+          (sum: number, report: any) => sum + (report.hoursWorked || 0),
+          0
+        );
+
+        setStats({
+          totalReports: employeeReports.length,
+          totalHours: totalHours,
+          currentProjects: assignedProjects.length,
+          thisWeekHours: totalHoursToday,
+        });
+      } catch (error: any) {
+        console.error("❌ Error fetching dashboard data:", error);
+        console.error("Error details:", error.response?.data || error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (user) {
       fetchDashboardData();
     }
-  }, [user, fetchDashboardData]);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      console.log("🔄 Fetching dashboard data for user:", user?.username);
-
-      // Fetch employee's reports and projects
-      const [reportsResponse, projectsResponse] = await Promise.all([
-        axios.get("/reports"),
-        axios.get("/projects"),
-      ]);
-
-      console.log("📊 Reports response:", reportsResponse.data);
-      console.log("📋 Projects response:", projectsResponse.data);
-
-      const employeeReports = reportsResponse.data;
-      const assignedProjects = projectsResponse.data;
-
-      // Calculate stats
-      const totalHours = employeeReports.reduce(
-        (sum: number, report: any) => sum + (report.hoursWorked || 0),
-        0
-      );
-      const today = new Date();
-      const todayStart = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate()
-      );
-      const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
-
-      const todayReports = employeeReports.filter((report: any) => {
-        const reportDate = new Date(report.date);
-        return reportDate >= todayStart && reportDate < todayEnd;
-      });
-
-      const totalHoursToday = todayReports.reduce(
-        (sum: number, report: any) => sum + (report.hoursWorked || 0),
-        0
-      );
-
-      setStats({
-        totalReports: employeeReports.length,
-        totalHours: totalHours,
-        currentProjects: assignedProjects.length,
-        thisWeekHours: totalHoursToday,
-      });
-    } catch (error: any) {
-      console.error("❌ Error fetching dashboard data:", error);
-      console.error("Error details:", error.response?.data || error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user]);
 
   if (loading) {
     return (

@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -96,32 +96,32 @@ const WeeklyReports = () => {
   const [viewDialog, setViewDialog] = useState(false);
   const [selectedProject, setSelectedProject] = useState<any>(null);
 
-  useEffect(() => {
-    fetchWeeklyData();
-  }, [currentWeek]);
-
-  const fetchWeeklyData = async () => {
+  const fetchWeeklyData = React.useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      
+
       const weekStart = getWeekStart(currentWeek);
       const weekEnd = getWeekEnd(currentWeek);
-      
+
       const response = await axios.get('/reports/weekly', {
         params: {
           weekStart: weekStart.toISOString(),
           weekEnd: weekEnd.toISOString(),
         },
       });
-      
+
       setWeeklyData(response.data);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to fetch weekly data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentWeek]);
+
+  useEffect(() => {
+    fetchWeeklyData();
+  }, [fetchWeeklyData]);
 
   const getWeekStart = (date: Date) => {
     const dayOfWeek = date.getDay();

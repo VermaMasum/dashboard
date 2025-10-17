@@ -71,11 +71,7 @@ const EmployeeManagement = () => {
     department: "",
   });
 
-  useEffect(() => {
-    fetchData();
-  }, [page]);
-
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
       console.log(
@@ -85,7 +81,7 @@ const EmployeeManagement = () => {
         `/users?role=employee&page=${page}&limit=${limit}`
       );
       console.log("👥 Employees response:", response.data);
-      
+
       // Handle paginated response
       if (response.data.data) {
         setEmployees(response.data.data);
@@ -104,7 +100,11 @@ const EmployeeManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
+
+  useEffect(() => {
+    fetchData();
+  }, [page, fetchData]);
 
   const handleOpenDialog = (employee?: Employee) => {
     if (employee) {
@@ -371,7 +371,7 @@ const EmployeeManagement = () => {
             minHeight="200px"
           >
             <Typography variant="h6" color="text.secondary">
-              No employees found. Click "Add Employee" to create one.
+              No employees found. Click &quot;Add Employee&quot; to create one.
             </Typography>
           </Box>
         )}

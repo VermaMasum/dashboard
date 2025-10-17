@@ -81,13 +81,7 @@ const EmployeeProjects = () => {
     Report[]
   >([]);
 
-  useEffect(() => {
-    if (user) {
-      fetchData();
-    }
-  }, [user]);
-
-  const fetchData = async (page = 1, limit = 5) => {
+  const fetchData = React.useCallback(async (page = 1, limit = 5) => {
     try {
       setLoading(true);
       console.log("🔄 Fetching projects data for user:", user?.username);
@@ -119,7 +113,13 @@ const EmployeeProjects = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchData();
+    }
+  }, [user, fetchData]);
 
   const calculateProjectTotalHours = (projectId: string) => {
     return reports

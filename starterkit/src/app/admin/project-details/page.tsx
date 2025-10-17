@@ -104,11 +104,7 @@ const ProjectDetails = () => {
   // Search term for employee list
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, [page]);
-
-  const fetchData = async () => {
+  const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
       console.log(`🔍 Fetching projects - Page: ${page}, Limit: ${limit}`);
@@ -116,9 +112,9 @@ const ProjectDetails = () => {
         axios.get(`/projects?page=${page}&limit=${limit}`),
         axios.get("/users?role=employee"),
       ]);
-      
+
       console.log("📊 Projects API Response:", projectsRes.data);
-      
+
       // Handle paginated response
       if (projectsRes.data.data) {
         console.log("✅ Paginated response detected");
@@ -133,14 +129,18 @@ const ProjectDetails = () => {
         setTotal(projectsData.length);
         setTotalPages(Math.ceil(projectsData.length / limit));
       }
-      
+
       setEmployees(employeesRes.data);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch data");
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
+
+  useEffect(() => {
+    fetchData();
+  }, [page, fetchData]);
 
   // ---------- NEW: handle inline status change ----------
   const handleStatusChange = async (projectId: string, newStatus: string) => {
@@ -540,7 +540,7 @@ const ProjectDetails = () => {
             minHeight="200px"
           >
             <Typography variant="h6" color="text.secondary">
-              No projects found. Click "Add Project" to create one.
+              No projects found.Click &quot;Add Employee&quot; to create one..
             </Typography>
           </Box>
         )}
@@ -917,6 +917,7 @@ const ProjectDetails = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 sx={{ borderRadius: "8px" }}
               />
+              p
             </Box>
 
             {/* ✅ Filtered List */}
