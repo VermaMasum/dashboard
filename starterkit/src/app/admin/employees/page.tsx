@@ -55,7 +55,7 @@ const EmployeeManagement = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const limit = 10;
+  const limit = 5;
 
   // Dialog states
   const [employeeDialog, setEmployeeDialog] = useState(false);
@@ -346,9 +346,12 @@ const EmployeeManagement = () => {
         </TableContainer>
 
         {/* Pagination Controls */}
-        {totalPages > 1 && (
+        {total > 0 && (
           <Box mt={3} display="flex" justifyContent="center">
             <Stack spacing={2}>
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                Page {page} of {totalPages} | Showing {employees.length} of {total} employees
+              </Typography>
               <Pagination
                 count={totalPages}
                 page={page}
