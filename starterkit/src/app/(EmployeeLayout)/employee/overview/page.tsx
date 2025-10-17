@@ -33,7 +33,7 @@ const EmployeeOverview = () => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user]);
+  }, [user, fetchDashboardData]);
 
   const fetchDashboardData = async () => {
     try {

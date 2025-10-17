@@ -61,14 +61,10 @@ const EmployeeProfile = () => {
     username: '',
   });
 
-  useEffect(() => {
-    fetchProfileData();
-  }, []);
-
-  const fetchProfileData = async () => {
+  const fetchProfileData = React.useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Fetch employee profile (using current user data)
       if (user) {
         setProfile({
@@ -81,7 +77,7 @@ const EmployeeProfile = () => {
 
       // Fetch employee's reports for stats
       const reportsResponse = await axios.get('/reports');
-      const employeeReports = reportsResponse.data.filter((report: any) => 
+      const employeeReports = reportsResponse.data.filter((report: any) =>
         report.employee && report.employee._id === user?.id
       );
 
@@ -90,14 +86,14 @@ const EmployeeProfile = () => {
       const totalHours = employeeReports.reduce((sum: number, report: any) => sum + report.hoursWorked, 0);
       const uniqueProjects = new Set(employeeReports.map((report: any) => report.project?._id).filter(Boolean));
       const totalProjects = uniqueProjects.size;
-      
+
       // Calculate average hours per day (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentReports = employeeReports.filter((report: any) => 
+      const recentReports = employeeReports.filter((report: any) =>
         new Date(report.date) >= thirtyDaysAgo
       );
-      const averageHoursPerDay = recentReports.length > 0 
+      const averageHoursPerDay = recentReports.length > 0
         ? Math.round((recentReports.reduce((sum: number, report: any) => sum + report.hoursWorked, 0) / 30) * 10) / 10
         : 0;
 
@@ -113,7 +109,11 @@ const EmployeeProfile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   const handleEditProfile = () => {
     setEditData({

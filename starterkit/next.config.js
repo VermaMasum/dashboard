@@ -12,9 +12,7 @@ const nextConfig = {
   
   // Fix for "Missing origin header" when behind reverse proxy
   experimental: {
-    serverActions: {
-      allowedOrigins: ['3.111.194.111', 'localhost:3000', '3.111.194.111:3000'],
-    },
+    serverActions: true,
   },
 };
 
