@@ -33,6 +33,8 @@ import {
   ListItem,
   ListItemText,
   Snackbar,
+  Pagination,
+  Stack,
 } from "@mui/material";
 import {
   Add,
@@ -70,6 +72,12 @@ const ProjectDetails = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 5; // Changed to 5 for better testing
+
   // Dialog states
   const [projectDialog, setProjectDialog] = useState(false);
   const [assignDialog, setAssignDialog] = useState(false);
@@ -98,18 +106,34 @@ const ProjectDetails = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
+      console.log(`🔍 Fetching projects - Page: ${page}, Limit: ${limit}`);
       const [projectsRes, employeesRes] = await Promise.all([
-        axios.get("/projects"),
+        axios.get(`/projects?page=${page}&limit=${limit}`),
         axios.get("/users?role=employee"),
       ]);
-      // Admin API returns projects directly as array, not paginated
-      const projectsData = projectsRes.data || [];
-      setProjects(Array.isArray(projectsData) ? projectsData : []);
+      
+      console.log("📊 Projects API Response:", projectsRes.data);
+      
+      // Handle paginated response
+      if (projectsRes.data.data) {
+        console.log("✅ Paginated response detected");
+        setProjects(projectsRes.data.data);
+        setTotalPages(projectsRes.data.totalPages);
+        setTotal(projectsRes.data.total);
+      } else {
+        // Fallback for non-paginated response
+        console.log("⚠️ Non-paginated response, using fallback");
+        const projectsData = projectsRes.data || [];
+        setProjects(Array.isArray(projectsData) ? projectsData : []);
+        setTotal(projectsData.length);
+        setTotalPages(Math.ceil(projectsData.length / limit));
+      }
+      
       setEmployees(employeesRes.data);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch data");
@@ -193,6 +217,8 @@ const ProjectDetails = () => {
       } else {
         await axios.post("/projects", submitData);
         setSuccess("Project created successfully");
+        // Reset to first page when creating new project
+        setPage(1);
       }
       handleCloseProjectDialog();
       fetchData();
@@ -329,6 +355,13 @@ const ProjectDetails = () => {
             {success}
           </Alert>
         </Snackbar>
+
+        {/* Project Count Info */}
+        <Box mb={2}>
+          <Typography variant="body1" color="text.secondary">
+            Total Projects: <strong>{total}</strong>
+          </Typography>
+        </Box>
 
         {/* Projects Table */}
         <TableContainer component={Paper}>
@@ -480,6 +513,37 @@ const ProjectDetails = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <Box mt={3} display="flex" justifyContent="center">
+            <Stack spacing={2}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(event, value) => setPage(value)}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+              />
+            </Stack>
+          </Box>
+        )}
+
+        {/* Empty State */}
+        {!loading && projects.length === 0 && (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="200px"
+          >
+            <Typography variant="h6" color="text.secondary">
+              No projects found. Click "Add Project" to create one.
+            </Typography>
+          </Box>
+        )}
 
         {/* View Project Details Dialog */}
         <Dialog

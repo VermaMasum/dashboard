@@ -29,6 +29,8 @@ import {
   Paper,
   TextField,
   Snackbar,
+  Pagination,
+  Stack,
 } from "@mui/material";
 import {
   Edit,
@@ -70,6 +72,10 @@ const ProjectHistory = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [itemsPerPage] = useState(3); // Changed to 3 for better testing
 
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewProject, setViewProject] = useState<Project | null>(null);
@@ -270,7 +276,7 @@ const ProjectHistory = () => {
   //     return p.status === "not started" || !p.status;
   //   return p.status === selectedStatus;
   // });
-  const filteredProjects = projects.filter((p) => {
+  const allFilteredProjects = projects.filter((p) => {
     const matchesStatus =
       selectedStatus === "not started"
         ? p.status === "not started" || !p.status
@@ -282,6 +288,27 @@ const ProjectHistory = () => {
 
     return matchesStatus && matchesSearch;
   });
+
+  // Calculate pagination
+  const totalPages = Math.ceil(allFilteredProjects.length / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const filteredProjects = allFilteredProjects.slice(startIndex, endIndex);
+
+  // Debug logging
+  console.log("🔍 Project History Pagination Debug:");
+  console.log("- Total filtered projects:", allFilteredProjects.length);
+  console.log("- Items per page:", itemsPerPage);
+  console.log("- Current page:", page);
+  console.log("- Total pages:", totalPages);
+  console.log("- Start index:", startIndex);
+  console.log("- End index:", endIndex);
+  console.log("- Projects on current page:", filteredProjects.length);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [selectedStatus, searchTerm]);
 
   if (analyticsLoading) {
     return (
@@ -327,6 +354,13 @@ const ProjectHistory = () => {
         >
           Project History
         </Typography>
+
+        {/* Project Count Info */}
+        <Box mb={2}>
+          <Typography variant="body1" color="text.secondary">
+            Total Projects ({selectedStatus}): <strong>{allFilteredProjects.length}</strong>
+          </Typography>
+        </Box>
 
         {/* Dropdown Filters */}
         <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
@@ -554,6 +588,41 @@ const ProjectHistory = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Pagination Controls */}
+        {allFilteredProjects.length > 0 && (
+          <Box mt={3} display="flex" justifyContent="center">
+            <Stack spacing={2}>
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                Page {page} of {totalPages} | Showing {filteredProjects.length} of {allFilteredProjects.length} projects
+              </Typography>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(event, value) => setPage(value)}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+              />
+            </Stack>
+          </Box>
+        )}
+
+        {/* Empty State */}
+        {!analyticsLoading && filteredProjects.length === 0 && (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="200px"
+            mt={3}
+          >
+            <Typography variant="h6" color="text.secondary">
+              No projects found with &quot;{selectedStatus}&quot; status
+            </Typography>
+          </Box>
+        )}
 
         {/* Project History for Selected Project */}
 

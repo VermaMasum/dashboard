@@ -147,6 +147,8 @@ router.get("/all-users", protect, async (req, res) => {
   }
 });
 
+const { paginate } = require("../utils/pagination");
+
 // Get users (with optional role filter) - admin/superAdmin only
 router.get("/", protect, async (req, res) => {
   try {
@@ -159,7 +161,7 @@ router.get("/", protect, async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { role } = req.query;
+    const { role, page, limit } = req.query;
     console.log("🔍 Fetching users with role filter:", role);
 
     let query = {};
@@ -167,13 +169,30 @@ router.get("/", protect, async (req, res) => {
       query.role = role;
     }
 
-    console.log("🔍 Database query:", query);
-    const users = await User.find(query)
-      .select("-password")
-      .sort({ role: 1, username: 1 });
-    console.log("👥 Total users found in database:", users.length);
-    console.log("👥 Users:", users.map(u => ({ username: u.username, role: u.role })));
-    res.json(users);
+    // For admins, if no pagination params provided, return all users
+    if (!page && !limit) {
+      console.log("🔍 Database query:", query);
+      const users = await User.find(query)
+        .select("-password")
+        .sort({ role: 1, username: 1 });
+      console.log("👥 Total users found in database:", users.length);
+      console.log("👥 Users:", users.map(u => ({ username: u.username, role: u.role })));
+      return res.json(users);
+    }
+
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+
+    console.log("🔍 Database query with pagination:", query, "page:", pageNum, "limit:", limitNum);
+    const result = await paginate(User, query, pageNum, limitNum, { role: 1, username: 1 });
+    console.log("👥 Paginated users result:", {
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+      dataLength: result.data.length
+    });
+    res.json(result);
   } catch (error) {
     console.error("❌ Fetch users error:", error);
     res.status(500).json({ message: "Server error" });

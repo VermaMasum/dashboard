@@ -8,7 +8,7 @@
  * @param {Number} limit - Number of items per page (default: 10)
  * @param {Object} sort - Sort object (default: {_id: -1})
  */
-export async function paginate(
+async function paginate(
   model,
   filter = {},
   page = 1,
@@ -34,3 +34,5 @@ export async function paginate(
     data,
   };
 }
+
+module.exports = { paginate };

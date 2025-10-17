@@ -1,6 +1,7 @@
 const express = require("express");
 const Project = require("../models/Project");
 const { protect } = require("../middleware/auth");
+const { paginate } = require("../utils/pagination");
 
 const router = express.Router();
 
@@ -36,22 +37,12 @@ router.get("/", protect, async (req, res) => {
 
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
-    const skip = (pageNum - 1) * limitNum;
 
-    const total = await Project.countDocuments(query);
-    const data = await Project.find(query)
-      .sort({ _id: -1 })
-      .skip(skip)
-      .limit(limitNum)
-      .populate("employees", "username");
+    const result = await paginate(Project, query, pageNum, limitNum, { _id: -1 });
+    // Populate employees after pagination
+    await Project.populate(result.data, { path: "employees", select: "username" });
 
-    res.json({
-      total,
-      page: pageNum,
-      limit: limitNum,
-      totalPages: Math.ceil(total / limitNum),
-      data,
-    });
+    res.json(result);
   } catch (error) {
     console.error("Error fetching projects:", error);
     res.status(500).json({ message: "Server error" });

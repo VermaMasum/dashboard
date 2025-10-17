@@ -27,6 +27,8 @@ import {
   IconButton,
   CircularProgress,
   Snackbar,
+  Pagination,
+  Stack,
 } from "@mui/material";
 import { Add, Edit, Delete, Person } from "@mui/icons-material";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,6 +51,12 @@ const EmployeeManagement = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
+
   // Dialog states
   const [employeeDialog, setEmployeeDialog] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
@@ -65,7 +73,7 @@ const EmployeeManagement = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page]);
 
   const fetchData = async () => {
     try {
@@ -73,9 +81,22 @@ const EmployeeManagement = () => {
       console.log(
         "👥 Fetching employees from /users endpoint with role=employee..."
       );
-      const response = await axios.get("/users?role=employee");
+      const response = await axios.get(
+        `/users?role=employee&page=${page}&limit=${limit}`
+      );
       console.log("👥 Employees response:", response.data);
-      setEmployees(response.data);
+      
+      // Handle paginated response
+      if (response.data.data) {
+        setEmployees(response.data.data);
+        setTotalPages(response.data.totalPages);
+        setTotal(response.data.total);
+      } else {
+        // Fallback for non-paginated response
+        setEmployees(response.data);
+        setTotal(response.data.length);
+        setTotalPages(1);
+      }
     } catch (err: any) {
       console.error("❌ Error fetching employees:", err);
       console.error("❌ Error details:", err.response?.data);
@@ -149,6 +170,8 @@ const EmployeeManagement = () => {
         const response = await axios.post("/users", userData);
         console.log("✅ Employee created:", response.data);
         setSuccess("Employee created successfully");
+        // Reset to first page when creating new employee
+        setPage(1);
       }
       handleCloseDialog();
       fetchData();
@@ -264,6 +287,14 @@ const EmployeeManagement = () => {
             {success}
           </Alert>
         </Snackbar>
+
+        {/* Employee Count Info */}
+        <Box mb={2}>
+          <Typography variant="body1" color="text.secondary">
+            Total Employees: <strong>{total}</strong>
+          </Typography>
+        </Box>
+
         {/* <TableCell>Role</TableCell> */}
         <TableContainer component={Paper}>
           <Table>
@@ -313,6 +344,38 @@ const EmployeeManagement = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <Box mt={3} display="flex" justifyContent="center">
+            <Stack spacing={2}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(event, value) => setPage(value)}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+              />
+            </Stack>
+          </Box>
+        )}
+
+        {/* Empty State */}
+        {!loading && employees.length === 0 && (
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="200px"
+          >
+            <Typography variant="h6" color="text.secondary">
+              No employees found. Click "Add Employee" to create one.
+            </Typography>
+          </Box>
+        )}
+
         {/* <TableCell>
                     <Chip
                       label={employee.role}
