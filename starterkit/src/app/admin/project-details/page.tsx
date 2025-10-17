@@ -917,7 +917,6 @@ const ProjectDetails = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 sx={{ borderRadius: "8px" }}
               />
-              p
             </Box>
 
             {/* ✅ Filtered List */}
